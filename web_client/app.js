@@ -70,11 +70,16 @@ class SrishtyApp {
         if (response.status === 401) { this.logout(); return null; }
         if (!response.ok) {
             let errorText = `API Error: ${response.status}`;
+            const clonedResponse = response.clone();
             try {
                 const errorData = await response.json();
                 errorText += ` - ${JSON.stringify(errorData)}`;
             } catch (e) {
-                errorText += ` - ${await response.text()}`;
+                try {
+                    errorText += ` - ${await clonedResponse.text()}`;
+                } catch (textErr) {
+                    errorText += ` - (Response body unavailable)`;
+                }
             }
             throw new Error(errorText);
         }
