@@ -54,7 +54,7 @@
             <div class="nav-center">
                 <span class="nav-link active" id="nav-home" onclick="app.switchView('home')">My Stories</span>
                 <span class="nav-link" id="nav-analytics" onclick="app.switchView('analytics')">Analytics</span>
-                <span class="nav-link" onclick="alert('Community features coming soon!')">Explore</span>
+                <span class="nav-link" id="nav-explore" onclick="app.switchView('explore')">Explore</span>
             </div>
 
             <div class="nav-right">
@@ -248,6 +248,34 @@
 
                 </div>
             </div>
+
+            <!-- VIEW: EXPLORE -->
+            <div id="view-explore" class="view-content hidden">
+                <div class="container">
+                    <div class="dashboard-header">
+                        <div class="welcome-msg">
+                            <h2>Explore Stories</h2>
+                            <p>Discover your next favorite masterpiece</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap;">
+                        <input type="text" id="explore-search" class="form-input" placeholder="Search stories, authors, or tags..." style="max-width: 400px; padding: 12px 20px;" onkeyup="app.filterExplore()">
+                        <div id="category-filters" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;">
+                            <span class="cat-chip active" onclick="app.setExploreCategory(null)">All</span>
+                            <span class="cat-chip" onclick="app.setExploreCategory('Fantasy')">Fantasy</span>
+                            <span class="cat-chip" onclick="app.setExploreCategory('Romance')">Romance</span>
+                            <span class="cat-chip" onclick="app.setExploreCategory('Horror')">Horror</span>
+                            <span class="cat-chip" onclick="app.setExploreCategory('Mystery')">Mystery</span>
+                        </div>
+                    </div>
+
+                    <div class="story-grid" id="explore-grid">
+                        <!-- Dynamic Stories -->
+                    </div>
+                </div>
+            </div>
+
 
             <!-- VIEW: ANALYTICS -->
             <div id="view-analytics" class="view-content hidden">

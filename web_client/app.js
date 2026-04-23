@@ -14,6 +14,8 @@ class SrishtyApp {
         this.currentStoryId = null;
         this.currentChapters = [];
         this.currentChapterId = null;
+        this.allExploreBooks = [];
+        this.currentExploreCategory = null;
         
         // Wait for DOM to be ready before init
         if (document.readyState === 'loading') {
@@ -204,6 +206,7 @@ class SrishtyApp {
         if (viewName === 'home') this.loadDashboard();
         if (viewName === 'create') this.resetCreateForm();
         if (viewName === 'analytics') this.loadAnalyticsData();
+        if (viewName === 'explore') this.loadExploreData();
     }
 
     getMediaUrl(path) {
@@ -661,6 +664,67 @@ class SrishtyApp {
         } catch (e) {
             console.error('Analytics Error:', e);
         }
+    }
+
+    /* ======== EXPLORE VIEW ======== */
+    async loadExploreData() {
+        const grid = document.getElementById('explore-grid');
+        grid.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>';
+        
+        try {
+            this.allExploreBooks = await this.fetchAPI('/core/books/');
+            this.renderExploreGrid(this.allExploreBooks);
+        } catch (e) {
+            console.error(e);
+            grid.innerHTML = '<p>Error loading stories.</p>';
+        }
+    }
+
+    setExploreCategory(cat) {
+        this.currentExploreCategory = cat;
+        // Update UI
+        document.querySelectorAll('.cat-chip').forEach(chip => {
+            chip.classList.toggle('active', chip.textContent === (cat || 'All'));
+        });
+        this.filterExplore();
+    }
+
+    filterExplore() {
+        const query = document.getElementById('explore-search').value.toLowerCase();
+        const filtered = this.allExploreBooks.filter(book => {
+            const matchesQuery = book.title.toLowerCase().includes(query) || 
+                                 book.author_name.toLowerCase().includes(query) ||
+                                 (book.tags && book.tags.toLowerCase().includes(query));
+            const matchesCat = !this.currentExploreCategory || book.category_name === this.currentExploreCategory;
+            return matchesQuery && matchesCat && book.is_published;
+        });
+        this.renderExploreGrid(filtered);
+    }
+
+    renderExploreGrid(books) {
+        const grid = document.getElementById('explore-grid');
+        if (books.length === 0) {
+            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px;">No stories found match your search.</p>';
+            return;
+        }
+
+        grid.innerHTML = books.map(book => {
+            const coverUrl = this.getMediaUrl(book.cover);
+            return `
+                <div class="story-card">
+                    <div class="story-card-img">
+                        <img src="${coverUrl}" alt="cover">
+                    </div>
+                    <div class="story-info-meta">
+                        <div class="story-card-title">${book.title}</div>
+                        <div class="story-card-subtitle">by ${book.author_name}</div>
+                        <div style="margin-top: 8px; font-size: 11px; color: var(--text-secondary);">
+                            ${book.total_reads} reads • ${book.likes_count} likes
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 }
 
