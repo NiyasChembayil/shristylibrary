@@ -17,7 +17,7 @@ class BookSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(read_only=True)
     author_name = serializers.ReadOnlyField(source='author.username')
     category_name = serializers.ReadOnlyField(source='category.name')
-    author_profile_id = serializers.ReadOnlyField(source='author.profile.id')
+    author_profile_id = serializers.SerializerMethodField()
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), required=False, allow_null=True)
     is_author_following = serializers.SerializerMethodField()
     chapters = ChapterSerializer(many=True, read_only=True)
@@ -37,10 +37,19 @@ class BookSerializer(serializers.ModelSerializer):
             'downloads_count'
         ]
 
+    def get_author_profile_id(self, obj):
+        try:
+            return obj.author.profile.id
+        except:
+            return None
+
     def get_is_liked(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.likes.filter(user=request.user).exists()
+            try:
+                return obj.likes.filter(user=request.user).exists()
+            except:
+                return False
         return False
 
     def get_is_author_following(self, obj):

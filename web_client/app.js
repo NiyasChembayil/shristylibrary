@@ -31,9 +31,25 @@ class SrishtyApp {
         
         try {
             this.setupQuill();
+            this.fetchCategories();
         } catch (e) {
-            console.warn('Quill setup delayed/failed:', e);
+            console.warn('Init delayed/failed:', e);
         }
+    }
+
+    async fetchCategories() {
+        try {
+            const cats = await this.fetchAPI('/core/categories/');
+            const select = document.getElementById('create-category');
+            if(select) {
+                cats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    select.appendChild(opt);
+                });
+            }
+        } catch (e) { console.error('Cat Fetch Error:', e); }
     }
 
     setupQuill() {
@@ -297,6 +313,9 @@ class SrishtyApp {
         formData.append('description', document.getElementById('create-desc').value);
         formData.append('tags', document.getElementById('create-tags').value);
         formData.append('language', document.getElementById('create-language').value);
+        
+        const catId = document.getElementById('create-category').value;
+        if (catId) formData.append('category', catId);
         
         const coverFile = document.getElementById('create-cover').files[0];
         if (coverFile) formData.append('cover', coverFile);
