@@ -122,6 +122,10 @@
                                 <input type="file" id="create-cover" class="form-input" style="padding: 10px;">
                             </div>
                             <div class="form-group">
+                                <label>Audio File (Full Story)</label>
+                                <input type="file" id="create-audio" class="form-input" accept="audio/*" style="padding: 10px;">
+                            </div>
+                            <div class="form-group">
                                 <label>Language</label>
                                 <select id="create-language" class="form-input">
                                     <option value="English">English</option>
@@ -158,6 +162,13 @@
                                 <div style="display: flex; gap: 20px; align-items: center; width: 100%;">
                                     <input type="file" id="settings-cover" class="form-input" style="flex: 1;">
                                     <img id="settings-cover-preview" src="" style="width: 80px; height: 120px; object-fit: cover; border-radius: 8px; display: none; box-shadow: var(--shadow-sm);">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Update Audio</label>
+                                <div style="display: flex; gap: 20px; align-items: center; width: 100%;">
+                                    <input type="file" id="settings-audio" class="form-input" accept="audio/*" style="flex: 1;">
+                                    <span id="settings-audio-label" style="font-size: 11px; color: var(--text-secondary);">No audio</span>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -218,11 +229,6 @@
                                 <span id="save-status" style="color: #10B981">Auto-saved</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 16px;">
-                                <label for="chapter-audio" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3zm12-2c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z"/></svg>
-                                    <span id="audio-filename">Attach Audio</span>
-                                </label>
-                                <input type="file" id="chapter-audio" accept="audio/*" style="display: none;" onchange="document.getElementById('audio-filename').textContent = this.files[0].name">
                                 <button class="btn-quiet" onclick="app.openSettings()">Settings</button>
                             </div>
                         </div>

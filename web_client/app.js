@@ -295,6 +295,9 @@ class SrishtyApp {
         const coverFile = document.getElementById('create-cover').files[0];
         if (coverFile) formData.append('cover', coverFile);
 
+        const audioFile = document.getElementById('create-audio').files[0];
+        if (audioFile) formData.append('audio_file', audioFile);
+
         try {
             const book = await this.fetchAPI('/core/books/', { method: 'POST', body: formData });
             await this.openEditor(book.id);
@@ -373,10 +376,6 @@ class SrishtyApp {
         }
         
         // Update UI state
-        document.getElementById('chapter-audio').value = '';
-        document.getElementById('audio-filename').textContent = 'Attach Audio';
-        document.getElementById('save-status').textContent = 'Saved';
-        document.getElementById('save-status').style.color = '#10B981';
         this.renderChapterList();
     }
 
@@ -412,9 +411,6 @@ class SrishtyApp {
         const formData = new FormData();
         formData.append('title', label === 'New Chapter' ? `Chapter ${this.currentChapters.length + 1}` : label);
         formData.append('content', content);
-
-        const audioFile = document.getElementById('chapter-audio').files[0];
-        if (audioFile) formData.append('audio_file', audioFile);
 
         try {
             if (this.currentChapterId) {
@@ -486,6 +482,14 @@ class SrishtyApp {
             } else {
                 preview.style.display = 'none';
             }
+
+            const audioLabel = document.getElementById('settings-audio-label');
+            if (book.audio_file) {
+                const parts = book.audio_file.split('/');
+                audioLabel.textContent = parts[parts.length - 1];
+            } else {
+                audioLabel.textContent = 'No audio';
+            }
         } catch (e) {
             console.error(e);
         }
@@ -503,6 +507,9 @@ class SrishtyApp {
         
         const coverFile = document.getElementById('settings-cover').files[0];
         if (coverFile) formData.append('cover', coverFile);
+        
+        const audioFile = document.getElementById('settings-audio').files[0];
+        if (audioFile) formData.append('audio_file', audioFile);
 
         try {
             await this.fetchAPI(`/core/books/${this.currentStoryId}/`, {

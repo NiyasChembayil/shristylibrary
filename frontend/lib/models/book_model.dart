@@ -13,6 +13,7 @@ class BookModel {
   final bool isInLibrary;
   final bool isLiked;
   final int downloadsCount;
+  final String? audioUrl;
 
   final int authorProfileId;
   final bool isAuthorFollowing;
@@ -34,23 +35,31 @@ class BookModel {
     this.isInLibrary = false,
     this.isLiked = false,
     this.downloadsCount = 0,
+    this.audioUrl,
   });
 
   factory BookModel.fromJson(Map<String, dynamic> json) {
     String cover = json['cover'] ?? '';
     
-    // If the URL is already absolute (starts with http), leave it alone.
-    // Otherwise, if it starts with /, prepend the backend domain.
-    if (cover.isNotEmpty && !cover.startsWith('http')) {
-      // In production, the media host is srishty-backend.onrender.com
-      cover = 'https://srishty-backend.onrender.com${cover.startsWith('/') ? '' : '/'}$cover';
-    } else {
+    if (cover.isEmpty) {
       cover = 'https://placehold.co/400x600?text=No+Cover';
+    } else if (!cover.startsWith('http')) {
+      // If it's a relative path, prepend the backend domain
+      cover = 'https://srishty-backend.onrender.com${cover.startsWith('/') ? '' : '/'}$cover';
     }
     
     // Always enforce HTTPS for images to avoid cleartext HTTP errors on mobile
     if (cover.startsWith('http://srishty-backend.onrender.com')) {
       cover = cover.replaceFirst('http://', 'https://');
+    }
+
+    String? audio = json['audio_file'];
+    if (audio != null && audio.isNotEmpty) {
+      if (!audio.startsWith('http')) {
+        audio = 'https://srishty-backend.onrender.com${audio.startsWith('/') ? '' : '/'}$audio';
+      } else if (audio.startsWith('http://srishty-backend.onrender.com')) {
+        audio = audio.replaceFirst('http://', 'https://');
+      }
     }
 
     return BookModel(
@@ -68,6 +77,7 @@ class BookModel {
       isInLibrary: json['is_in_library'] ?? false,
       isLiked: json['is_liked'] ?? false,
       downloadsCount: json['downloads_count'] ?? 0,
+      audioUrl: audio,
       chapters: (json['chapters'] as List? ?? [])
           .map((c) => ChapterModel.fromJson(c))
           .toList(),
@@ -94,6 +104,7 @@ class BookModel {
     bool? isInLibrary,
     bool? isLiked,
     int? downloadsCount,
+    String? audioUrl,
   }) {
     return BookModel(
       id: id ?? this.id,
@@ -112,6 +123,7 @@ class BookModel {
       isInLibrary: isInLibrary ?? this.isInLibrary,
       isLiked: isLiked ?? this.isLiked,
       downloadsCount: downloadsCount ?? this.downloadsCount,
+      audioUrl: audioUrl ?? this.audioUrl,
     );
   }
 }
@@ -120,26 +132,18 @@ class ChapterModel {
   final int id;
   final String title;
   final String content;
-  final String? audioUrl;
 
   ChapterModel({
     required this.id,
     required this.title,
     required this.content,
-    this.audioUrl,
   });
 
   factory ChapterModel.fromJson(Map<String, dynamic> json) {
-    String? audio = json['audio_file'];
-    if (audio != null && audio.startsWith('http://srishty-backend.onrender.com')) {
-      audio = audio.replaceFirst('http://', 'https://');
-    }
-
     return ChapterModel(
       id: json['id'],
       title: json['title'],
       content: json['content'] ?? '',
-      audioUrl: audio,
     );
   }
 }

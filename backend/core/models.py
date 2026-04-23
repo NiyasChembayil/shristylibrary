@@ -29,6 +29,7 @@ class Book(models.Model):
     region = models.CharField(max_length=50, default='Global', db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    audio_file = models.FileField(upload_to='book_audio/', null=True, blank=True)
 
     class Meta:
         indexes = [
@@ -62,7 +63,6 @@ class Chapter(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='chapters')
     title = models.CharField(max_length=255)
     content = models.TextField(null=True, blank=True) # Rich text content
-    audio_file = models.FileField(upload_to='chapter_audio/', null=True, blank=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
