@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Srishty Author Studio</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Styles -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=20240424">
+    <link rel="icon" href="/static/assets/logo.png" type="image/x-icon">
+</head>
+<body>
+
+    <!-- AUTH GATEWAY -->
+    <div id="auth-gateway" class="auth-gateway">
+        <div class="auth-card">
+            <h1>Srishty</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 14px;">Digital Author Studio</p>
+            
+            <form id="auth-form" onsubmit="app.handleAuth(event); return false;">
+                <div class="form-group"><input type="text" id="auth-user" class="form-input" placeholder="Username" required></div>
+                <div id="signup-extra" class="hidden form-group">
+                    <input type="email" id="auth-email" class="form-input" placeholder="Email (optional)">
+                </div>
+                <div class="form-group"><input type="password" id="auth-pass" class="form-input" placeholder="Password" required></div>
+                
+                <p id="auth-error" style="color: #ff6b6b; margin-bottom: 20px; font-size: 13px; display: none;"></p>
+                
+                <button type="button" class="btn-primary" id="auth-btn" onclick="app.handleAuth(event)">Sign In</button>
+            </form>
+            
+            <p style="margin-top: 20px; font-size: 13px; color: var(--text-secondary);">
+                <span id="auth-toggle-text">New to Srishty?</span> 
+                <a href="#" onclick="app.toggleAuthMode(event)" style="color: var(--accent-primary); font-weight: 700; text-decoration: none;">Create Account</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- MAIN APP SHELL -->
+    <div id="app-shell" class="hidden">
+        
+        <!-- TOP NAVBAR -->
+        <nav class="top-nav" id="top-navbar">
+            <div class="nav-left">
+                <div class="nav-brand" onclick="app.switchView('home')">Srishty</div>
+            </div>
+            <div class="nav-right">
+                <div class="nav-links">
+                    <span onclick="app.switchView('home')">My Stories</span>
+                    <span onclick="alert('Notifications coming soon!')">Notifications ▾</span>
+                    <span onclick="app.logout()">Logout</span>
+                </div>
+                <span style="font-size: 13px; font-weight: 600;">My Profile</span>
+                <div class="profile-avatar" onclick="alert('Profile settings coming soon!')">
+                    <img src="https://ui-avatars.com/api/?name=Author&background=E2E4E8&color=6B7280" id="nav-avatar" alt="Profile">
+                </div>
+            </div>
+        </nav>
+
+        <!-- MAIN VIEWPORT -->
+        <main class="main-viewport">
+            
+            <!-- VIEW: DASHBOARD (Home) -->
+            <div id="view-home" class="view-content hidden">
+                <div class="container">
+                    <div class="dashboard-header">
+                        <h2 id="welcome-message">Welcome, Author 👋</h2>
+                        <button class="btn-primary" onclick="app.switchView('create')">
+                            ➕ Create New Story
+                        </button>
+                    </div>
+
+                    <h3 style="font-size: 16px; margin-bottom: 15px;">Your Stories</h3>
+                    <div class="story-grid" id="story-grid">
+                        <!-- Dynamic Stories Loaded Here -->
+                        <p style="color: var(--text-secondary);">Loading stories...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: CREATE NEW STORY -->
+            <div id="view-create" class="view-content hidden">
+                <div class="container" style="max-width: 800px;">
+                    <div class="card-panel">
+                        <div class="panel-header">Create New Story</div>
+                        <div class="panel-body">
+                            <form id="create-story-form" onsubmit="app.handleCreateStory(event)">
+                                <div class="form-group">
+                                    <label>Title:</label>
+                                    <input type="text" id="create-title" class="form-input" placeholder="Enter your story title" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Description:</label>
+                                    <textarea id="create-desc" class="form-input" placeholder="Write a brief description of your story."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tags:</label>
+                                    <input type="text" id="create-tags" class="form-input" placeholder="romance, thriller">
+                                </div>
+                                <div class="form-group">
+                                    <label>Cover Image:</label>
+                                    <input type="file" id="create-cover" class="form-input" style="border: none; padding: 5px 0;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Language:</label>
+                                    <select id="create-language" class="form-input">
+                                        <option value="English">English</option>
+                                        <option value="Malayalam">Malayalam</option>
+                                        <option value="Hindi">Hindi</option>
+                                        <option value="Spanish">Spanish</option>
+                                    </select>
+                                </div>
+                                
+                                <div style="text-align: right; margin-top: 30px;">
+                                    <button type="button" class="btn-quiet" style="margin-right: 15px;" onclick="app.switchView('home')">Cancel</button>
+                                    <button type="submit" class="btn-secondary" id="create-btn">Create Story</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: STORY SETTINGS -->
+            <div id="view-settings" class="view-content hidden">
+                <div class="container" style="max-width: 800px;">
+                    <div class="card-panel">
+                        <div class="panel-header">Story Settings</div>
+                        <div class="panel-body">
+                            <form id="settings-story-form" onsubmit="app.handleSaveSettings(event)">
+                                <div class="form-group">
+                                    <label>Title:</label>
+                                    <input type="text" id="settings-title" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Description:</label>
+                                    <textarea id="settings-desc" class="form-input"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Update Cover:</label>
+                                    <div style="flex: 1; display:flex; gap: 15px; align-items: flex-start;">
+                                        <input type="file" id="settings-cover" class="form-input" style="border: none; padding: 5px 0;">
+                                        <img id="settings-cover-preview" src="" style="width: 100px; height: 60px; object-fit: cover; border-radius: 4px; display: none;">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Status:</label>
+                                    <select id="settings-status" class="form-input">
+                                        <option value="draft">Draft</option>
+                                        <option value="published">Published</option>
+                                    </select>
+                                </div>
+                                
+                                <div style="text-align: right; margin-top: 30px;">
+                                    <button type="button" class="btn-quiet" style="margin-right: 15px;" onclick="app.switchView('home')">Cancel</button>
+                                    <button type="submit" class="btn-secondary" id="settings-btn">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: EDITOR (Wattpad-Style 4-Pane Layout) -->
+            <div id="view-editor" class="view-content hidden">
+                <div class="editor-layout">
+                    
+                    <!-- Pane 1: Chapter Sidebar -->
+                    <aside class="pane-sidebar">
+                        <div class="sidebar-header">
+                            <span>Chapter Manager</span>
+                            <button class="icon-btn" onclick="app.createNewChapter()" title="Add Chapter">➕</button>
+                        </div>
+                        <div class="chapter-list" id="sidebar-chapter-list">
+                            <!-- Dynamic chapters -->
+                        </div>
+                    </aside>
+
+                    <!-- Pane 2 & 3: Main Editor + Top Context Bar -->
+                    <section class="pane-main">
+                        <div class="editor-top-context">
+                            <div class="context-left">
+                                <button class="btn-back" onclick="app.switchView('home')">← <span>Back</span></button>
+                                <div class="story-info">
+                                    <h4 id="editor-story-title">Story Title</h4>
+                                    <p id="editor-chapter-label">Chapter 1</p>
+                                </div>
+                            </div>
+                            <div class="context-right">
+                                <button class="btn-outline" onclick="app.saveCurrentChapter()" id="save-indicator">Save Draft</button>
+                                <button class="btn-primary" onclick="app.publishStory()" style="background-color: var(--accent-secondary);">Publish</button>
+                            </div>
+                        </div>
+
+                        <!-- The actual writing area -->
+                        <div class="editor-writing-area">
+                            <div id="editor-container"></div>
+                        </div>
+
+                        <!-- Pane 4: Bottom Stats & Audio Bar -->
+                        <div class="editor-status-bar">
+                            <div class="status-left">
+                                <span id="word-count">Words: 0</span>
+                                <span id="save-status">Saved</span>
+                            </div>
+                            <div class="status-right">
+                                <label for="chapter-audio" class="audio-label">
+                                    🎧 <span id="audio-filename">Attach Audio</span>
+                                </label>
+                                <input type="file" id="chapter-audio" accept="audio/*" style="display: none;" onchange="document.getElementById('audio-filename').textContent = this.files[0].name">
+                                <button class="btn-quiet" onclick="app.openSettings()">Settings</button>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="./app.js?v=20240424"></script>
+    <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; padding: 5px 10px; border-radius: 5px; font-size: 10px; pointer-events: none;">
+        DEBUG v3 - Port 3001/3002
+    </div>
+</body>
+</html>

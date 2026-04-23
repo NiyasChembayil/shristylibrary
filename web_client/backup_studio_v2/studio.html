@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Author Studio | Srishty</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/web_client/style.css">
+    <link rel="icon" href="/static/assets/logo.png" type="image/x-icon">
+</head>
+<body class="studio-body">
+    <!-- Premium Header -->
+    <header class="studio-header">
+        <div class="nav-brand">
+            <span class="nav-title" onclick="studioApp.switchView('dashboard')" style="cursor: pointer;">Srishty</span>
+        </div>
+        <nav class="nav-links">
+            <a href="#" class="active" onclick="studioApp.switchView('dashboard')">My Stories</a>
+            <a href="#">Notifications</a>
+            <a href="#" id="profile-name">My Profile</a>
+            <img id="header-avatar" src="" alt="" style="width: 32px; height: 32px; border-radius: 50%; background: #eee;">
+        </nav>
+    </header>
+
+    <main class="studio-content-wrap">
+        
+        <!-- VIEW: DASHBOARD -->
+        <section id="view-dashboard" class="studio-view">
+            <div class="welcome-section">
+                <h1>Welcome, <span id="welcome-name">Author</span> 👋</h1>
+                <button class="btn-studio-primary" onclick="studioApp.switchView('create')">+ Create New Story</button>
+            </div>
+
+            <div class="stories-section">
+                <h3>Your Stories</h3>
+                <br>
+                <div id="stories-grid" class="stories-grid">
+                    <!-- Dynamic Story Cards -->
+                    <div class="loading-spinner">Loading your masterpieces...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: CREATE NEW STORY -->
+        <section id="view-create" class="studio-view hidden">
+            <div class="welcome-section">
+                <h1>Create New Story</h1>
+            </div>
+            
+            <div class="studio-card">
+                <div class="studio-form-group">
+                    <label>Title:</label>
+                    <input type="text" id="create-title" class="studio-form-control" placeholder="Enter your story title">
+                </div>
+                <div class="studio-form-group">
+                    <label>Description:</label>
+                    <textarea id="create-desc" class="studio-form-control" rows="3" placeholder="Write a brief description of your story."></textarea>
+                </div>
+                <div class="studio-form-group">
+                    <label>Tags:</label>
+                    <input type="text" id="create-tags" class="studio-form-control" placeholder="romance, thriller">
+                </div>
+                <div class="studio-form-group">
+                    <label>Cover Image:</label>
+                    <div style="flex: 1;">
+                        <input type="file" id="create-cover" accept="image/*">
+                        <p class="cover-help-text">Recommended: 2:3 ratio.</p>
+                    </div>
+                </div>
+                <div class="studio-form-group">
+                    <label>Language:</label>
+                    <select id="create-lang" class="studio-form-control">
+                        <option value="English">English</option>
+                        <option value="Malayalam">Malayalam</option>
+                        <option value="Hindi">Hindi</option>
+                    </select>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button class="btn-studio-orange" onclick="studioApp.handleCreateStory()">Create Story</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: EDITOR -->
+        <section id="view-editor" class="studio-view hidden" style="max-width: 100%;">
+            <div class="power-editor-bar glass" style="margin-bottom: 20px; border-radius: 12px; background: white; color: var(--studio-text);">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <button class="btn-card" onclick="studioApp.switchView('dashboard')" style="padding: 5px 15px;">← Back</button>
+                    <h3 id="editor-story-title">Story Title</h3>
+                    <select id="chapter-selector" class="studio-form-control" style="width: 180px; padding: 5px;" onchange="studioApp.loadChapterContent(this.value)">
+                        <option value="0">Chapter 1</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <button class="btn-card" onclick="studioApp.saveDraft()">Save Draft</button>
+                    <button class="btn-studio-primary" id="btn-publish-toggle" onclick="studioApp.togglePublish()">Publish</button>
+                </div>
+            </div>
+
+            <div class="editor-main">
+                <div class="editor-wrap">
+                    <div id="editor-toolbar">
+                        <!-- Custom Quill Toolbar -->
+                    </div>
+                    <div id="editor-container" style="min-height: 500px;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                    <button class="btn-card" style="width: auto; padding: 10px 20px;" onclick="studioApp.addChapter()">+ Add New Chapter</button>
+                    <span id="word-count" style="color: var(--studio-text-light); font-size: 13px;">Word Count: 0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: STORY SETTINGS -->
+        <section id="view-settings" class="studio-view hidden">
+            <div class="welcome-section">
+                <h1 id="settings-header-title">Story Settings</h1>
+            </div>
+            
+            <div class="studio-card">
+                <div class="studio-form-group">
+                    <label>Title:</label>
+                    <input type="text" id="settings-title" class="studio-form-control">
+                </div>
+                <div class="studio-form-group">
+                    <label>Description:</label>
+                    <textarea id="settings-desc" class="studio-form-control" rows="3"></textarea>
+                </div>
+                <div class="studio-form-group">
+                    <label>Cover Image:</label>
+                    <div style="display: flex; gap: 20px; flex: 1; align-items: center;">
+                        <select id="settings-cover-action" class="studio-form-control" style="width: 150px;">
+                            <option value="keep">Keep Current</option>
+                            <option value="change">Change Cover</option>
+                        </select>
+                        <input type="file" id="settings-cover-file" class="hidden" accept="image/*">
+                        <img id="settings-cover-preview" src="" alt="" style="width: 60px; height: 80px; border-radius: 4px; object-fit: cover; background: #eee;">
+                    </div>
+                </div>
+                <div class="studio-form-group">
+                    <label>Status:</label>
+                    <select id="settings-status" class="studio-form-control">
+                        <option value="false">Draft</option>
+                        <option value="true">Published</option>
+                    </select>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button class="btn-studio-orange" onclick="studioApp.saveSettings()">Save Changes</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/web_client/app.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="/static/web_client/studio.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+databases:
+  - name: srishty-db
+    databaseName: srishty
+    user: srishty_user
+    plan: free
+
+services:
+  - type: redis
+    name: srishty-redis
+    plan: free
+    ipAllowList: [] # only allow internal connections
+
+  - type: web
+    name: srishty-backend
+    env: python
+    rootDir: backend
+    buildCommand: "./build.sh"
+    startCommand: "daphne -b 0.0.0.0 -p $PORT bookify_backend.asgi:application"
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: srishty-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: srishty-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: USE_S3
+        value: "False"
+      # IMPORTANT: To prevent your images/audio from being deleted on every deploy,
+      # configure your Cloudinary URL in the Render Dashboard environment settings.
+      # You can get this from your Cloudinary Console (Settings -> Access Keys).
+      - key: CLOUDINARY_URL
+        value: "" # Fill this in the Render Dashboard for permanent storage
+
+  - type: static
+    name: srishty-studio
+    env: static
+    rootDir: web_client
+    publishDir: .

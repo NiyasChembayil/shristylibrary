@@ -1,0 +1,59 @@
+Building com.srishty.app for simulator (ios)...
+Running Xcode build...                                          
+Xcode build done.                                            6.6s
+Failed to build iOS app
+Error output from Xcode build:
+↳
+    ** BUILD FAILED **
+
+
+Xcode's output:
+↳
+    Writing result bundle at path:
+    	/var/folders/2l/0fx5481j3_n7n2yxsvdvh4w40000gn/T/flutter_tools.FmGn0l/flutter_ios_build_temp_dirJodADK/temporary_xcresult_bundle
+
+    error: ../../../.pub-cache/hosted/pub.dev/flutter_quill-7.10.2/lib/src/widgets/raw_editor/raw_editor.dart:294:7: Error: The non-abstract class 'RawEditorState' is missing implementations for these members:
+     - TextSelectionDelegate.lookUpEnabled
+     - TextSelectionDelegate.searchWebEnabled
+     - TextSelectionDelegate.shareEnabled
+    Try to either
+     - provide an implementation,
+     - inherit an implementation from a superclass or mixin,
+     - mark the class as abstract, or
+     - provide a 'noSuchMethod' implementation.
+
+    class RawEditorState extends EditorState
+          ^^^^^^^^^^^^^^
+    ../../../development/flutter/packages/flutter/lib/src/services/text_input.dart:1051:12: Context: 'TextSelectionDelegate.lookUpEnabled' is defined here.
+      bool get lookUpEnabled => true;
+               ^^^^^^^^^^^^^
+    ../../../development/flutter/packages/flutter/lib/src/services/text_input.dart:1054:12: Context: 'TextSelectionDelegate.searchWebEnabled' is defined here.
+      bool get searchWebEnabled => true;
+               ^^^^^^^^^^^^^^^^
+    ../../../development/flutter/packages/flutter/lib/src/services/text_input.dart:1057:12: Context: 'TextSelectionDelegate.shareEnabled' is defined here.
+      bool get shareEnabled => true;
+               ^^^^^^^^^^^^
+    ../../../.pub-cache/hosted/pub.dev/flutter_quill-7.10.2/lib/src/widgets/raw_editor/raw_editor.dart:362:47: Error: Required named parameter 'onLookUp' must be provided.
+        return EditableText.getEditableButtonItems(
+                                                  ^
+    ../../../development/flutter/packages/flutter/lib/src/widgets/editable_text.dart:1867:38: Context: Found this candidate, but the arguments don't match.
+      static List<ContextMenuButtonItem> getEditableButtonItems({
+                                         ^^^^^^^^^^^^^^^^^^^^^^
+    ../../../.pub-cache/hosted/pub.dev/flutter_quill-7.10.2/lib/src/widgets/quill_single_child_scroll_view.dart:289:18: Error: The method '_RenderSingleChildViewport.getOffsetToReveal' has fewer named arguments than those of overridden method 'RenderAbstractViewport.getOffsetToReveal'.
+      RevealedOffset getOffsetToReveal(RenderObject target, double alignment,
+                     ^
+    ../../../development/flutter/packages/flutter/lib/src/rendering/viewport.dart:126:18: Context: This is the overridden method ('getOffsetToReveal').
+      RevealedOffset getOffsetToReveal(
+                     ^
+    ../../../.pub-cache/hosted/pub.dev/flutter_quill-7.10.2/lib/src/widgets/quill_single_child_scroll_view.dart:289:18: Error: The method '_RenderSingleChildViewport.getOffsetToReveal' doesn't have the named parameter 'axis' of overridden method 'RenderAbstractViewport.getOffsetToReveal'.
+      RevealedOffset getOffsetToReveal(RenderObject target, double alignment,
+                     ^
+    ../../../development/flutter/packages/flutter/lib/src/rendering/viewport.dart:126:18: Context: This is the overridden method ('getOffsetToReveal').
+      RevealedOffset getOffsetToReveal(
+                     ^
+    Target kernel_snapshot failed: Exception
+    Failed to package /Users/niyas/Desktop/shr/frontend.
+    note: Run script build phase 'Thin Binary' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+    note: Run script build phase 'Run Script' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+
+Encountered error while building for simulator.

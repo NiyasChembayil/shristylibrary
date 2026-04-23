@@ -1,0 +1,39 @@
+# Environments
+backend/venv/
+backend/.env
+backend/db.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+*.log
+
+# Flutter/Dart
+frontend/.dart_tool/
+frontend/.packages
+frontend/build/
+frontend/.pub-cache/
+frontend/.pub/
+frontend/pubspec.lock
+
+# Android/iOS Builds
+frontend/android/.gradle
+frontend/android/app/src/main/gen/
+frontend/android/app/build/
+frontend/ios/Flutter/App.framework
+frontend/ios/Flutter/Flutter.framework
+frontend/ios/Flutter/Flutter.podspec
+frontend/ios/Flutter/Generated.xcconfig
+frontend/ios/Flutter/app.flx
+frontend/ios/Flutter/app.zip
+frontend/ios/Flutter/flutter_assets/
+frontend/ios/Flutter/flutter_export_environment.sh
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+.DS_Store

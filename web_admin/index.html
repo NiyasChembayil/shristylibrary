@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Srishty | Admin Dashboard</title>
+    <meta name="description" content="Srishty Platform Administration Portal. Manage users, content, and analytics.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="../assets/logo.png" type="image/x-icon">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="../assets/logo.png" alt="Srishty Logo" class="logo-img">
+                <span class="logo-text">Srishty Admin</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" id="nav-dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-users">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-label">Users</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-books">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-label">Books</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-analytics">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-label">Analytics</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-label">Settings</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="adminApp.logout()">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-nav">
+                <h1 id="page-title">Dashboard Overview</h1>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span class="user-name" id="admin-name">Admin User</span>
+                        <span class="user-role">Platform Manager</span>
+                    </div>
+                    <div class="avatar-circle">A</div>
+                </div>
+            </header>
+
+            <!-- Dynamic View Container -->
+            <div id="view-container" class="content-container">
+                <!-- Dashboard Statistics Cards -->
+                <div class="stats-grid" id="stats-overview">
+                    <div class="stat-card glass animate-slide-up">
+                        <div class="stat-header">
+                            <span class="stat-label">Total Users</span>
+                            <span class="stat-icon-bg purple">👤</span>
+                        </div>
+                        <div class="stat-value" id="count-users">0</div>
+                        <div class="stat-meta">
+                            <span class="trend-up">+12%</span> from last month
+                        </div>
+                    </div>
+                    <div class="stat-card glass animate-slide-up" style="animation-delay: 0.1s">
+                        <div class="stat-header">
+                            <span class="stat-label">Active Authors</span>
+                            <span class="stat-icon-bg blue">✍️</span>
+                        </div>
+                        <div class="stat-value" id="count-authors">0</div>
+                        <div class="stat-meta">
+                            <span class="trend-up">+5%</span> growth rate
+                        </div>
+                    </div>
+                    <div class="stat-card glass animate-slide-up" style="animation-delay: 0.2s">
+                        <div class="stat-header">
+                            <span class="stat-label">Total Books</span>
+                            <span class="stat-icon-bg green">📖</span>
+                        </div>
+                        <div class="stat-value" id="count-books">0</div>
+                        <div class="stat-meta">
+                            <span class="trend-up">+18</span> new this week
+                        </div>
+                    </div>
+                    <div class="stat-card glass animate-slide-up" style="animation-delay: 0.3s">
+                        <div class="stat-header">
+                            <span class="stat-label">Platform Revenue</span>
+                            <span class="stat-icon-bg gold">💰</span>
+                        </div>
+                        <div class="stat-value" id="count-revenue">$0.00</div>
+                        <div class="stat-meta">
+                            <span class="trend-up">+8%</span> conversion
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Sections -->
+                <section class="dashboard-sections">
+                    <div class="section-card glass animate-slide-up" style="animation-delay: 0.4s">
+                        <h3>Recent Publications</h3>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Book Title</th>
+                                        <th>Author</th>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-books-list">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="overlay hidden glass">
+        <div class="login-card glass">
+            <h2>Srishty Admin Login</h2>
+            <p>Access the platform management portal</p>
+            <form id="login-form">
+                <input type="text" placeholder="Username" required id="username">
+                <input type="password" placeholder="Password" required id="password">
+                <button type="submit" class="btn-primary">Authenticate</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
