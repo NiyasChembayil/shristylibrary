@@ -326,22 +326,29 @@ class SrishtyApp {
     }
 
     createNewChapter() {
-        // Only allow one unsaved "new" chapter at a time
         const list = document.getElementById('sidebar-chapter-list');
         const existingNew = Array.from(list.children).find(el => el.dataset.id === 'new');
+        
+        // Reset editor state for a fresh chapter
+        this.currentChapterId = null;
+        this.quill.setText('');
+        document.getElementById('editor-chapter-label').textContent = 'New Chapter';
+        document.getElementById('save-status').textContent = 'Unsaved';
         
         if (!existingNew) {
             const div = document.createElement('div');
             div.className = 'chapter-item active';
             div.dataset.id = 'new';
             div.innerHTML = `<span>New Chapter *</span>`;
+            div.onclick = () => this.loadSelectedChapter('new');
             list.appendChild(div);
-            
-            this.currentChapterId = null;
-            this.quill.setText('');
-            document.getElementById('editor-chapter-label').textContent = 'New Chapter';
-            this.quill.focus();
+        } else {
+            // If already exists, just make sure it looks active
+            document.querySelectorAll('.chapter-item').forEach(el => el.classList.remove('active'));
+            existingNew.classList.add('active');
         }
+        
+        this.quill.focus();
     }
 
     async saveCurrentChapter() {
