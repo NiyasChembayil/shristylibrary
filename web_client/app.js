@@ -298,8 +298,25 @@ class SrishtyApp {
         const audioFile = document.getElementById('create-audio').files[0];
         if (audioFile) formData.append('audio_file', audioFile);
 
+        const importFile = document.getElementById('create-import-file').files[0];
+
         try {
             const book = await this.fetchAPI('/core/books/', { method: 'POST', body: formData });
+            
+            // If an import file is selected, process it
+            if (importFile) {
+                btn.textContent = 'Importing Chapters...';
+                const chapters = await this.readAndParseFile(importFile);
+                for (let i = 0; i < chapters.length; i++) {
+                    const chap = chapters[i];
+                    const chapData = new FormData();
+                    chapData.append('title', chap.title);
+                    chapData.append('content', chap.content);
+                    chapData.append('order', i);
+                    await this.fetchAPI(`/core/books/${book.id}/chapters/`, { method: 'POST', body: chapData });
+                }
+            }
+
             await this.openEditor(book.id);
         } catch (err) {
             alert(`Failed to create story: ${err.message}`);
@@ -307,6 +324,18 @@ class SrishtyApp {
             btn.textContent = 'Create Story';
             btn.disabled = false;
         }
+    }
+
+    readAndParseFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                resolve(this.parseChapters(text));
+            };
+            reader.onerror = reject;
+            reader.readAsText(file);
+        });
     }
 
     /* ======== EDITOR VIEW ======== */
