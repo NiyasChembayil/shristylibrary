@@ -82,10 +82,17 @@
                             <h2 id="welcome-message">Welcome back, Author 👋</h2>
                             <p>Ready to continue your masterpiece?</p>
                         </div>
-                        <button class="btn-primary" onclick="app.switchView('create')">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                            Create New Story
-                        </button>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn-outline" onclick="document.getElementById('import-file').click()">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                Import (.txt)
+                            </button>
+                            <input type="file" id="import-file" accept=".txt" style="display: none;" onchange="app.handleBulkImport(event)">
+                            <button class="btn-primary" onclick="app.switchView('create')">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                Create New Story
+                            </button>
+                        </div>
                     </div>
 
                     <div class="section-title">
@@ -136,6 +143,7 @@
                             
                             <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 40px;">
                                 <button type="button" class="btn-outline" onclick="app.switchView('home')">Cancel</button>
+                                <button type="button" class="btn-outline" onclick="document.getElementById('import-file').click()" style="border-color: var(--accent-primary); color: var(--accent-primary);">Import from File</button>
                                 <button type="submit" class="btn-primary" id="create-btn">Create Story</button>
                             </div>
                         </form>

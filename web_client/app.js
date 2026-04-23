@@ -398,8 +398,8 @@ class SrishtyApp {
     }
 
     async saveCurrentChapter() {
-        const content = JSON.stringify(this.quill.getContents());
-        const textContent = this.quill.getText().trim();
+        const content = this.quill.getText();
+        const textContent = content.trim();
         if(!textContent) return; // Don't save empty
         
         const saveBtn = document.getElementById('save-indicator');
@@ -523,6 +523,69 @@ class SrishtyApp {
         } finally {
             btn.textContent = 'Save Changes';
         }
+    }
+
+    async handleBulkImport(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const title = file.name.replace('.txt', '');
+        if (!confirm(`Import "${title}" and create chapters automatically?`)) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const fullText = event.target.result;
+            const chapters = this.parseChapters(fullText);
+            
+            try {
+                // 1. Create the Book
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('description', `Imported from ${file.name}`);
+                const book = await this.fetchAPI('/core/books/', { method: 'POST', body: formData });
+
+                // 2. Create Chapters
+                for (let i = 0; i < chapters.length; i++) {
+                    const chap = chapters[i];
+                    const chapData = new FormData();
+                    chapData.append('title', chap.title);
+                    chapData.append('content', chap.content);
+                    chapData.append('order', i);
+                    await this.fetchAPI(`/core/books/${book.id}/chapters/`, { method: 'POST', body: chapData });
+                }
+
+                alert(`Successfully imported "${title}" with ${chapters.length} chapters! 🚀`);
+                this.loadDashboard();
+            } catch (err) {
+                alert(`Import failed: ${err.message}`);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    parseChapters(text) {
+        // Look for "Chapter X" or "CHAPTER X" or "chapter X"
+        const chapterRegex = /(?:^|\n)\s*(?:Chapter|CHAPTER|chapter)\s+(\d+|[IVX]+|[A-Z]+).*\n/g;
+        const matches = [...text.matchAll(chapterRegex)];
+        
+        if (matches.length === 0) {
+            // No chapter markers found, treat whole file as one chapter
+            return [{ title: 'Chapter 1', content: text }];
+        }
+
+        const results = [];
+        for (let i = 0; i < matches.length; i++) {
+            const start = matches[i].index;
+            const end = (i + 1 < matches.length) ? matches[i+1].index : text.length;
+            const rawTitle = matches[i][0].trim();
+            const content = text.substring(start + matches[i][0].length, end).trim();
+            
+            results.push({
+                title: rawTitle,
+                content: content
+            });
+        }
+        return results;
     }
 }
 

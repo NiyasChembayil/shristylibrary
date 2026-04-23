@@ -305,13 +305,7 @@ class BookDetailScreen extends ConsumerWidget {
                 ]),
                 child: IconButton(
                   onPressed: () {
-                    // Find first chapter with audio
-                    final chapters = book.chapters;
-                    final audioChapter = chapters.any((c) => c.audioUrl != null && c.audioUrl!.isNotEmpty)
-                        ? chapters.firstWhere((c) => c.audioUrl != null && c.audioUrl!.isNotEmpty)
-                        : null;
-
-                    if (audioChapter == null) {
+                    if (book.audioUrl == null || book.audioUrl!.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('No audio available for this story yet.'))
                       );
@@ -326,7 +320,7 @@ class BookDetailScreen extends ConsumerWidget {
                           title: book.title,
                           author: book.authorName,
                           coverUrl: book.coverUrl,
-                          audioUrl: audioChapter.audioUrl,
+                          audioUrl: book.audioUrl,
                           chapters: book.chapters,
                         ),
                       ),

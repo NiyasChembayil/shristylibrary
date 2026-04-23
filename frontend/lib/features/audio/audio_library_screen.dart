@@ -88,15 +88,16 @@ class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
             likes: book.likesCount,
             downloads: book.downloadsCount,
             onPlay: () {
+              if (book.audioUrl == null || book.audioUrl!.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No audio available for this story yet.'))
+                );
+                return;
+              }
+
               // Record a read event for the stats
               ref.read(bookProvider.notifier).recordRead(book.id);
               
-              // Find first chapter with audio
-              final firstAudioChapter = book.chapters.firstWhere(
-                (c) => c.audioUrl != null && c.audioUrl!.isNotEmpty,
-                orElse: () => book.chapters.first,
-              );
-
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -106,7 +107,7 @@ class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
                     author: book.authorName,
                     coverUrl: book.coverUrl,
                     chapters: book.chapters,
-                    audioUrl: firstAudioChapter.audioUrl,
+                    audioUrl: book.audioUrl,
                   ),
                 ),
               );
