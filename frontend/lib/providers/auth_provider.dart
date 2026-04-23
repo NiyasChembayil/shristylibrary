@@ -35,9 +35,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (token != null) {
         debugPrint('Auth: Token found, fetching profile...');
         _apiClient.setAuthToken(token);
-        final profile = await _fetchProfile();
-        state = AuthState(status: AuthStatus.authenticated, token: token, profile: profile);
-        debugPrint('Auth: Authenticated.');
+        try {
+          final profile = await _fetchProfile();
+          if (profile != null) {
+            state = AuthState(status: AuthStatus.authenticated, token: token, profile: profile);
+            debugPrint('Auth: Successfully authenticated with profile: ${profile.username}');
+          } else {
+            debugPrint('Auth: Profile fetch returned null. Reverting to unauthenticated.');
+            await logout();
+          }
+        } catch (e) {
+          debugPrint('Auth: Profile fetch failed: $e. Reverting to unauthenticated.');
+          await logout();
+        }
       } else {
         debugPrint('Auth: No token found.');
         state = AuthState(status: AuthStatus.unauthenticated);
@@ -58,10 +68,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<ProfileModel?> _fetchProfile() async {
     try {
       final response = await _apiClient.dio.get('accounts/profile/me/');
-      // The serializer now returns username, role, bio, avatar, followers_count
+      debugPrint('Auth: Profile fetched successfully: ${response.data}');
       return ProfileModel.fromJson(response.data);
+    } on DioException catch (e) {
+      debugPrint('Auth: Profile fetch error: ${e.response?.statusCode} - ${e.message}');
+      rethrow; // Rethrow so the caller knows it failed
     } catch (e) {
-      return null;
+      debugPrint('Auth: Unexpected profile fetch error: $e');
+      rethrow;
     }
   }
 
@@ -78,7 +92,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _apiClient.setAuthToken(token);
       
       final profile = await _fetchProfile();
-      state = AuthState(status: AuthStatus.authenticated, token: token, profile: profile);
+      if (profile != null) {
+        state = AuthState(status: AuthStatus.authenticated, token: token, profile: profile);
+        debugPrint('Auth: Login successful for ${profile.username}');
+      } else {
+        throw Exception('Login succeeded but profile could not be loaded.');
+      }
     } catch (e) {
       String message = 'Login failed. Please check your credentials.';
       

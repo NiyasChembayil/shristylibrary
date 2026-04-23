@@ -49,6 +49,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get', 'put', 'patch'])
     def me(self, request):
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
+            
         profile, created = Profile.objects.get_or_create(user=request.user)
         if request.method == 'GET':
             serializer = self.get_serializer(profile)

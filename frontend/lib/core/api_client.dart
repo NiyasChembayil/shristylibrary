@@ -44,7 +44,14 @@ class ApiClient {
         if (e.response?.statusCode == 401) {
           // If token is expired, clear it so we can at least browse as a guest
           clearAuthToken();
-          debugPrint("Auth token expired/invalid. Cleared for guest access.");
+          debugPrint("Auth: Token expired/invalid (401). Cleared headers.");
+        } else if (e.response?.statusCode == 500) {
+          debugPrint("⚠️ SERVER ERROR (500): The backend crashed. Check Render logs.");
+          debugPrint("URL: ${e.requestOptions.uri}");
+          debugPrint("Response: ${e.response?.data}");
+        } else {
+          debugPrint("🌐 API ERROR [${e.response?.statusCode}]: ${e.message}");
+          debugPrint("URL: ${e.requestOptions.uri}");
         }
         return handler.next(e);
       },
