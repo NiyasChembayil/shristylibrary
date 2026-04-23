@@ -177,9 +177,20 @@ class SrishtyApp {
 
     /* ======== VIEW ROUTING ======== */
     switchView(viewName) {
-        document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.view-content').forEach(el => {
+            el.classList.add('hidden');
+            el.style.opacity = '0';
+        });
+
         const activeView = document.getElementById(`view-${viewName}`);
-        if(activeView) activeView.classList.remove('hidden');
+        if(activeView) {
+            activeView.classList.remove('hidden');
+            // Trigger smooth fade-in
+            setTimeout(() => {
+                activeView.style.opacity = '1';
+            }, 50);
+        }
+        
         this.currentView = viewName;
 
         // Update Nav Active State
@@ -203,7 +214,12 @@ class SrishtyApp {
     /* ======== DASHBOARD ======== */
     async loadDashboard() {
         const grid = document.getElementById('story-grid');
-        grid.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1/-1; text-align: center; padding: 40px;">Refreshing your library...</p>';
+        // Show Loading Skeletons
+        grid.innerHTML = `
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+        `;
         
         try {
             const myBooks = await this.fetchAPI('/core/books/my_books/');
