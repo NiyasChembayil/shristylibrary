@@ -196,11 +196,14 @@ class SrishtyApp {
         // Update Nav Active State
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.remove('active');
-            if (viewName === 'home' && link.textContent === 'My Stories') link.classList.add('active');
         });
+        
+        if (viewName === 'home') document.getElementById('nav-home').classList.add('active');
+        if (viewName === 'analytics') document.getElementById('nav-analytics').classList.add('active');
 
         if (viewName === 'home') this.loadDashboard();
         if (viewName === 'create') this.resetCreateForm();
+        if (viewName === 'analytics') this.loadAnalyticsData();
     }
 
     getMediaUrl(path) {
@@ -615,6 +618,49 @@ class SrishtyApp {
             });
         }
         return results;
+    }
+
+    async loadAnalyticsData() {
+        try {
+            const books = await this.fetchAPI('/core/books/my_books/');
+            let totalReads = 0;
+            let totalLikes = 0;
+            let totalDownloads = 0;
+
+            const tableBody = document.getElementById('analytics-table-body');
+            tableBody.innerHTML = '';
+
+            books.forEach(book => {
+                totalReads += (book.total_reads || 0);
+                totalLikes += (book.likes_count || 0);
+                totalDownloads += (book.downloads_count || 0);
+
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--border-color)';
+                tr.innerHTML = `
+                    <td style="padding: 16px 8px;">
+                        <div style="font-weight: 600;">${book.title}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">${book.category_name || 'Uncategorized'}</div>
+                    </td>
+                    <td style="padding: 16px 8px; font-weight: 700;">${book.total_reads || 0}</td>
+                    <td style="padding: 16px 8px;">${book.likes_count || 0}</td>
+                    <td style="padding: 16px 8px;">${book.downloads_count || 0}</td>
+                    <td style="padding: 16px 8px;">
+                        <span style="padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; ${book.is_published ? 'background: #DCFCE7; color: #166534;' : 'background: #F3F4F6; color: #374151;'}">
+                            ${book.is_published ? 'Published' : 'Draft'}
+                        </span>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            document.getElementById('total-reads').textContent = totalReads;
+            document.getElementById('total-likes').textContent = totalLikes;
+            document.getElementById('total-downloads').textContent = totalDownloads;
+
+        } catch (e) {
+            console.error('Analytics Error:', e);
+        }
     }
 }
 

@@ -52,9 +52,9 @@
             </div>
 
             <div class="nav-center">
-                <span class="nav-link active" onclick="app.switchView('home')">My Stories</span>
+                <span class="nav-link active" id="nav-home" onclick="app.switchView('home')">My Stories</span>
+                <span class="nav-link" id="nav-analytics" onclick="app.switchView('analytics')">Analytics</span>
                 <span class="nav-link" onclick="alert('Community features coming soon!')">Explore</span>
-                <span class="nav-link" onclick="alert('Analytics coming soon!')">Analytics</span>
             </div>
 
             <div class="nav-right">
@@ -248,6 +248,54 @@
 
                 </div>
             </div>
+
+            <!-- VIEW: ANALYTICS -->
+            <div id="view-analytics" class="view-content hidden">
+                <div class="container">
+                    <div class="section-title">Performance Analytics</div>
+                    
+                    <!-- Top Stat Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 40px;">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: white; padding: 24px; border-radius: 20px; box-shadow: var(--shadow-md);">
+                            <div style="font-size: 14px; opacity: 0.8;">Total Reads</div>
+                            <div id="total-reads" style="font-size: 32px; font-weight: bold; margin-top: 8px;">0</div>
+                            <div style="font-size: 11px; margin-top: 4px; opacity: 0.7;">Across all stories</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%); color: white; padding: 24px; border-radius: 20px; box-shadow: var(--shadow-md);">
+                            <div style="font-size: 14px; opacity: 0.8;">Total Likes</div>
+                            <div id="total-likes" style="font-size: 32px; font-weight: bold; margin-top: 8px;">0</div>
+                            <div style="font-size: 11px; margin-top: 4px; opacity: 0.7;">Community engagement</div>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 24px; border-radius: 20px; box-shadow: var(--shadow-md);">
+                            <div style="font-size: 14px; opacity: 0.8;">Total Downloads</div>
+                            <div id="total-downloads" style="font-size: 32px; font-weight: bold; margin-top: 8px;">0</div>
+                            <div style="font-size: 11px; margin-top: 4px; opacity: 0.7;">Library additions</div>
+                        </div>
+                    </div>
+
+                    <!-- Story Breakdown -->
+                    <div style="background: white; border-radius: 24px; padding: 32px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
+                        <h3 style="margin-bottom: 24px;">Story-by-Story Breakdown</h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-size: 13px;">
+                                        <th style="padding: 16px 8px;">Story Title</th>
+                                        <th style="padding: 16px 8px;">Reads</th>
+                                        <th style="padding: 16px 8px;">Likes</th>
+                                        <th style="padding: 16px 8px;">Downloads</th>
+                                        <th style="padding: 16px 8px;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="analytics-table-body">
+                                    <!-- Rows populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
         </main>
     </div>

@@ -11,11 +11,7 @@ final apiClientProvider = Provider((ref) => ApiClient());
 // Using localhost (127.0.0.1) will NOT work on real devices!
 // Using localhost (127.0.0.1) will NOT work on real physical devices or Android emulators!
 String get _baseUrl {
-  if (kDebugMode) {
-    // 10.0.2.2 is the special alias to your host loopback interface (127.0.0.1 on your development machine)
-    // for Android Emulators. Use localhost or your IP for iOS/Desktop.
-    return 'http://localhost:8000/api/'; 
-  }
+  // Always use the production URL for stability on real devices
   return 'https://srishty-backend.onrender.com/api/';
 }
 
