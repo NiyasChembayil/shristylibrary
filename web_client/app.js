@@ -69,19 +69,17 @@ class SrishtyApp {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
         if (response.status === 401) { this.logout(); return null; }
         if (!response.ok) {
-            let errorText = `API Error: ${response.status}`;
-            const clonedResponse = response.clone();
+            const bodyText = await response.text();
+            let errorMessage = `API Error ${response.status}`;
+            
             try {
-                const errorData = await response.json();
-                errorText += ` - ${JSON.stringify(errorData)}`;
+                const errorData = JSON.parse(bodyText);
+                errorMessage += `: ${JSON.stringify(errorData)}`;
             } catch (e) {
-                try {
-                    errorText += ` - ${await clonedResponse.text()}`;
-                } catch (textErr) {
-                    errorText += ` - (Response body unavailable)`;
-                }
+                errorMessage += `: ${bodyText || 'No response body'}`;
             }
-            throw new Error(errorText);
+            
+            throw new Error(errorMessage);
         }
         return await response.json();
     }
