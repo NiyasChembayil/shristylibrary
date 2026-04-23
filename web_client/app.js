@@ -111,7 +111,7 @@ class SrishtyApp {
         try {
             if (this.isSignUpMode) {
                 const email = document.getElementById('auth-email').value;
-                await this.fetchAPI('/accounts/register/', {
+                await this.fetchAPI('/accounts/auth/register/', {
                     method: 'POST',
                     body: JSON.stringify({ username: user, email, password: pass })
                 });
