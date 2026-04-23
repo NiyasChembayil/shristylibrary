@@ -24,7 +24,7 @@ class SrishtyApp {
     }
 
     async init() {
-        console.log('App: Initializing Wattpad-Style Studio...');
+        console.log('App: Initializing Srishty Studio PRO...');
         this.checkAuth();
         
         try {
@@ -41,20 +41,28 @@ class SrishtyApp {
             theme: 'snow',
             modules: {
                 toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
                     ['bold', 'italic', 'underline', 'strike'],
                     ['blockquote', 'image'],
                     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                     ['clean']
                 ]
             },
-            placeholder: 'Start your story here...'
+            placeholder: 'Start writing your masterpiece...'
         });
 
         this.quill.on('text-change', () => {
             const text = this.quill.getText().trim();
             const count = text.length > 0 ? text.split(/\s+/).length : 0;
             const wordCountEl = document.getElementById('word-count');
-            if(wordCountEl) wordCountEl.textContent = `Word Count: ${count.toLocaleString()}`;
+            if(wordCountEl) wordCountEl.textContent = `${count.toLocaleString()} words`;
+            
+            // Subtle auto-save indicator
+            const statusText = document.getElementById('save-status');
+            if(statusText && statusText.textContent === 'Saved') {
+                statusText.textContent = 'Editing...';
+                statusText.style.color = 'var(--text-secondary)';
+            }
         });
     }
 
@@ -71,14 +79,12 @@ class SrishtyApp {
         if (!response.ok) {
             const bodyText = await response.text();
             let errorMessage = `API Error ${response.status}`;
-            
             try {
                 const errorData = JSON.parse(bodyText);
                 errorMessage += `: ${JSON.stringify(errorData)}`;
             } catch (e) {
                 errorMessage += `: ${bodyText || 'No response body'}`;
             }
-            
             throw new Error(errorMessage);
         }
         return await response.json();
@@ -95,19 +101,30 @@ class SrishtyApp {
             gw.classList.add('hidden');
             shell.classList.remove('hidden');
             
+            // Update Navbar Profile
+            const usernameEl = document.getElementById('nav-username');
+            const initialsEl = document.getElementById('nav-initials');
             const welcome = document.getElementById('welcome-message');
-            if(welcome) welcome.textContent = `Welcome, ${this.currentUser} 👋`;
+            
+            if(usernameEl) usernameEl.textContent = this.currentUser;
+            if(initialsEl && this.currentUser) initialsEl.textContent = this.currentUser.substring(0, 2).toUpperCase();
+            if(welcome) welcome.textContent = `Welcome back, ${this.currentUser} 👋`;
             
             this.switchView('home');
         }
     }
 
     async handleAuth(e) {
-        e.preventDefault();
+        if(e) e.preventDefault();
         const user = document.getElementById('auth-user').value;
         const pass = document.getElementById('auth-pass').value;
         const errorEl = document.getElementById('auth-error');
+        const btn = document.getElementById('auth-btn');
         
+        btn.textContent = 'Authenticating...';
+        btn.disabled = true;
+        errorEl.style.display = 'none';
+
         try {
             if (this.isSignUpMode) {
                 const email = document.getElementById('auth-email').value;
@@ -122,7 +139,7 @@ class SrishtyApp {
                 body: JSON.stringify({ username: user, password: pass })
             });
             
-            if (!res.ok) throw new Error();
+            if (!res.ok) throw new Error('Invalid credentials');
             const data = await res.json();
             
             this.token = data.access;
@@ -132,10 +149,12 @@ class SrishtyApp {
             
             this.checkAuth();
         } catch (err) {
-            console.error('Sign-in error:', err);
-            alert('Sign-in error: ' + err.message);
+            console.error('Auth error:', err);
             errorEl.style.display = 'block';
-            errorEl.textContent = this.isSignUpMode ? 'Registration failed.' : `Sign-in failed. ${err.message || 'Check connection.'}`;
+            errorEl.textContent = this.isSignUpMode ? 'Registration failed. Try a different username.' : 'Incorrect username or password.';
+        } finally {
+            btn.textContent = this.isSignUpMode ? 'Register' : 'Sign In';
+            btn.disabled = false;
         }
     }
 
@@ -163,15 +182,19 @@ class SrishtyApp {
         if(activeView) activeView.classList.remove('hidden');
         this.currentView = viewName;
 
+        // Update Nav Active State
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+            if (viewName === 'home' && link.textContent === 'My Stories') link.classList.add('active');
+        });
+
         if (viewName === 'home') this.loadDashboard();
         if (viewName === 'create') this.resetCreateForm();
     }
 
     getMediaUrl(path) {
-        if (!path) return 'https://placehold.co/400x600?text=No+Cover';
+        if (!path) return 'https://placehold.co/400x600/E2E8F0/64748B?text=Cover+Not+Found';
         if (path.startsWith('http')) return path;
-        
-        // Resilience: Handle potential double slashes or missing slashes
         const backendOrigin = API_BASE_URL.replace('/api', '').replace(/\/$/, '');
         const cleanPath = path.startsWith('/') ? path : `/${path}`;
         return `${backendOrigin}${cleanPath}`;
@@ -180,34 +203,50 @@ class SrishtyApp {
     /* ======== DASHBOARD ======== */
     async loadDashboard() {
         const grid = document.getElementById('story-grid');
-        grid.innerHTML = '<p style="color: var(--text-secondary);">Loading your masterpieces...</p>';
+        grid.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1/-1; text-align: center; padding: 40px;">Refreshing your library...</p>';
         
         try {
-            // OPTIMIZATION: Request only current user's books 
-            // backend filters by author=request.user when calling /my_books/
             const myBooks = await this.fetchAPI('/core/books/my_books/');
             
             if (!myBooks || myBooks.length === 0) {
-                grid.innerHTML = `<p style="color: var(--text-secondary);">You haven't written anything yet. Click Create New Story to begin!</p>`;
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px; background: white; border-radius: 24px; border: 2px dashed var(--border-color);">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+                        <h3 style="margin-bottom: 8px;">Your library is empty</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 24px;">Start your writing journey today by creating your first story.</p>
+                        <button class="btn-primary" onclick="app.switchView('create')">Create My First Story</button>
+                    </div>
+                `;
                 return;
             }
 
             grid.innerHTML = myBooks.map(book => {
                 const coverUrl = this.getMediaUrl(book.cover);
+                const statusClass = book.is_published ? 'status-published' : 'status-draft';
+                const statusLabel = book.is_published ? 'Published' : 'Draft';
+                
                 return `
                 <div class="story-card">
                     <div class="story-card-img">
-                        <img src="${coverUrl}" alt="cover" onerror="this.onerror=null;this.src='https://placehold.co/400x600?text=Cover+Not+Found';">
-                        <div class="status-badge ${book.is_published ? 'status-published' : 'status-draft'}">
-                            ${book.is_published ? 'Published' : 'Draft'}
+                        <img src="${coverUrl}" alt="cover" onerror="this.onerror=null;this.src='https://placehold.co/400x600/E2E8F0/64748B?text=Cover+Lost';">
+                        <div class="card-badge ${statusClass}">${statusLabel}</div>
+                        <div class="story-card-overlay">
+                            <button class="btn-primary" style="width: 100%;" onclick="app.openEditor(${book.id})">Continue Writing</button>
                         </div>
                     </div>
-                    <div class="story-card-content">
+                    <div class="story-info-meta">
                         <div class="story-card-title">${book.title}</div>
+                        <div class="story-card-subtitle">${book.chapters_count || 0} Chapters • 0 Reads</div>
                     </div>
                     <div class="story-card-actions">
-                        <button onclick="app.openSettings(${book.id})">⚙️ Settings</button>
-                        <button onclick="app.openEditor(${book.id})">✏️ Write</button>
+                        <button class="btn-card-write" onclick="app.openEditor(${book.id})">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Write
+                        </button>
+                        <button class="btn-card-settings" onclick="app.openSettings(${book.id})">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Settings
+                        </button>
                     </div>
                 </div>
                 `;
@@ -215,14 +254,14 @@ class SrishtyApp {
 
         } catch (err) {
             console.error('Dashboard Error:', err);
-            alert('Dashboard Error: ' + err.message);
-            grid.innerHTML = `<p style="color: #ff6b6b;">Failed to load stories. ${err.message}</p>`;
+            grid.innerHTML = `<div style="grid-column: 1/-1; color: var(--danger); text-align: center; padding: 40px;">⚠️ Failed to load library. Please check your connection.</div>`;
         }
     }
 
     /* ======== CREATE STORY VIEW ======== */
     resetCreateForm() {
-        document.getElementById('create-story-form').reset();
+        const form = document.getElementById('create-story-form');
+        if(form) form.reset();
     }
 
     async handleCreateStory(e) {
@@ -242,10 +281,9 @@ class SrishtyApp {
 
         try {
             const book = await this.fetchAPI('/core/books/', { method: 'POST', body: formData });
-            // Immediately open editor for a new Chapter 1
-            await this.openEditor(book.id, true);
+            await this.openEditor(book.id);
         } catch (err) {
-            alert(`Failed to create story. ${err.message}`);
+            alert(`Failed to create story: ${err.message}`);
         } finally {
             btn.textContent = 'Create Story';
             btn.disabled = false;
@@ -256,7 +294,7 @@ class SrishtyApp {
     async openEditor(bookId) {
         this.currentStoryId = bookId;
         this.switchView('editor');
-        this.quill.setText('Loading...\n');
+        this.quill.setText('Loading chapter...\n');
 
         try {
             const book = await this.fetchAPI(`/core/books/${bookId}/`);
@@ -268,7 +306,6 @@ class SrishtyApp {
             if (this.currentChapters.length === 0) {
                 this.createNewChapter();
             } else {
-                // Load first chapter
                 this.loadSelectedChapter(this.currentChapters[0].id);
             }
         } catch (err) {
@@ -322,47 +359,33 @@ class SrishtyApp {
         // Update UI state
         document.getElementById('chapter-audio').value = '';
         document.getElementById('audio-filename').textContent = 'Attach Audio';
+        document.getElementById('save-status').textContent = 'Saved';
+        document.getElementById('save-status').style.color = '#10B981';
         this.renderChapterList();
     }
 
     async createNewChapter() {
         const textContent = this.quill.getText().trim();
-        
-        // If we're on an unsaved new chapter with content, save it first!
         if (this.currentChapterId === null && textContent.length > 0) {
-            console.log('Studio: Auto-saving current draft before creating next...');
             await this.saveCurrentChapter();
         }
 
         const list = document.getElementById('sidebar-chapter-list');
-        
-        // Reset editor state for the next fresh chapter
         this.currentChapterId = null;
         this.quill.setText('');
         document.getElementById('editor-chapter-label').textContent = 'New Chapter';
         document.getElementById('save-status').textContent = 'Unsaved';
-        
-        // Add a new placeholder to the sidebar
-        const div = document.createElement('div');
-        div.className = 'chapter-item active';
-        div.dataset.id = 'new';
-        div.innerHTML = `<span>New Chapter *</span>`;
-        div.onclick = () => this.loadSelectedChapter('new');
+        document.getElementById('save-status').style.color = 'var(--accent-secondary)';
         
         // Remove active class from others
         document.querySelectorAll('.chapter-item').forEach(el => el.classList.remove('active'));
-        list.appendChild(div);
-        
         this.quill.focus();
     }
 
     async saveCurrentChapter() {
         const content = JSON.stringify(this.quill.getContents());
         const textContent = this.quill.getText().trim();
-        if(!textContent) {
-            alert('Please write something first!');
-            return;
-        }
+        if(!textContent) return; // Don't save empty
         
         const saveBtn = document.getElementById('save-indicator');
         const statusText = document.getElementById('save-status');
@@ -398,18 +421,18 @@ class SrishtyApp {
             
             saveBtn.textContent = 'Save Draft';
             statusText.textContent = 'Saved';
+            statusText.style.color = '#10B981';
             this.renderChapterList();
-            alert('Progress Saved!');
         } catch(e) {
             console.error('Save Error:', e);
-            alert(`Failed: ${e.message}`);
-            statusText.textContent = 'Error';
+            statusText.textContent = 'Save Error';
+            statusText.style.color = 'var(--danger)';
         }
     }
 
     async publishStory() {
         if (!this.currentStoryId) return;
-        if (!confirm('Are you ready to publish this story to the world?')) return;
+        if (!confirm('Ready to publish? This will make your story visible in the mobile app library.')) return;
 
         try {
             const formData = new FormData();
@@ -418,7 +441,7 @@ class SrishtyApp {
                 method: 'PATCH',
                 body: formData
             });
-            alert('Story Published successfully! 🎉');
+            alert('Story Published! 🚀');
             this.switchView('home');
         } catch (e) {
             alert(`Failed to publish: ${e.message}`);
@@ -470,7 +493,7 @@ class SrishtyApp {
                 method: 'PATCH',
                 body: formData
             });
-            alert('Settings Updated!');
+            alert('Story updated successfully!');
             this.switchView('home');
         } catch (e) {
             alert('Failed to save settings.');
@@ -480,5 +503,5 @@ class SrishtyApp {
     }
 }
 
-// Global initialization - Create instance immediately
+// Global initialization
 const app = new SrishtyApp();
