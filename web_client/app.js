@@ -325,28 +325,33 @@ class SrishtyApp {
         this.renderChapterList();
     }
 
-    createNewChapter() {
-        const list = document.getElementById('sidebar-chapter-list');
-        const existingNew = Array.from(list.children).find(el => el.dataset.id === 'new');
+    async createNewChapter() {
+        const textContent = this.quill.getText().trim();
         
-        // Reset editor state for a fresh chapter
+        // If we're on an unsaved new chapter with content, save it first!
+        if (this.currentChapterId === null && textContent.length > 0) {
+            console.log('Studio: Auto-saving current draft before creating next...');
+            await this.saveCurrentChapter();
+        }
+
+        const list = document.getElementById('sidebar-chapter-list');
+        
+        // Reset editor state for the next fresh chapter
         this.currentChapterId = null;
         this.quill.setText('');
         document.getElementById('editor-chapter-label').textContent = 'New Chapter';
         document.getElementById('save-status').textContent = 'Unsaved';
         
-        if (!existingNew) {
-            const div = document.createElement('div');
-            div.className = 'chapter-item active';
-            div.dataset.id = 'new';
-            div.innerHTML = `<span>New Chapter *</span>`;
-            div.onclick = () => this.loadSelectedChapter('new');
-            list.appendChild(div);
-        } else {
-            // If already exists, just make sure it looks active
-            document.querySelectorAll('.chapter-item').forEach(el => el.classList.remove('active'));
-            existingNew.classList.add('active');
-        }
+        // Add a new placeholder to the sidebar
+        const div = document.createElement('div');
+        div.className = 'chapter-item active';
+        div.dataset.id = 'new';
+        div.innerHTML = `<span>New Chapter *</span>`;
+        div.onclick = () => this.loadSelectedChapter('new');
+        
+        // Remove active class from others
+        document.querySelectorAll('.chapter-item').forEach(el => el.classList.remove('active'));
+        list.appendChild(div);
         
         this.quill.focus();
     }
