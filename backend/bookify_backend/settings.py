@@ -48,6 +48,10 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 INSTALLED_APPS = [
     'daphne',
+    'django-cors-headers',
+    'django-cloudinary-storage',
+    'cloudinary',
+    'firebase-admin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -61,6 +65,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'rest_framework_simplejwt',
+    'cloudinary_storage',
+    'cloudinary',
     'storages',
 
     # Local apps
@@ -193,6 +199,16 @@ STATICFILES_DIRS = [
 ]
 
 MEDIA_URL = '/media/'
+# Default to local storage for now, will switch to Cloudinary once credentials are provided
+DEFAULT_FILE_STORAGE = env('DEFAULT_FILE_STORAGE', default='django.core.files.storage.FileSystemStorage')
+
+# Cloudinary Settings (to be filled via Render Env Vars)
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default=''),
+    'API_KEY': env('CLOUDINARY_API_KEY', default=''),
+    'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
+}
+
 MEDIA_ROOT = BASE_DIR / 'media'
 
 CORS_ALLOW_ALL_ORIGINS = False
