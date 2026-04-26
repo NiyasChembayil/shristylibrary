@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://srishty-backend.onrender.com/api';
 
 class AdminApp {
     constructor() {
@@ -117,9 +117,13 @@ class AdminApp {
                 title.textContent = 'Dashboard Overview';
                 this.loadDashboard();
                 break;
-            case 'users':
-                title.textContent = 'User Management';
-                this.loadUsersView();
+            case 'users_verified':
+                title.textContent = 'Verified Users';
+                this.loadUsersView(true);
+                break;
+            case 'users_unverified':
+                title.textContent = 'Unverified Users';
+                this.loadUsersView(false);
                 break;
             case 'books':
                 title.textContent = 'Content Moderation';
@@ -166,10 +170,11 @@ class AdminApp {
         }
     }
 
-    async loadUsersView() {
+    async loadUsersView(isVerified = null) {
+        const titleText = isVerified === true ? 'Verified Platform Users' : (isVerified === false ? 'Unverified Platform Users' : 'Registered Platform Users');
         const container = document.getElementById('view-container');
         container.innerHTML = `<div class="glass section-card animate-slide-up">
-            <h3>Registered Platform Users</h3>
+            <h3>${titleText}</h3>
             <div class="table-container">
                 <table class="data-table">
                     <thead>
@@ -189,19 +194,58 @@ class AdminApp {
         </div>`;
 
         try {
-            const data = await this.fetchWithAuth(`${API_BASE_URL}/accounts/profile/`);
+            let url = `${API_BASE_URL}/accounts/profile/`;
+            if (isVerified !== null) {
+                url += `?is_verified=${isVerified}`;
+            }
+            const data = await this.fetchWithAuth(url);
             const target = document.getElementById('users-list-target');
-            target.innerHTML = data.results.map(profile => `
+            
+            // Server-side filtering fallback: ensure UI is filtered even if backend is still deploying
+            let profiles = data.results;
+            if (isVerified !== null) {
+                profiles = profiles.filter(p => p.is_verified === isVerified);
+            }
+            
+            if (profiles.length === 0) {
+                target.innerHTML = `<tr><td colspan="5">No users found.</td></tr>`;
+                return;
+            }
+
+            target.innerHTML = profiles.map(profile => `
                 <tr>
                     <td>#${profile.id}</td>
                     <td>${profile.username}</td>
                     <td>${profile.role}</td>
-                    <td><span class="status-badge ${profile.role}">Online</span></td>
-                    <td><button class="btn-action red">Block</button></td>
+                    <td>
+                        <button class="btn-action" onclick="adminApp.toggleVerify(${profile.id}, ${profile.is_verified})" style="background: ${profile.is_verified ? '#6C63FF' : '#444'}; margin-right: 5px;">${profile.is_verified ? 'Verified' : 'Verify'}</button>
+                        <button class="btn-action red">Block</button>
+                    </td>
                 </tr>
             `).join('');
         } catch (e) {
             console.error(e);
+        }
+    }
+
+    async toggleVerify(id, currentStatus) {
+        if(!confirm(`Are you sure you want to ${currentStatus ? 'remove verification from' : 'verify'} this user?`)) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/accounts/profile/${id}/toggle_verify/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                this.loadUsersView(this.currentView === 'users_verified' ? true : (this.currentView === 'users_unverified' ? false : null));
+            } else {
+                alert('Failed to update verification status.');
+            }
+        } catch (e) {
+            console.error('Toggle verify error:', e);
+            alert('A connection error occurred.');
         }
     }
 
@@ -341,7 +385,7 @@ class AdminApp {
         
         // Load mock settings from local storage or set defaults
         const settings = JSON.parse(localStorage.getItem('srishty_settings')) || {
-            platformName: 'Srishty StoryVerse',
+            platformName: 'Srishty',
             maintenanceMode: false,
             allowNewRegistrations: true,
             authorCommission: '70'
