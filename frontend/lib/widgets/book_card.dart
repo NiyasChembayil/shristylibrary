@@ -20,6 +20,7 @@ class BookCard extends ConsumerWidget {
   final int downloads;
   final VoidCallback onPlay;
   final VoidCallback onTap;
+  final bool authorIsVerified;
 
   const BookCard({
     super.key,
@@ -33,6 +34,7 @@ class BookCard extends ConsumerWidget {
     required this.downloads,
     required this.onPlay,
     required this.onTap,
+    this.authorIsVerified = false,
   });
 
   @override
@@ -113,14 +115,25 @@ class BookCard extends ConsumerWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            'by $author',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.white70,
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  'by $author',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ),
+                              if (authorIsVerified) ...[
+                                const SizedBox(width: 4),
+                                const Icon(Icons.verified, color: Colors.blue, size: 16),
+                              ],
+                            ],
                           ),
                         ),
                         const SizedBox(width: 12),

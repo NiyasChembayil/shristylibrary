@@ -21,6 +21,9 @@ class Profile(models.Model):
     notify_comments = models.BooleanField(default=True)
     notify_new_books = models.BooleanField(default=True)
     
+    # Verification
+    is_verified = models.BooleanField(default=False)
+    
     # Reader & Audio Preferences
     font_size = models.FloatField(default=16.0)
     reader_theme = models.CharField(max_length=20, default='Dark')

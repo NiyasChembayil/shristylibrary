@@ -17,6 +17,7 @@ class ProfileModel {
   final double playbackSpeed;
   final int userId;
   final String? email;
+  final bool isVerified;
 
   ProfileModel({
     required this.id,
@@ -37,6 +38,7 @@ class ProfileModel {
     this.fontSize = 16.0,
     this.readerTheme = 'Dark',
     this.playbackSpeed = 1.0,
+    this.isVerified = false,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
@@ -63,6 +65,7 @@ class ProfileModel {
       fontSize: (json['font_size'] as num?)?.toDouble() ?? 16.0,
       readerTheme: json['reader_theme'] ?? 'Dark',
       playbackSpeed: (json['playback_speed'] as num?)?.toDouble() ?? 1.0,
+      isVerified: json['is_verified'] ?? false,
     );
   }
 
@@ -95,6 +98,7 @@ class ProfileModel {
       'font_size': fontSize,
       'reader_theme': readerTheme,
       'playback_speed': playbackSpeed,
+      'is_verified': isVerified,
     };
   }
 }

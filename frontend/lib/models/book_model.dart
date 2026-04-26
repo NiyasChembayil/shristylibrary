@@ -17,6 +17,7 @@ class BookModel {
 
   final int authorProfileId;
   final bool isAuthorFollowing;
+  final bool authorIsVerified;
 
   BookModel({
     required this.id,
@@ -36,6 +37,7 @@ class BookModel {
     this.isLiked = false,
     this.downloadsCount = 0,
     this.audioUrl,
+    this.authorIsVerified = false,
   });
 
   factory BookModel.fromJson(Map<String, dynamic> json) {
@@ -69,6 +71,7 @@ class BookModel {
       categoryName: json['category_name'] ?? 'Novel',
       authorProfileId: json['author_profile_id'] ?? 0,
       isAuthorFollowing: json['is_author_following'] ?? false,
+      authorIsVerified: json['author_is_verified'] ?? false,
       coverUrl: cover,
       description: json['description'] ?? '',
       price: 0.0, // Platform is free
@@ -105,6 +108,7 @@ class BookModel {
     bool? isLiked,
     int? downloadsCount,
     String? audioUrl,
+    bool? authorIsVerified,
   }) {
     return BookModel(
       id: id ?? this.id,
@@ -124,6 +128,7 @@ class BookModel {
       isLiked: isLiked ?? this.isLiked,
       downloadsCount: downloadsCount ?? this.downloadsCount,
       audioUrl: audioUrl ?? this.audioUrl,
+      authorIsVerified: authorIsVerified ?? this.authorIsVerified,
     );
   }
 }

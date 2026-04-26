@@ -734,7 +734,7 @@ class SrishtyApp {
                     </div>
                     <div class="story-info-meta">
                         <div class="story-card-title">${book.title}</div>
-                        <div class="story-card-subtitle">by ${book.author_name}</div>
+                        <div class="story-card-subtitle">by ${book.author_name}${book.author_is_verified ? ' <svg width="14" height="14" fill="#00D2FF" style="vertical-align: text-bottom; margin-left: 2px;" viewBox="0 0 24 24"><path d="M9 16.172l-4.172-4.172-1.414 1.414L9 19 21 7l-1.414-1.414L9 16.172z"/></svg>' : ''}</div>
                         <div style="margin-top: 8px; font-size: 11px; color: var(--text-secondary);">
                             ${book.total_reads} reads • ${book.likes_count} likes
                         </div>

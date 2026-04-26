@@ -38,11 +38,11 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = [
             'id', 'user_id', 'username', 'email', 'password', 'role', 'bio', 'avatar', 
-            'followers_count', 'following_count', 'is_following',
+            'followers_count', 'following_count', 'is_following', 'is_verified',
             'is_private', 'notify_new_follower', 'notify_likes', 'notify_comments', 
             'notify_new_books', 'font_size', 'reader_theme', 'playback_speed'
         ]
-        read_only_fields = ['id', 'user_id', 'role', 'followers_count', 'following_count', 'is_following']
+        read_only_fields = ['id', 'user_id', 'role', 'followers_count', 'following_count', 'is_following', 'is_verified']
 
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', {})

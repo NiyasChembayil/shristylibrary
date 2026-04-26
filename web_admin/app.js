@@ -196,12 +196,35 @@ class AdminApp {
                     <td>#${profile.id}</td>
                     <td>${profile.username}</td>
                     <td>${profile.role}</td>
-                    <td><span class="status-badge ${profile.role}">Online</span></td>
-                    <td><button class="btn-action red">Block</button></td>
+                    <td>
+                        <button class="btn-action" onclick="adminApp.toggleVerify(${profile.id}, ${profile.is_verified})" style="background: ${profile.is_verified ? '#6C63FF' : '#444'}; margin-right: 5px;">${profile.is_verified ? 'Verified' : 'Verify'}</button>
+                        <button class="btn-action red">Block</button>
+                    </td>
                 </tr>
             `).join('');
         } catch (e) {
             console.error(e);
+        }
+    }
+
+    async toggleVerify(id, currentStatus) {
+        if(!confirm(`Are you sure you want to ${currentStatus ? 'remove verification from' : 'verify'} this user?`)) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/accounts/profile/${id}/toggle_verify/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                this.loadUsersView();
+            } else {
+                alert('Failed to update verification status.');
+            }
+        } catch (e) {
+            console.error('Toggle verify error:', e);
+            alert('A connection error occurred.');
         }
     }
 

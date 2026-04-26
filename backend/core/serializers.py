@@ -16,6 +16,7 @@ class ChapterSerializer(serializers.ModelSerializer):
 class BookSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(read_only=True)
     author_name = serializers.ReadOnlyField(source='author.username')
+    author_is_verified = serializers.ReadOnlyField(source='author.profile.is_verified')
     category_name = serializers.ReadOnlyField(source='category.name')
     author_profile_id = serializers.SerializerMethodField()
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), required=False, allow_null=True)
@@ -30,7 +31,7 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
-            'id', 'title', 'slug', 'author', 'author_name', 'author_profile_id', 'is_author_following', 'cover', 'audio_file',
+            'id', 'title', 'slug', 'author', 'author_name', 'author_is_verified', 'author_profile_id', 'is_author_following', 'cover', 'audio_file',
             'description', 'category', 'category_name', 'language', 'tags', 'price', 'region',
             'is_published', 'created_at', 'updated_at', 'chapters',
             'likes_count', 'comments_count', 'total_reads', 'is_in_library', 'is_liked',

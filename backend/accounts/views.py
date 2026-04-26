@@ -153,3 +153,10 @@ class ProfileViewSet(viewsets.ModelViewSet):
             profile.save()
             return Response({"status": "success", "role": profile.role})
         return Response({"status": "already_author", "role": profile.role})
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def toggle_verify(self, request, pk=None):
+        profile = self.get_object()
+        profile.is_verified = not profile.is_verified
+        profile.save()
+        return Response({"status": "success", "is_verified": profile.is_verified})

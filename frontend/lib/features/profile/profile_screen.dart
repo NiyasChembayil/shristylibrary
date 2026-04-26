@@ -186,9 +186,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                   const SizedBox(height: 15),
 
                   // Username
-                  Text(
-                    profile.username,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        profile.username,
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      if (profile.isVerified) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.verified, color: Colors.blue, size: 20),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 6),
 
