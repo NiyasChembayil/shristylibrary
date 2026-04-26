@@ -35,7 +35,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-nt#3g3^zxpq&rohn2+x%9#z9j7+$a43q@p1&6x(l=+_&#l!zg7')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=False)
 
 # Parse database configuration from $DATABASE_URL
 # Automatically fall back to SQLite if no variable provided.
