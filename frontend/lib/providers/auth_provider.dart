@@ -226,16 +226,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (state.profile == null) return;
     
     final currentProfile = state.profile!;
-    final newProfile = ProfileModel(
-      id: currentProfile.id,
-      username: currentProfile.username,
-      role: currentProfile.role,
-      bio: currentProfile.bio,
-      avatar: currentProfile.avatar,
-      followersCount: currentProfile.followersCount,
+    final newProfile = currentProfile.copyWith(
       followingCount: currentProfile.followingCount + delta,
-      userId: currentProfile.userId,
-      email: currentProfile.email,
     );
     
     state = AuthState(

@@ -101,4 +101,48 @@ class ProfileModel {
       'is_verified': isVerified,
     };
   }
+
+  ProfileModel copyWith({
+    int? id,
+    String? username,
+    String? role,
+    String? bio,
+    String? avatar,
+    int? followersCount,
+    int? followingCount,
+    bool? isFollowing,
+    bool? isPrivate,
+    bool? notifyNewFollower,
+    bool? notifyLikes,
+    bool? notifyComments,
+    bool? notifyNewBooks,
+    double? fontSize,
+    String? readerTheme,
+    double? playbackSpeed,
+    int? userId,
+    String? email,
+    bool? isVerified,
+  }) {
+    return ProfileModel(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      role: role ?? this.role,
+      bio: bio ?? this.bio,
+      avatar: avatar ?? this.avatar,
+      followersCount: followersCount ?? this.followersCount,
+      followingCount: followingCount ?? this.followingCount,
+      isFollowing: isFollowing ?? this.isFollowing,
+      isPrivate: isPrivate ?? this.isPrivate,
+      notifyNewFollower: notifyNewFollower ?? this.notifyNewFollower,
+      notifyLikes: notifyLikes ?? this.notifyLikes,
+      notifyComments: notifyComments ?? this.notifyComments,
+      notifyNewBooks: notifyNewBooks ?? this.notifyNewBooks,
+      fontSize: fontSize ?? this.fontSize,
+      readerTheme: readerTheme ?? this.readerTheme,
+      playbackSpeed: playbackSpeed ?? this.playbackSpeed,
+      userId: userId ?? this.userId,
+      email: email ?? this.email,
+      isVerified: isVerified ?? this.isVerified,
+    );
+  }
 }

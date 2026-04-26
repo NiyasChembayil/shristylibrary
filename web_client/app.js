@@ -37,9 +37,10 @@ class SrishtyApp {
 
     async fetchCategories() {
         try {
-            const cats = await this.fetchAPI('/core/categories/');
+            const data = await this.fetchAPI('/core/categories/');
+            const cats = data?.results || data;
             const select = document.getElementById('create-category');
-            if(select) {
+            if(select && cats && Array.isArray(cats)) {
                 cats.forEach(c => {
                     const opt = document.createElement('option');
                     opt.value = c.id;
@@ -48,7 +49,6 @@ class SrishtyApp {
                 });
             }
         } catch (e) { console.error('Cat Fetch Error:', e); }
-    }
 
     setupQuill() {
         if (!document.getElementById('editor-container')) return;
@@ -90,8 +90,18 @@ class SrishtyApp {
         }
         if (this.token) Object.assign(headers, { 'Authorization': `Bearer ${this.token}` });
         
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
-        if (response.status === 401) { this.logout(); return null; }
+        let response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+        
+        // If 401, the token might be expired. Logout to clear it and try one last time as a guest.
+        if (response.status === 401 && this.token) {
+            this.logout();
+            const guestHeaders = { ...options.headers };
+            if (!(options.body instanceof FormData)) {
+                guestHeaders['Content-Type'] = 'application/json';
+            }
+            response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers: guestHeaders });
+        }
+
         if (!response.ok) {
             const bodyText = await response.text();
             let errorMessage = `API Error ${response.status}`;
@@ -242,7 +252,8 @@ class SrishtyApp {
         `;
         
         try {
-            const myBooks = await this.fetchAPI('/core/books/my_books/');
+            const data = await this.fetchAPI('/core/books/my_books/');
+            const myBooks = data?.results || data;
             
             if (!myBooks || myBooks.length === 0) {
                 grid.innerHTML = `
@@ -642,7 +653,8 @@ class SrishtyApp {
 
     async loadAnalyticsData() {
         try {
-            const books = await this.fetchAPI('/core/books/my_books/');
+            const data = await this.fetchAPI('/core/books/my_books/');
+            const books = data?.results || data;
             let totalReads = 0;
             let totalLikes = 0;
             let totalDownloads = 0;
@@ -720,7 +732,7 @@ class SrishtyApp {
 
     renderExploreGrid(books) {
         const grid = document.getElementById('explore-grid');
-        if (books.length === 0) {
+        if (!books || books.length === 0) {
             grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px;">No stories found match your search.</p>';
             return;
         }
