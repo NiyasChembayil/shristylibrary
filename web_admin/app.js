@@ -194,13 +194,14 @@ class AdminApp {
         </div>`;
 
         try {
-            const data = await this.fetchWithAuth(`${API_BASE_URL}/accounts/profile/`);
+            let url = `${API_BASE_URL}/accounts/profile/`;
+            if (isVerified !== null) {
+                url += `?is_verified=${isVerified}`;
+            }
+            const data = await this.fetchWithAuth(url);
             const target = document.getElementById('users-list-target');
             
-            let profiles = data.results;
-            if (isVerified !== null) {
-                profiles = profiles.filter(p => p.is_verified === isVerified);
-            }
+            const profiles = data.results;
             
             if (profiles.length === 0) {
                 target.innerHTML = `<tr><td colspan="5">No users found.</td></tr>`;
