@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://srishty-backend.onrender.com/api';
+const API_BASE_URL = `${window.location.origin}/api`;
 
 class AdminApp {
     constructor() {
