@@ -154,8 +154,10 @@ class ProfileViewSet(viewsets.ModelViewSet):
             return Response({"status": "success", "role": profile.role})
         return Response({"status": "already_author", "role": profile.role})
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def toggle_verify(self, request, pk=None):
+        if not hasattr(request.user, 'profile') or request.user.profile.role != 'admin':
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
         profile = self.get_object()
         profile.is_verified = not profile.is_verified
         profile.save()
