@@ -15,10 +15,19 @@ class AudioLibraryScreen extends ConsumerStatefulWidget {
 }
 
 class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() => ref.read(myBooksProvider.notifier).fetchMyBooks());
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -31,7 +40,7 @@ class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+              padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
               child: Row(
                 children: [
                   IconButton(
@@ -51,6 +60,47 @@ class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
                 ],
               ),
             ),
+            
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15),
+              child: Container(
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
+                  },
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: 'Search by title or author...',
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                    prefixIcon: const Icon(Icons.search_rounded, color: Colors.white54),
+                    suffixIcon: _searchQuery.isNotEmpty 
+                      ? IconButton(
+                          icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                          onPressed: () {
+                            setState(() {
+                              _searchController.clear();
+                              _searchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ),
+
             Expanded(
               child: _buildContent(state),
             ),
@@ -65,8 +115,15 @@ class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
       return const Center(child: CircularProgressIndicator(color: Color(0xFF6C63FF)));
     }
 
-    if (state.books.isEmpty) {
-      return _buildEmptyState();
+    final filteredBooks = _searchQuery.isEmpty 
+      ? state.books 
+      : state.books.where((book) => 
+          book.title.toLowerCase().contains(_searchQuery) || 
+          book.authorName.toLowerCase().contains(_searchQuery)
+        ).toList();
+
+    if (filteredBooks.isEmpty) {
+      return _searchQuery.isEmpty ? _buildEmptyState() : _buildNoSearchResults();
     }
 
     return RefreshIndicator(
@@ -75,9 +132,9 @@ class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
       backgroundColor: const Color(0xFF1E1E2E),
       child: ListView.builder(
         padding: const EdgeInsets.only(bottom: 120),
-        itemCount: state.books.length,
+        itemCount: filteredBooks.length,
         itemBuilder: (context, index) {
-          final book = state.books[index];
+          final book = filteredBooks[index];
           return BookCard(
             id: book.id,
             title: book.title,
@@ -129,6 +186,21 @@ class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildNoSearchResults() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.search_off_rounded, size: 80, color: Colors.white24),
+          const SizedBox(height: 20),
+          const Text('No matches found', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white70)),
+          const SizedBox(height: 10),
+          Text('Try searching for something else in your library.', style: TextStyle(color: Colors.white38)),
+        ],
       ),
     );
   }
