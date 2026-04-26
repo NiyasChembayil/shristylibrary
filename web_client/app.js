@@ -170,7 +170,10 @@ class SrishtyApp {
                 body: JSON.stringify({ username: user, password: pass })
             });
             
-            if (!res.ok) throw new Error('Invalid credentials');
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.detail || 'Incorrect username or password.');
+            }
             const data = await res.json();
             
             this.token = data.access;
@@ -182,7 +185,7 @@ class SrishtyApp {
         } catch (err) {
             console.error('Auth error:', err);
             errorEl.style.display = 'block';
-            errorEl.textContent = this.isSignUpMode ? 'Registration failed. Try a different username.' : 'Incorrect username or password.';
+            errorEl.textContent = err.message || (this.isSignUpMode ? 'Registration failed. Please check your details.' : 'Incorrect username or password.');
         } finally {
             btn.textContent = this.isSignUpMode ? 'Register' : 'Sign In';
             btn.disabled = false;
