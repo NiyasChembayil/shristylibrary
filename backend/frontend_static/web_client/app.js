@@ -3,7 +3,7 @@ const API_BASE_URL = window.location.origin.includes('localhost') ? 'http://127.
 // Security: XSS Prevention Utility
 function escapeHTML(str) {
     if (!str) return '';
-    return String(str).replace(/[&<>"']/g, function(m) {
+    return String(str).replace(/[&<>"']/g, function (m) {
         return {
             '&': '&amp;',
             '<': '&lt;',
@@ -21,14 +21,14 @@ class SrishtyApp {
         this.currentView = 'home';
         this.isSignUpMode = false;
         this.quill = null;
-        
+
         // Studio State
         this.currentStoryId = null;
         this.currentChapters = [];
         this.currentChapterId = null;
         this.allExploreBooks = [];
         this.currentExploreCategory = null;
-        
+
         // Wait for DOM to be ready before init
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
@@ -40,7 +40,7 @@ class SrishtyApp {
     async init() {
         console.log('App: Initializing Srishty Studio PRO...');
         this.checkAuth();
-        
+
         try {
             this.setupQuill();
             this.fetchCategories();
@@ -55,10 +55,10 @@ class SrishtyApp {
             if (!data) return;
             const cats = data.results || data;
             const select = document.getElementById('create-category');
-            if(select && Array.isArray(cats)) {
+            if (select && Array.isArray(cats)) {
                 // Clear existing options except first
                 while (select.options.length > 1) select.remove(1);
-                
+
                 cats.forEach(c => {
                     const opt = document.createElement('option');
                     opt.value = c.id;
@@ -71,7 +71,7 @@ class SrishtyApp {
 
     setupQuill() {
         if (!document.getElementById('editor-container')) return;
-        
+
         this.quill = new Quill('#editor-container', {
             theme: 'snow',
             modules: {
@@ -79,7 +79,7 @@ class SrishtyApp {
                     [{ 'header': [1, 2, 3, false] }],
                     ['bold', 'italic', 'underline', 'strike'],
                     ['blockquote', 'image'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                     ['clean']
                 ]
             },
@@ -90,11 +90,11 @@ class SrishtyApp {
             const text = this.quill.getText().trim();
             const count = text.length > 0 ? text.split(/\s+/).length : 0;
             const wordCountEl = document.getElementById('word-count');
-            if(wordCountEl) wordCountEl.textContent = `${count.toLocaleString()} words`;
-            
+            if (wordCountEl) wordCountEl.textContent = `${count.toLocaleString()} words`;
+
             // Subtle auto-save indicator
             const statusText = document.getElementById('save-status');
-            if(statusText && statusText.textContent === 'Saved') {
+            if (statusText && statusText.textContent === 'Saved') {
                 statusText.textContent = 'Editing...';
                 statusText.style.color = 'var(--text-secondary)';
             }
@@ -108,9 +108,9 @@ class SrishtyApp {
             headers['Content-Type'] = 'application/json';
         }
         if (this.token) Object.assign(headers, { 'Authorization': `Bearer ${this.token}` });
-        
+
         let response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
-        
+
         // If 401, the token might be expired. Logout to clear it and try one last time as a guest.
         if (response.status === 401 && this.token) {
             this.logout();
@@ -138,34 +138,34 @@ class SrishtyApp {
     checkAuth() {
         const gw = document.getElementById('auth-gateway');
         const shell = document.getElementById('app-shell');
-        
+
         if (!this.token) {
             gw.classList.remove('hidden');
             shell.classList.add('hidden');
         } else {
             gw.classList.add('hidden');
             shell.classList.remove('hidden');
-            
+
             // Update Navbar Profile
             const usernameEl = document.getElementById('nav-username');
             const initialsEl = document.getElementById('nav-initials');
             const welcome = document.getElementById('welcome-message');
-            
-            if(usernameEl) usernameEl.textContent = this.currentUser;
-            if(initialsEl && this.currentUser) initialsEl.textContent = this.currentUser.substring(0, 2).toUpperCase();
-            if(welcome) welcome.textContent = `Welcome back, ${this.currentUser} 👋`;
-            
+
+            if (usernameEl) usernameEl.textContent = this.currentUser;
+            if (initialsEl && this.currentUser) initialsEl.textContent = this.currentUser.substring(0, 2).toUpperCase();
+            if (welcome) welcome.textContent = `Welcome back, ${this.currentUser} 👋`;
+
             this.switchView('home');
         }
     }
 
     async handleAuth(e) {
-        if(e) e.preventDefault();
+        if (e) e.preventDefault();
         const user = document.getElementById('auth-user').value;
         const pass = document.getElementById('auth-pass').value;
         const errorEl = document.getElementById('auth-error');
         const btn = document.getElementById('auth-btn');
-        
+
         btn.textContent = 'Authenticating...';
         btn.disabled = true;
         errorEl.style.display = 'none';
@@ -183,18 +183,18 @@ class SrishtyApp {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: user, password: pass })
             });
-            
+
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
                 throw new Error(errData.detail || 'Incorrect username or password.');
             }
             const data = await res.json();
-            
+
             this.token = data.access;
             this.currentUser = user;
             localStorage.setItem('access_token', this.token);
             localStorage.setItem('username', user);
-            
+
             this.checkAuth();
         } catch (err) {
             console.error('Auth error:', err);
@@ -231,21 +231,21 @@ class SrishtyApp {
         });
 
         const activeView = document.getElementById(`view-${viewName}`);
-        if(activeView) {
+        if (activeView) {
             activeView.classList.remove('hidden');
             // Trigger smooth fade-in
             setTimeout(() => {
                 activeView.style.opacity = '1';
             }, 50);
         }
-        
+
         this.currentView = viewName;
 
         // Update Nav Active State
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.remove('active');
         });
-        
+
         if (viewName === 'home') document.getElementById('nav-home').classList.add('active');
         if (viewName === 'analytics') document.getElementById('nav-analytics').classList.add('active');
 
@@ -272,11 +272,11 @@ class SrishtyApp {
             <div class="skeleton-card"></div>
             <div class="skeleton-card"></div>
         `;
-        
+
         try {
             const data = await this.fetchAPI('/core/books/my_books/');
             const myBooks = data?.results || data;
-            
+
             if (!myBooks || myBooks.length === 0) {
                 grid.innerHTML = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 60px; background: white; border-radius: 24px; border: 2px dashed var(--border-color);">
@@ -293,7 +293,7 @@ class SrishtyApp {
                 const coverUrl = this.getMediaUrl(book.cover);
                 const statusClass = book.is_published ? 'status-published' : 'status-draft';
                 const statusLabel = book.is_published ? 'Published' : 'Draft';
-                
+
                 return `
                 <div class="story-card">
                     <div class="story-card-img">
@@ -330,7 +330,7 @@ class SrishtyApp {
     /* ======== CREATE STORY VIEW ======== */
     resetCreateForm() {
         const form = document.getElementById('create-story-form');
-        if(form) form.reset();
+        if (form) form.reset();
     }
 
     async handleCreateStory(e) {
@@ -344,10 +344,10 @@ class SrishtyApp {
         formData.append('description', document.getElementById('create-desc').value);
         formData.append('tags', document.getElementById('create-tags').value);
         formData.append('language', document.getElementById('create-language').value);
-        
+
         const catId = document.getElementById('create-category').value;
         if (catId) formData.append('category', catId);
-        
+
         const coverFile = document.getElementById('create-cover').files[0];
         if (coverFile) formData.append('cover', coverFile);
 
@@ -358,7 +358,7 @@ class SrishtyApp {
 
         try {
             const book = await this.fetchAPI('/core/books/', { method: 'POST', body: formData });
-            
+
             // If an import file is selected, process it
             if (importFile) {
                 btn.textContent = 'Importing Chapters...';
@@ -404,7 +404,7 @@ class SrishtyApp {
             const book = await this.fetchAPI(`/core/books/${bookId}/`);
             document.getElementById('editor-story-title').textContent = book.title;
             this.currentChapters = book.chapters || [];
-            
+
             this.renderChapterList();
 
             if (this.currentChapters.length === 0) {
@@ -421,7 +421,7 @@ class SrishtyApp {
     renderChapterList() {
         const list = document.getElementById('sidebar-chapter-list');
         list.innerHTML = '';
-        
+
         this.currentChapters.forEach((ch, idx) => {
             const div = document.createElement('div');
             div.className = `chapter-item ${ch.id === this.currentChapterId ? 'active' : ''}`;
@@ -459,7 +459,7 @@ class SrishtyApp {
                 this.loadChapterContent(chap);
             }
         }
-        
+
         // Update UI state
         this.renderChapterList();
     }
@@ -476,7 +476,7 @@ class SrishtyApp {
         document.getElementById('editor-chapter-label').textContent = 'New Chapter';
         document.getElementById('save-status').textContent = 'Unsaved';
         document.getElementById('save-status').style.color = 'var(--accent-secondary)';
-        
+
         // Remove active class from others
         document.querySelectorAll('.chapter-item').forEach(el => el.classList.remove('active'));
         this.quill.focus();
@@ -485,8 +485,8 @@ class SrishtyApp {
     async saveCurrentChapter() {
         const content = this.quill.getText();
         const textContent = content.trim();
-        if(!textContent) return; // Don't save empty
-        
+        if (!textContent) return; // Don't save empty
+
         const saveBtn = document.getElementById('save-indicator');
         const statusText = document.getElementById('save-status');
         saveBtn.textContent = 'Saving...';
@@ -515,12 +515,12 @@ class SrishtyApp {
                 this.currentChapterId = newChap.id;
                 this.currentChapters.push(newChap);
             }
-            
+
             saveBtn.textContent = 'Save Draft';
             statusText.textContent = 'Saved';
             statusText.style.color = '#10B981';
             this.renderChapterList();
-        } catch(e) {
+        } catch (e) {
             console.error('Save Error:', e);
             statusText.textContent = 'Save Error';
             statusText.style.color = 'var(--danger)';
@@ -547,21 +547,21 @@ class SrishtyApp {
 
     /* ======== SETTINGS VIEW ======== */
     async openSettings(bookId) {
-        if(!bookId) bookId = this.currentStoryId;
-        if(!bookId) return;
+        if (!bookId) bookId = this.currentStoryId;
+        if (!bookId) return;
 
         this.currentStoryId = bookId;
         this.switchView('settings');
-        
+
         try {
             const book = await this.fetchAPI(`/core/books/${bookId}/`);
             document.getElementById('settings-title').value = book.title;
             document.getElementById('settings-desc').value = book.description;
             document.getElementById('settings-status').value = book.is_published ? 'published' : 'draft';
-            
+
             const preview = document.getElementById('settings-cover-preview');
             const coverUrl = this.getMediaUrl(book.cover);
-            if(coverUrl) {
+            if (coverUrl) {
                 preview.src = coverUrl;
                 preview.style.display = 'block';
             } else {
@@ -584,15 +584,15 @@ class SrishtyApp {
         e.preventDefault();
         const btn = document.getElementById('settings-btn');
         btn.textContent = 'Saving...';
-        
+
         const formData = new FormData();
         formData.append('title', document.getElementById('settings-title').value);
         formData.append('description', document.getElementById('settings-desc').value);
         formData.append('is_published', document.getElementById('settings-status').value === 'published');
-        
+
         const coverFile = document.getElementById('settings-cover').files[0];
         if (coverFile) formData.append('cover', coverFile);
-        
+
         const audioFile = document.getElementById('settings-audio').files[0];
         if (audioFile) formData.append('audio_file', audioFile);
 
@@ -621,7 +621,7 @@ class SrishtyApp {
         reader.onload = async (event) => {
             const fullText = event.target.result;
             const chapters = this.parseChapters(fullText);
-            
+
             try {
                 // 1. Create the Book
                 const formData = new FormData();
@@ -652,7 +652,7 @@ class SrishtyApp {
         // Look for "Chapter X" or "CHAPTER X" or "chapter X"
         const chapterRegex = /(?:^|\n)\s*(?:Chapter|CHAPTER|chapter)\s+(\d+|[IVX]+|[A-Z]+).*\n/g;
         const matches = [...text.matchAll(chapterRegex)];
-        
+
         if (matches.length === 0) {
             // No chapter markers found, treat whole file as one chapter
             return [{ title: 'Chapter 1', content: text }];
@@ -661,10 +661,10 @@ class SrishtyApp {
         const results = [];
         for (let i = 0; i < matches.length; i++) {
             const start = matches[i].index;
-            const end = (i + 1 < matches.length) ? matches[i+1].index : text.length;
+            const end = (i + 1 < matches.length) ? matches[i + 1].index : text.length;
             const rawTitle = matches[i][0].trim();
             const content = text.substring(start + matches[i][0].length, end).trim();
-            
+
             results.push({
                 title: rawTitle,
                 content: content
@@ -721,7 +721,7 @@ class SrishtyApp {
     async loadExploreData() {
         const grid = document.getElementById('explore-grid');
         grid.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>';
-        
+
         try {
             this.allExploreBooks = await this.fetchAPI('/core/books/');
             this.renderExploreGrid(this.allExploreBooks);
@@ -743,9 +743,9 @@ class SrishtyApp {
     filterExplore() {
         const query = document.getElementById('explore-search').value.toLowerCase();
         const filtered = this.allExploreBooks.filter(book => {
-            const matchesQuery = book.title.toLowerCase().includes(query) || 
-                                 book.author_name.toLowerCase().includes(query) ||
-                                 (book.tags && book.tags.toLowerCase().includes(query));
+            const matchesQuery = book.title.toLowerCase().includes(query) ||
+                book.author_name.toLowerCase().includes(query) ||
+                (book.tags && book.tags.toLowerCase().includes(query));
             const matchesCat = !this.currentExploreCategory || book.category_name === this.currentExploreCategory;
             return matchesQuery && matchesCat && book.is_published;
         });
