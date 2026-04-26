@@ -8,6 +8,7 @@ from .models import Profile
 from .serializers import UserSerializer, ProfileSerializer, RegisterSerializer, UserListSerializer
 from core.models import ReadStats
 from social.models import Follow, Notification
+from core.permissions import IsOwnerOrReadOnly
 
 class AuthViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.AllowAny]
@@ -39,7 +40,7 @@ class AuthViewSet(viewsets.GenericViewSet):
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     filterset_fields = ['is_verified', 'role']
     search_fields = ['user__username', 'bio']

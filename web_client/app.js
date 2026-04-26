@@ -1,5 +1,19 @@
 const API_BASE_URL = window.location.origin.includes('localhost') ? 'http://127.0.0.1:8000/api' : 'https://srishty-backend.onrender.com/api';
 
+// Security: XSS Prevention Utility
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m];
+    });
+}
+
 class SrishtyApp {
     constructor() {
         this.token = localStorage.getItem('access_token');
@@ -290,7 +304,7 @@ class SrishtyApp {
                         </div>
                     </div>
                     <div class="story-info-meta">
-                        <div class="story-card-title">${book.title}</div>
+                        <div class="story-card-title">${escapeHTML(book.title)}</div>
                         <div class="story-card-subtitle">${book.chapters_count || 0} Chapters • 0 Reads</div>
                     </div>
                     <div class="story-card-actions">
@@ -412,7 +426,7 @@ class SrishtyApp {
             const div = document.createElement('div');
             div.className = `chapter-item ${ch.id === this.currentChapterId ? 'active' : ''}`;
             div.innerHTML = `
-                <span>${ch.title || 'Chapter ' + (idx + 1)}</span>
+                <span>${escapeHTML(ch.title) || 'Chapter ' + (idx + 1)}</span>
                 <span style="font-size: 10px; opacity: 0.5;">${idx + 1}</span>
             `;
             div.onclick = () => this.loadSelectedChapter(ch.id);
@@ -679,8 +693,8 @@ class SrishtyApp {
                 tr.style.borderBottom = '1px solid var(--border-color)';
                 tr.innerHTML = `
                     <td style="padding: 16px 8px;">
-                        <div style="font-weight: 600;">${book.title}</div>
-                        <div style="font-size: 11px; color: var(--text-secondary);">${book.category_name || 'Uncategorized'}</div>
+                        <div style="font-weight: 600;">${escapeHTML(book.title)}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">${escapeHTML(book.category_name) || 'Uncategorized'}</div>
                     </td>
                     <td style="padding: 16px 8px; font-weight: 700;">${book.total_reads || 0}</td>
                     <td style="padding: 16px 8px;">${book.likes_count || 0}</td>

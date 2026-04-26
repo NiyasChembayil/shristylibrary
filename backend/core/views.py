@@ -14,7 +14,7 @@ from django.utils.decorators import method_decorator
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, permissions.IsAdminUser]
     lookup_field = 'slug'
 
 from .permissions import IsOwnerOrReadOnly
@@ -310,12 +310,17 @@ class BookViewSet(viewsets.ModelViewSet):
 class ChapterViewSet(viewsets.ModelViewSet):
     queryset = Chapter.objects.all().select_related('book')
     serializer_class = ChapterSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_queryset(self):
         return Chapter.objects.filter(book_id=self.kwargs['book_pk'])
 
     def perform_create(self, serializer):
-        serializer.save(book_id=self.kwargs['book_pk'])
+        from django.core.exceptions import PermissionDenied
+        book_id = self.kwargs['book_pk']
+        # Verify ownership before creating chapter
+        if not Book.objects.filter(id=book_id, author=self.request.user).exists():
+            raise PermissionDenied("You do not have permission to add chapters to this book.")
+        serializer.save(book_id=book_id)
 
 
