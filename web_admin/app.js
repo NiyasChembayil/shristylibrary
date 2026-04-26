@@ -170,42 +170,58 @@ class AdminApp {
         }
     }
 
-    async loadUsersView(isVerified = null) {
+    async searchUsers(event, isVerified) {
+        if (event.key === 'Enter' || event.target.value.length >= 3 || event.target.value.length === 0) {
+            this.loadUsersView(isVerified, event.target.value);
+        }
+    }
+
+    async loadUsersView(isVerified = null, searchQuery = '') {
         const titleText = isVerified === true ? 'Verified Platform Users' : (isVerified === false ? 'Unverified Platform Users' : 'Registered Platform Users');
         const container = document.getElementById('view-container');
-        container.innerHTML = `<div class="glass section-card animate-slide-up">
-            <h3>${titleText}</h3>
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>User ID</th>
-                            <th>Username</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="users-list-target">
-                        <tr><td colspan="5">Loading user data...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>`;
+        
+        // If we already have the search bar, don't re-render the whole container to avoid losing focus
+        let target = document.getElementById('users-list-target');
+        if (!target) {
+            container.innerHTML = `<div class="glass section-card animate-slide-up">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">${titleText}</h3>
+                    <div class="search-box" style="position: relative;">
+                        <input type="text" id="user-search-input" placeholder="Search by username..." 
+                            style="padding: 10px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; width: 250px;"
+                            onkeyup="adminApp.searchUsers(event, ${isVerified})"
+                            value="${searchQuery}">
+                        <span style="position: absolute; right: 15px; top: 10px; opacity: 0.5;">🔍</span>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list-target">
+                            <tr><td colspan="5">Loading user data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+            target = document.getElementById('users-list-target');
+        }
 
         try {
-            let url = `${API_BASE_URL}/accounts/profile/`;
-            if (isVerified !== null) {
-                url += `?is_verified=${isVerified}`;
-            }
+            let url = `${API_BASE_URL}/accounts/profile/?`;
+            if (isVerified !== null) url += `is_verified=${isVerified}&`;
+            if (searchQuery) url += `search=${searchQuery}`;
+
             const data = await this.fetchWithAuth(url);
-            const target = document.getElementById('users-list-target');
             
-            // Server-side filtering fallback: ensure UI is filtered even if backend is still deploying
-            let profiles = data.results;
-            if (isVerified !== null) {
-                profiles = profiles.filter(p => p.is_verified === isVerified);
-            }
+            let profiles = data.results || data;
             
             if (profiles.length === 0) {
                 target.innerHTML = `<tr><td colspan="5">No users found.</td></tr>`;
@@ -225,6 +241,7 @@ class AdminApp {
             `).join('');
         } catch (e) {
             console.error(e);
+            if (target) target.innerHTML = `<tr><td colspan="5">Error loading users.</td></tr>`;
         }
     }
 

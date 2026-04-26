@@ -86,9 +86,9 @@ class SettingsScreen extends ConsumerWidget {
                   settings.isPrivateAccount, 
                   (val) => settingsNotifier.updateSetting('isPrivateAccount', val),
                 ),
-                _buildListTile('Who can comment', subtitle: 'Everyone', icon: Icons.comment_outlined),
-                _buildListTile('Block users', icon: Icons.block),
-                _buildListTile('Two-factor authentication', subtitle: 'Coming soon', icon: Icons.verified_user_outlined),
+                _buildListTile('Who can comment', subtitle: 'Coming soon', icon: Icons.comment_outlined, enabled: false),
+                _buildListTile('Block users', subtitle: 'Coming soon', icon: Icons.block, enabled: false),
+                _buildListTile('Two-factor authentication', subtitle: 'Coming soon', icon: Icons.verified_user_outlined, enabled: false),
               ],
             ),
 
@@ -202,17 +202,17 @@ class SettingsScreen extends ConsumerWidget {
             _buildSectionHeader('7. LANGUAGE & REGION', Icons.language),
             _buildGlassCard(
               children: [
-                _buildListTile('App language', subtitle: 'English (US)', icon: Icons.translate),
-                _buildListTile('Content language', subtitle: 'Global', icon: Icons.public),
+                _buildListTile('App language', subtitle: 'English (US) - Default', icon: Icons.translate, enabled: false),
+                _buildListTile('Content language', subtitle: 'Global - Default', icon: Icons.public, enabled: false),
               ],
             ),
 
             _buildSectionHeader('8. CREATOR SETTINGS', Icons.draw_outlined),
               _buildGlassCard(
                 children: [
-                  _buildListTile('Payment account', subtitle: 'UPI / Bank', icon: Icons.account_balance),
-                  _buildListTile('Earnings dashboard', icon: Icons.bar_chart),
-                  _buildListTile('Upload preferences', icon: Icons.cloud_upload_outlined),
+                  _buildListTile('Payment account', subtitle: 'Coming soon', icon: Icons.account_balance, enabled: false),
+                  _buildListTile('Earnings dashboard', subtitle: 'Coming soon', icon: Icons.bar_chart, enabled: false),
+                  _buildListTile('Upload preferences', subtitle: 'Coming soon', icon: Icons.cloud_upload_outlined, enabled: false),
                 ],
               ),
 
@@ -220,9 +220,9 @@ class SettingsScreen extends ConsumerWidget {
             _buildSectionHeader('9. HELP & SUPPORT', Icons.help_outline),
             _buildGlassCard(
               children: [
-                _buildListTile('Help center', icon: Icons.support_agent),
-                _buildListTile('Contact support', icon: Icons.mail_outline),
-                _buildListTile('FAQ', icon: Icons.question_answer_outlined),
+                _buildListTile('Help center', subtitle: 'Coming soon', icon: Icons.support_agent, enabled: false),
+                _buildListTile('Contact support', subtitle: 'Coming soon', icon: Icons.mail_outline, enabled: false),
+                _buildListTile('FAQ', subtitle: 'Coming soon', icon: Icons.question_answer_outlined, enabled: false),
               ],
             ),
 
@@ -240,10 +240,11 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 _buildListTile(
                   'Delete account', 
-                  subtitle: 'Permanent action', 
+                  subtitle: 'Coming soon', 
                   icon: Icons.delete_forever, 
-                  textColor: Colors.redAccent,
-                  iconColor: Colors.redAccent,
+                  textColor: Colors.redAccent.withValues(alpha: 0.5),
+                  iconColor: Colors.redAccent.withValues(alpha: 0.5),
+                  enabled: false,
                 ),
               ],
             ),
@@ -297,14 +298,14 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildListTile(String title, {String? subtitle, required IconData icon, Color? textColor, Color? iconColor, VoidCallback? onTap}) {
+  Widget _buildListTile(String title, {String? subtitle, required IconData icon, Color? textColor, Color? iconColor, VoidCallback? onTap, bool enabled = true}) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-      leading: Icon(icon, color: iconColor ?? Colors.white70, size: 22),
-      title: Text(title, style: TextStyle(color: textColor ?? Colors.white, fontSize: 15)),
-      subtitle: subtitle != null ? Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 11)) : null,
-      trailing: const Icon(Icons.chevron_right, color: Colors.white24, size: 18),
-      onTap: onTap,
+      leading: Icon(icon, color: (iconColor ?? Colors.white70).withValues(alpha: enabled ? 1.0 : 0.3), size: 22),
+      title: Text(title, style: TextStyle(color: (textColor ?? Colors.white).withValues(alpha: enabled ? 1.0 : 0.3), fontSize: 15)),
+      subtitle: subtitle != null ? Text(subtitle, style: TextStyle(color: Colors.white38.withValues(alpha: enabled ? 1.0 : 0.3), fontSize: 11)) : null,
+      trailing: enabled ? const Icon(Icons.chevron_right, color: Colors.white24, size: 18) : null,
+      onTap: enabled ? onTap : null,
     );
   }
 
