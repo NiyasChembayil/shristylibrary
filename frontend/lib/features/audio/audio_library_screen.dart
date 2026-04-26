@@ -87,6 +87,7 @@ class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
             coverUrl: book.coverUrl,
             likes: book.likesCount,
             downloads: book.downloadsCount,
+            authorIsVerified: book.authorIsVerified,
             onPlay: () {
               if (book.audioUrl == null || book.audioUrl!.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(

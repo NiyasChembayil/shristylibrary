@@ -303,9 +303,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             style: const TextStyle(color: Colors.white))
                         : null,
                   ),
-                  title: Text(profile.username,
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
+                  title: Row(
+                    children: [
+                      Text(profile.username,
+                          style: const TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold)),
+                      if (profile.isVerified) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.verified, color: Colors.blue, size: 16),
+                      ],
+                    ],
+                  ),
                   subtitle: Text(profile.role,
                       style: const TextStyle(color: Colors.white70)),
                   trailing: const Icon(Icons.chevron_right, color: Colors.white24),
@@ -331,6 +339,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     coverUrl: book.coverUrl,
                     likes: book.likesCount,
                     downloads: book.downloadsCount,
+                    authorIsVerified: book.authorIsVerified,
                     onPlay: () => _playVoice(book),
                     onTap: () => _navigateToDetail(book)),
               )),
