@@ -25,6 +25,15 @@ from rest_framework_simplejwt.views import (
 from .admin_views import AdminDashboardViewSet
 from rest_framework import routers
 from django.views.generic import TemplateView
+import os
+from django.http import HttpResponse
+
+def list_files(request):
+    files = []
+    for root, dirs, filenames in os.walk(settings.BASE_DIR):
+        for f in filenames:
+            files.append(os.path.relpath(os.path.join(root, f), settings.BASE_DIR))
+    return HttpResponse("<br>".join(files))
 
 router = routers.DefaultRouter()
 router.register(r'admin-stats', AdminDashboardViewSet, basename='admin-stats')
@@ -36,6 +45,7 @@ urlpatterns = [
     path('studio/', TemplateView.as_view(template_name='web_client/studio.html'), name='author-studio'),
     path('studio.html', TemplateView.as_view(template_name='web_client/studio.html')),
     path('portal/', TemplateView.as_view(template_name='web_admin/index.html'), name='admin-ui'),
+    path('debug-files/', list_files),
 
     path('admin/', admin.site.urls),
     
