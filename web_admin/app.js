@@ -201,7 +201,11 @@ class AdminApp {
             const data = await this.fetchWithAuth(url);
             const target = document.getElementById('users-list-target');
             
-            const profiles = data.results;
+            // Server-side filtering fallback: ensure UI is filtered even if backend is still deploying
+            let profiles = data.results;
+            if (isVerified !== null) {
+                profiles = profiles.filter(p => p.is_verified === isVerified);
+            }
             
             if (profiles.length === 0) {
                 target.innerHTML = `<tr><td colspan="5">No users found.</td></tr>`;
