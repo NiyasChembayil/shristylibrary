@@ -29,6 +29,9 @@ class Profile(models.Model):
     reader_theme = models.CharField(max_length=20, default='Dark')
     playback_speed = models.FloatField(default=1.0)
     
+    # Push Notifications
+    fcm_token = models.CharField(max_length=255, null=True, blank=True)
+    
     def __str__(self):
         return f"{self.user.username}'s Profile"
 

@@ -5,7 +5,7 @@ class AdminApp {
         this.token = localStorage.getItem('srishty_admin_token');
         this.user = JSON.parse(localStorage.getItem('srishty_admin_user'));
         this.currentView = 'dashboard';
-        
+
         this.init();
     }
 
@@ -39,7 +39,7 @@ class AdminApp {
                 e.preventDefault();
                 const view = item.id.replace('nav-', '');
                 this.switchView(view);
-                
+
                 // Update UI state
                 navItems.forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
@@ -62,7 +62,7 @@ class AdminApp {
             if (response.ok) {
                 const data = await response.json();
                 this.token = data.access;
-                
+
                 // Validate if user is admin
                 const profileRes = await this.fetchWithAuth(`${API_BASE_URL}/accounts/profile/me/`);
                 if (profileRes.role !== 'admin') {
@@ -74,7 +74,7 @@ class AdminApp {
                 this.user = profileRes;
                 localStorage.setItem('srishty_admin_token', this.token);
                 localStorage.setItem('srishty_admin_user', JSON.stringify(this.user));
-                
+
                 this.checkAuth();
                 this.loadDashboard();
             } else {
@@ -179,7 +179,7 @@ class AdminApp {
     async loadUsersView(isVerified = null, searchQuery = '') {
         const titleText = isVerified === true ? 'Verified Platform Users' : (isVerified === false ? 'Unverified Platform Users' : 'Registered Platform Users');
         const container = document.getElementById('view-container');
-        
+
         // If we already have the search bar, don't re-render the whole container to avoid losing focus
         let target = document.getElementById('users-list-target');
         if (!target) {
@@ -220,9 +220,9 @@ class AdminApp {
             if (searchQuery) url += `search=${searchQuery}`;
 
             const data = await this.fetchWithAuth(url);
-            
+
             let profiles = data.results || data;
-            
+
             if (profiles.length === 0) {
                 target.innerHTML = `<tr><td colspan="5">No users found.</td></tr>`;
                 return;
@@ -246,7 +246,7 @@ class AdminApp {
     }
 
     async toggleVerify(id, currentStatus) {
-        if(!confirm(`Are you sure you want to ${currentStatus ? 'remove verification from' : 'verify'} this user?`)) return;
+        if (!confirm(`Are you sure you want to ${currentStatus ? 'remove verification from' : 'verify'} this user?`)) return;
         try {
             const response = await fetch(`${API_BASE_URL}/accounts/profile/${id}/toggle_verify/`, {
                 method: 'POST',
@@ -325,9 +325,9 @@ class AdminApp {
 
         try {
             const stats = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/stats/`);
-            
+
             // Generate simulated 30-day historical data ending at 'total revenue'
-            const days = Array.from({length: 30}, (_, i) => `Day ${i+1}`);
+            const days = Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`);
             let currentRev = 0;
             const revData = days.map((_, i) => {
                 const increase = (stats.revenue.total / 30) * (Math.random() * 0.5 + 0.75);
@@ -358,11 +358,11 @@ class AdminApp {
                     maintainAspectRatio: false,
                     plugins: { legend: { labels: { color: '#fff' } } },
                     scales: {
-                        y: { 
+                        y: {
                             grid: { color: 'rgba(255, 255, 255, 0.1)' },
                             ticks: { color: '#rgba(255, 255, 255, 0.6)' }
                         },
-                        x: { 
+                        x: {
                             grid: { display: false },
                             ticks: { display: false }
                         }
@@ -385,7 +385,7 @@ class AdminApp {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { 
+                    plugins: {
                         legend: { position: 'bottom', labels: { color: '#fff', padding: 20 } }
                     },
                     cutout: '70%'
@@ -399,7 +399,7 @@ class AdminApp {
 
     loadSettingsView() {
         const container = document.getElementById('view-container');
-        
+
         // Load mock settings from local storage or set defaults
         const settings = JSON.parse(localStorage.getItem('srishty_settings')) || {
             platformName: 'Srishty',
@@ -465,7 +465,7 @@ class AdminApp {
                 maintenanceMode: document.getElementById('set-maintenance').checked,
                 allowNewRegistrations: document.getElementById('set-register').checked,
             };
-            
+
             localStorage.setItem('srishty_settings', JSON.stringify(newSettings));
             alert('Settings successfully saved!');
         });

@@ -68,18 +68,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           body: _buildFeedTab(state),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
-          );
-          ref.read(postFeedProvider.notifier).loadFeed();
-        },
-        backgroundColor: const Color(0xFF6C63FF),
-        icon: const Icon(Icons.edit_rounded, color: Colors.white),
-        label: const Text('Post', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ),
     );
   }
 

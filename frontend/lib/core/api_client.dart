@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 final apiClientProvider = Provider((ref) => ApiClient());
 
 // ⚠️ BEFORE RELEASING TO PLAY STORE:
@@ -19,8 +18,8 @@ class ApiClient {
   final Dio dio = Dio(
     BaseOptions(
       baseUrl: _baseUrl,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
+      connectTimeout: const Duration(seconds: 60),
+      receiveTimeout: const Duration(seconds: 60),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -31,7 +30,8 @@ class ApiClient {
   ApiClient() {
     // Only log requests in debug mode — never in production builds
     if (kDebugMode) {
-      dio.interceptors.add(LogInterceptor(responseBody: true, requestBody: true));
+      dio.interceptors
+          .add(LogInterceptor(responseBody: true, requestBody: true));
     }
 
     // Add interceptor to handle 401 Unauthorized (Expired Tokens)
@@ -42,7 +42,8 @@ class ApiClient {
           clearAuthToken();
           debugPrint("Auth: Token expired/invalid (401). Cleared headers.");
         } else if (e.response?.statusCode == 500) {
-          debugPrint("⚠️ SERVER ERROR (500): The backend crashed. Check Render logs.");
+          debugPrint(
+              "⚠️ SERVER ERROR (500): The backend crashed. Check Render logs.");
           debugPrint("URL: ${e.requestOptions.uri}");
           debugPrint("Response: ${e.response?.data}");
         } else {

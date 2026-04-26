@@ -21,3 +21,4 @@ dj-database-url
 gunicorn
 cloudinary
 django-cloudinary-storage
+firebase-admin

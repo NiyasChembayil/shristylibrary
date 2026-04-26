@@ -7,12 +7,24 @@ import 'features/auth/login_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/purchase_provider.dart';
 import 'services/notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'core/push_notification_service.dart';
+import 'core/api_client.dart';
 
 // No longer needed: AudioHandler is managed via Riverpod provider now.
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  } catch (e) {
+    debugPrint("Firebase: Skipping initialization (No config found or error): $e");
+  }
+
   // Use a manual container to allow background initialization after runApp
   final container = ProviderContainer();
 
@@ -41,6 +53,8 @@ class SrishtyApp extends ConsumerWidget {
       ref.watch(purchaseProvider);
       // Initialize Real-time Notifications
       ref.read(notificationServiceProvider).init();
+      // Initialize Push Notifications (FCM)
+      PushNotificationService.initialize(ref.read(apiClientProvider));
     } else {
       // Disconnect if no longer authenticated
       ref.read(notificationServiceProvider).disconnect();

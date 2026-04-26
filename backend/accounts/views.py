@@ -176,3 +176,14 @@ class ProfileViewSet(viewsets.ModelViewSet):
             )
 
         return Response({"status": "success", "is_verified": profile.is_verified})
+
+    @action(detail=False, methods=['post'])
+    def update_fcm_token(self, request):
+        token = request.data.get('token')
+        if not token:
+            return Response({"error": "Token is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        profile = request.user.profile
+        profile.fcm_token = token
+        profile.save()
+        return Response({"status": "success"})

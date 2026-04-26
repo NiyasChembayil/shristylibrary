@@ -18,6 +18,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
 
 from .permissions import IsOwnerOrReadOnly
+from .notifications import notify_followers_new_chapter
 
 class BookViewSet(viewsets.ModelViewSet):
     serializer_class = BookSerializer
@@ -270,6 +271,11 @@ class BookViewSet(viewsets.ModelViewSet):
                         content=content,
                         order=index
                     )
+                    # Notify followers of new chapter
+                    try:
+                        notify_followers_new_chapter(chapter)
+                    except Exception:
+                        pass
                     
                 chapters_created.append({
                     'id': chapter.id,
@@ -321,6 +327,12 @@ class ChapterViewSet(viewsets.ModelViewSet):
         # Verify ownership before creating chapter
         if not Book.objects.filter(id=book_id, author=self.request.user).exists():
             raise PermissionDenied("You do not have permission to add chapters to this book.")
-        serializer.save(book_id=book_id)
+        chapter = serializer.save(book_id=book_id)
+        
+        # Notify followers
+        try:
+            notify_followers_new_chapter(chapter)
+        except Exception:
+            pass
 
 
