@@ -11,7 +11,7 @@ class ChapterSerializer(serializers.ModelSerializer):
     book = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Chapter
-        fields = ['id', 'title', 'content', 'order']
+        fields = ['id', 'book', 'title', 'content', 'order']
 
 class BookSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(read_only=True)
