@@ -163,4 +163,15 @@ class ProfileViewSet(viewsets.ModelViewSet):
         profile = self.get_object()
         profile.is_verified = not profile.is_verified
         profile.save()
+
+        # Send notification if verified
+        if profile.is_verified:
+            from social.models import Notification
+            Notification.objects.create(
+                recipient=profile.user,
+                actor=request.user,
+                action_type='SYSTEM',
+                message="Congratulations! 🎉 Your account has been officially verified with the Blue Tick. Welcome to the verified elite of Srishty!"
+            )
+
         return Response({"status": "success", "is_verified": profile.is_verified})

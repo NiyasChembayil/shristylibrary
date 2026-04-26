@@ -170,7 +170,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                     TextSpan(text: _getActionText(notif['action_type'])),
                     if (notif['book_title'] != null && notif['action_type'] != 'LIKE' && notif['action_type'] != 'POST_LIKE')
                       TextSpan(text: notif['book_title'], style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white70)),
-                    if (notif['message'] != null && (notif['action_type'] == 'COMMENT' || notif['action_type'] == 'POST_COMMENT'))
+                    if (notif['message'] != null && (notif['action_type'] == 'COMMENT' || notif['action_type'] == 'POST_COMMENT' || notif['action_type'] == 'SYSTEM'))
                       TextSpan(text: ' "${notif['message']}"', style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.white70)),
                     TextSpan(
                       text: '  $timeAgo',
@@ -245,6 +245,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       case 'FOLLOW': return ' started following you.';
       case 'NEW_BOOK': return ' published a new book: ';
       case 'REPOST': return ' reposted your post.';
+      case 'SYSTEM': return ': ';
       default: return ' sent a notification. ';
     }
   }
