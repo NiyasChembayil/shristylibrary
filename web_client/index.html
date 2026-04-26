@@ -3,343 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Srishty Author Studio</title>
-    <!-- Fonts -->
+    <title>Srishty | Where Stories Live</title>
+    <meta name="description" content="Srishty is the world's most-loved social storytelling platform. Connect through the power of story.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Styles -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=20240426_v1">
-    <link rel="icon" href="/static/assets/logo.png" type="image/x-icon">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-dark: #5A52D5;
+            --secondary: #FF6584;
+            --bg-dark: #0F0F1E;
+            --surface: #1E1E2E;
+            --text-main: #FFFFFF;
+            --text-dim: #A0A0B8;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, .logo-text {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(15, 15, 30, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo img {
+            height: 40px;
+            width: 40px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #FFF 0%, #AAA 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+            font-size: 15px;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .btn-login {
+            color: white !important;
+            border: 1px solid var(--glass-border);
+            padding: 10px 25px;
+            border-radius: 100px;
+            background: var(--glass);
+        }
+
+        .btn-signup {
+            background: var(--primary);
+            color: white !important;
+            padding: 10px 25px;
+            border-radius: 100px;
+            box-shadow: 0 10px 20px rgba(108, 99, 255, 0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 10%;
+            position: relative;
+            background: radial-gradient(circle at 80% 20%, rgba(108, 99, 255, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 10% 80%, rgba(255, 101, 132, 0.1) 0%, transparent 40%);
+        }
+
+        .hero-content {
+            max-width: 600px;
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            font-weight: 900;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: var(--text-dim);
+            margin-bottom: 40px;
+            max-width: 500px;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-hero {
+            padding: 18px 40px;
+            border-radius: 100px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 18px;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 15px 30px rgba(108, 99, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(108, 99, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--glass);
+            color: white;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-5px);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 10%;
+            background: var(--surface);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-header h2 {
+            font-size: 42px;
+            margin-bottom: 15px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .card {
+            background: var(--bg-dark);
+            padding: 50px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            transition: 0.4s;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 25px;
+            display: block;
+        }
+
+        .card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .card p {
+            color: var(--text-dim);
+        }
+
+        /* Animation Background */
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: var(--primary);
+            filter: blur(150px);
+            opacity: 0.1;
+            z-index: -1;
+            animation: move 20s infinite alternate;
+        }
+
+        @keyframes move {
+            from { transform: translate(-10%, -10%); }
+            to { transform: translate(10%, 10%); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            nav { padding: 20px; }
+            .nav-links { display: none; }
+            .hero h1 { font-size: 42px; }
+            .cta-group { flex-direction: column; }
+            .hero { text-align: center; padding-top: 100px; justify-content: center; }
+        }
+    </style>
 </head>
 <body>
+    <div class="blob"></div>
 
-    <!-- AUTH GATEWAY -->
-    <div id="auth-gateway" class="auth-gateway">
-        <div class="auth-card">
-            <h1>Srishty</h1>
-            <p>Digital Author Studio</p>
-            
-            <form id="auth-form" onsubmit="app.handleAuth(event); return false;">
-                <div class="form-group"><input type="text" id="auth-user" class="form-input" placeholder="Username" required></div>
-                <div id="signup-extra" class="hidden form-group">
-                    <input type="email" id="auth-email" class="form-input" placeholder="Email (optional)">
-                </div>
-                <div class="form-group"><input type="password" id="auth-pass" class="form-input" placeholder="Password" required></div>
-                
-                <p id="auth-error" style="color: #ef4444; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none;"></p>
-                
-                <button type="submit" class="btn-primary" id="auth-btn">Sign In</button>
-            </form>
-            
-            <p style="margin-top: 24px; font-size: 14px; color: var(--text-secondary); font-weight: 500;">
-                <span id="auth-toggle-text">New to Srishty?</span> 
-                <a href="#" onclick="app.toggleAuthMode(event)" style="color: var(--accent-primary); font-weight: 700; text-decoration: none; margin-left: 4px;">Create Account</a>
-            </p>
+    <nav>
+        <a href="/" class="logo">
+            <img src="./assets/logo.png" alt="Srishty Logo">
+            <span class="logo-text">Srishty</span>
+        </a>
+        <div class="nav-links">
+            <a href="#">Browse</a>
+            <a href="#">Community</a>
+            <a href="./studio.html">Write</a>
+            <a href="./studio.html" class="btn-login">Sign In</a>
+            <a href="./studio.html" class="btn-signup">Get Started</a>
         </div>
-    </div>
+    </nav>
 
-    <!-- MAIN APP SHELL -->
-    <div id="app-shell" class="hidden">
-        
-        <!-- TOP NAVBAR -->
-        <nav class="top-nav" id="top-navbar">
-            <div class="nav-left">
-                <div class="nav-brand" onclick="app.switchView('home')">
-                    <span style="color: var(--accent-primary)">Srishty</span>Studio
-                </div>
+    <header class="hero">
+        <div class="hero-content">
+            <h1>Hi, we're Srishty.<br>Where stories live.</h1>
+            <p>Connect with a global community of readers and writers through the power of story. Your next obsession is waiting.</p>
+            <div class="cta-group">
+                <a href="./studio.html" class="btn-hero btn-primary">Start Reading</a>
+                <a href="./studio.html" class="btn-hero btn-secondary">Start Writing</a>
             </div>
+        </div>
+    </header>
 
-            <div class="nav-center">
-                <span class="nav-link active" id="nav-home" onclick="app.switchView('home')">My Stories</span>
-                <span class="nav-link" id="nav-analytics" onclick="app.switchView('analytics')">Analytics</span>
-                <span class="nav-link" id="nav-explore" onclick="app.switchView('explore')">Explore</span>
+    <section class="features">
+        <div class="section-header">
+            <h2>Your story starts here.</h2>
+            <p>Join the world's most-loved social storytelling platform.</p>
+        </div>
+        <div class="grid">
+            <div class="card">
+                <span class="card-icon">📖</span>
+                <h3>Read.</h3>
+                <p>Discover stories you'll love from writers around the world. From romance to mystery, find your next favorite read.</p>
             </div>
-
-            <div class="nav-right">
-                <div class="profile-group" onclick="alert('Profile settings coming soon!')">
-                    <div class="profile-info">
-                        <span class="profile-name" id="nav-username">Author</span>
-                        <span class="profile-role" id="nav-role">Pro Author</span>
-                    </div>
-                    <div class="profile-avatar" id="nav-initials">AU</div>
-                </div>
-                <button class="btn-logout" onclick="app.logout()" title="Logout">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-                </button>
+            <div class="card">
+                <span class="card-icon">✍️</span>
+                <h3>Write.</h3>
+                <p>Share your voice with the world. Our platform gives you the tools to create, publish, and grow your audience.</p>
             </div>
-        </nav>
-
-        <!-- MAIN VIEWPORT -->
-        <main class="main-viewport">
-            
-            <!-- VIEW: DASHBOARD (Home) -->
-            <div id="view-home" class="view-content hidden">
-                <div class="container">
-                    <div class="dashboard-header">
-                        <div class="welcome-msg">
-                            <h2 id="welcome-message">Welcome back, Author 👋</h2>
-                            <p>Ready to continue your masterpiece?</p>
-                        </div>
-                        <div style="display: flex; gap: 12px;">
-                            <button class="btn-outline" onclick="document.getElementById('import-file').click()">
-                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                Import (.txt)
-                            </button>
-                            <input type="file" id="import-file" accept=".txt" style="display: none;" onchange="app.handleBulkImport(event)">
-                            <button class="btn-primary" onclick="app.switchView('create')">
-                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                                Create New Story
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="section-title">
-                        Your Library
-                    </div>
-                    
-                    <div class="story-grid" id="story-grid">
-                        <!-- Dynamic Stories Loaded Here -->
-                        <p style="color: var(--text-secondary); grid-column: 1/-1; text-align: center; padding: 40px;">Loading your library...</p>
-                    </div>
-                </div>
+            <div class="card">
+                <span class="card-icon">🤝</span>
+                <h3>Connect.</h3>
+                <p>Join a community that celebrates creativity. Follow your favorite authors and discuss stories with fellow readers.</p>
             </div>
+        </div>
+    </section>
 
-            <!-- VIEW: CREATE NEW STORY -->
-            <div id="view-create" class="view-content hidden">
-                <div class="container" style="max-width: 800px;">
-                    <div class="section-title">Create New Story</div>
-                    <div style="background: white; padding: 40px; border-radius: 24px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
-                        <form id="create-story-form" onsubmit="app.handleCreateStory(event)">
-                            <div class="form-group">
-                                <label>Title</label>
-                                <input type="text" id="create-title" class="form-input" placeholder="e.g. The Midnight Express" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Category</label>
-                                <select id="create-category" class="form-input" required>
-                                    <!-- Populated by JS -->
-                                    <option value="">Select Category</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <textarea id="create-desc" class="form-input" placeholder="What is your story about?" rows="4"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Tags</label>
-                                <input type="text" id="create-tags" class="form-input" placeholder="fantasy, adventure, magic">
-                            </div>
-                            <div class="form-group">
-                                <label>Cover Image</label>
-                                <input type="file" id="create-cover" class="form-input" style="padding: 10px;">
-                            </div>
-                            <div class="form-group">
-                                <label>Audio File (Full Story)</label>
-                                <input type="file" id="create-audio" class="form-input" accept="audio/*" style="padding: 10px;">
-                            </div>
-                            <div class="form-group">
-                                <label>Language</label>
-                                <select id="create-language" class="form-input">
-                                    <option value="English">English</option>
-                                    <option value="Malayalam">Malayalam</option>
-                                    <option value="Hindi">Hindi</option>
-                                </select>
-                            </div>
-                            <div class="form-group" style="background: var(--glass-bg); padding: 15px; border-radius: 12px; margin-top: 20px; border: 1px dashed var(--accent-primary);">
-                                <label style="color: var(--accent-primary); font-weight: bold;">Import Chapters (Optional)</label>
-                                <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">Select a .txt file to automatically create chapters.</p>
-                                <input type="file" id="create-import-file" class="form-input" accept=".txt" style="padding: 10px;">
-                            </div>
-                            
-                            <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 40px;">
-                                <button type="button" class="btn-outline" onclick="app.switchView('home')">Cancel</button>
-                                <button type="submit" class="btn-primary" id="create-btn">Create & Import Story</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEW: STORY SETTINGS -->
-            <div id="view-settings" class="view-content hidden">
-                <div class="container" style="max-width: 800px;">
-                    <div class="section-title">Story Settings</div>
-                    <div style="background: white; padding: 40px; border-radius: 24px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
-                        <form id="settings-story-form" onsubmit="app.handleSaveSettings(event)">
-                            <div class="form-group">
-                                <label>Title</label>
-                                <input type="text" id="settings-title" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <textarea id="settings-desc" class="form-input" rows="4"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Cover Image</label>
-                                <div style="display: flex; gap: 20px; align-items: center; width: 100%;">
-                                    <input type="file" id="settings-cover" class="form-input" style="flex: 1;">
-                                    <img id="settings-cover-preview" src="" style="width: 80px; height: 120px; object-fit: cover; border-radius: 8px; display: none; box-shadow: var(--shadow-sm);">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Update Audio</label>
-                                <div style="display: flex; gap: 20px; align-items: center; width: 100%;">
-                                    <input type="file" id="settings-audio" class="form-input" accept="audio/*" style="flex: 1;">
-                                    <span id="settings-audio-label" style="font-size: 11px; color: var(--text-secondary);">No audio</span>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Visibility</label>
-                                <select id="settings-status" class="form-input">
-                                    <option value="draft">Draft (Private)</option>
-                                    <option value="published">Published (Public)</option>
-                                </select>
-                            </div>
-                            
-                            <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 40px;">
-                                <button type="button" class="btn-outline" onclick="app.switchView('home')">Cancel</button>
-                                <button type="submit" class="btn-primary" id="settings-btn">Save Changes</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEW: EDITOR -->
-            <div id="view-editor" class="view-content hidden">
-                <div class="editor-layout">
-                    
-                    <aside class="pane-sidebar">
-                        <div class="sidebar-header">
-                            <span>Table of Contents</span>
-                            <button class="btn-primary" style="padding: 6px 12px; border-radius: 8px;" onclick="app.createNewChapter()" title="Add Chapter">+</button>
-                        </div>
-                        <div class="chapter-list" id="sidebar-chapter-list">
-                            <!-- Dynamic chapters -->
-                        </div>
-                    </aside>
-
-                    <section class="pane-main">
-                        <div class="editor-navbar">
-                            <div style="display: flex; align-items: center; gap: 16px;">
-                                <button class="btn-outline" style="padding: 8px 12px;" onclick="app.switchView('home')">
-                                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
-                                </button>
-                                <div>
-                                    <h4 id="editor-story-title">Story Title</h4>
-                                    <p id="editor-chapter-label" style="font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;">Chapter 1</p>
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 12px;">
-                                <button class="btn-outline" onclick="app.saveCurrentChapter()" id="save-indicator">Save Draft</button>
-                                <button class="btn-primary" onclick="app.publishStory()">Publish</button>
-                            </div>
-                        </div>
-
-                        <div class="editor-writing-area">
-                            <div id="editor-container"></div>
-                        </div>
-
-                        <div class="editor-footer">
-                            <div style="display: flex; gap: 24px;">
-                                <span id="word-count">0 words</span>
-                                <span id="save-status" style="color: #10B981">Auto-saved</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 16px;">
-                                <button class="btn-quiet" onclick="app.openSettings()">Settings</button>
-                            </div>
-                        </div>
-                    </section>
-
-                </div>
-            </div>
-
-            <!-- VIEW: EXPLORE -->
-            <div id="view-explore" class="view-content hidden">
-                <div class="container">
-                    <div class="dashboard-header">
-                        <div class="welcome-msg">
-                            <h2>Explore Stories</h2>
-                            <p>Discover your next favorite masterpiece</p>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap;">
-                        <input type="text" id="explore-search" class="form-input" placeholder="Search stories, authors, or tags..." style="max-width: 400px; padding: 12px 20px;" onkeyup="app.filterExplore()">
-                        <div id="category-filters" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;">
-                            <span class="cat-chip active" onclick="app.setExploreCategory(null)">All</span>
-                            <span class="cat-chip" onclick="app.setExploreCategory('Fantasy')">Fantasy</span>
-                            <span class="cat-chip" onclick="app.setExploreCategory('Romance')">Romance</span>
-                            <span class="cat-chip" onclick="app.setExploreCategory('Horror')">Horror</span>
-                            <span class="cat-chip" onclick="app.setExploreCategory('Mystery')">Mystery</span>
-                        </div>
-                    </div>
-
-                    <div class="story-grid" id="explore-grid">
-                        <!-- Dynamic Stories -->
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- VIEW: ANALYTICS -->
-            <div id="view-analytics" class="view-content hidden">
-                <div class="container">
-                    <div class="section-title">Performance Analytics</div>
-                    
-                    <!-- Top Stat Cards -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 40px;">
-                        <div class="stat-card" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: white; padding: 24px; border-radius: 20px; box-shadow: var(--shadow-md);">
-                            <div style="font-size: 14px; opacity: 0.8;">Total Reads</div>
-                            <div id="total-reads" style="font-size: 32px; font-weight: bold; margin-top: 8px;">0</div>
-                            <div style="font-size: 11px; margin-top: 4px; opacity: 0.7;">Across all stories</div>
-                        </div>
-                        <div class="stat-card" style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%); color: white; padding: 24px; border-radius: 20px; box-shadow: var(--shadow-md);">
-                            <div style="font-size: 14px; opacity: 0.8;">Total Likes</div>
-                            <div id="total-likes" style="font-size: 32px; font-weight: bold; margin-top: 8px;">0</div>
-                            <div style="font-size: 11px; margin-top: 4px; opacity: 0.7;">Community engagement</div>
-                        </div>
-                        <div class="stat-card" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 24px; border-radius: 20px; box-shadow: var(--shadow-md);">
-                            <div style="font-size: 14px; opacity: 0.8;">Total Downloads</div>
-                            <div id="total-downloads" style="font-size: 32px; font-weight: bold; margin-top: 8px;">0</div>
-                            <div style="font-size: 11px; margin-top: 4px; opacity: 0.7;">Library additions</div>
-                        </div>
-                    </div>
-
-                    <!-- Story Breakdown -->
-                    <div style="background: white; border-radius: 24px; padding: 32px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
-                        <h3 style="margin-bottom: 24px;">Story-by-Story Breakdown</h3>
-                        <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                                <thead>
-                                    <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-size: 13px;">
-                                        <th style="padding: 16px 8px;">Story Title</th>
-                                        <th style="padding: 16px 8px;">Reads</th>
-                                        <th style="padding: 16px 8px;">Likes</th>
-                                        <th style="padding: 16px 8px;">Downloads</th>
-                                        <th style="padding: 16px 8px;">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="analytics-table-body">
-                                    <!-- Rows populated by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-        </main>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <script src="./app.js?v=20240426_v1"></script>
-    <div style="position: fixed; bottom: 16px; left: 16px; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); color: white; padding: 6px 12px; border-radius: 100px; font-size: 10px; font-weight: 700; pointer-events: none; border: 1px solid rgba(255,255,255,0.1);">
-        STUDIO v4.0 PRO
-    </div>
+    <footer style="padding: 50px 10%; background: var(--bg-dark); border-top: 1px solid var(--glass-border); text-align: center; color: var(--text-dim); font-size: 14px;">
+        <p>&copy; 2024 Srishty Platform. All rights reserved.</p>
+    </footer>
 </body>
 </html>
