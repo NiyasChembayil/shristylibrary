@@ -275,7 +275,5 @@ if USE_S3:
 else:
     # Use Cloudinary as an alternative if configured
     CLOUDINARY_URL = env('CLOUDINARY_URL', default='')
-    if CLOUDINARY_URL:
-        INSTALLED_APPS.append('cloudinary_storage')
-        INSTALLED_APPS.append('cloudinary')
+    if CLOUDINARY_URL and not env('CLOUDINARY_CLOUD_NAME', default=''):
         DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
