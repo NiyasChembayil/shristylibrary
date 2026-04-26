@@ -117,9 +117,13 @@ class AdminApp {
                 title.textContent = 'Dashboard Overview';
                 this.loadDashboard();
                 break;
-            case 'users':
-                title.textContent = 'User Management';
-                this.loadUsersView();
+            case 'users_verified':
+                title.textContent = 'Verified Users';
+                this.loadUsersView(true);
+                break;
+            case 'users_unverified':
+                title.textContent = 'Unverified Users';
+                this.loadUsersView(false);
                 break;
             case 'books':
                 title.textContent = 'Content Moderation';
@@ -166,10 +170,11 @@ class AdminApp {
         }
     }
 
-    async loadUsersView() {
+    async loadUsersView(isVerified = null) {
+        const titleText = isVerified === true ? 'Verified Platform Users' : (isVerified === false ? 'Unverified Platform Users' : 'Registered Platform Users');
         const container = document.getElementById('view-container');
         container.innerHTML = `<div class="glass section-card animate-slide-up">
-            <h3>Registered Platform Users</h3>
+            <h3>${titleText}</h3>
             <div class="table-container">
                 <table class="data-table">
                     <thead>
@@ -191,7 +196,18 @@ class AdminApp {
         try {
             const data = await this.fetchWithAuth(`${API_BASE_URL}/accounts/profile/`);
             const target = document.getElementById('users-list-target');
-            target.innerHTML = data.results.map(profile => `
+            
+            let profiles = data.results;
+            if (isVerified !== null) {
+                profiles = profiles.filter(p => p.is_verified === isVerified);
+            }
+            
+            if (profiles.length === 0) {
+                target.innerHTML = `<tr><td colspan="5">No users found.</td></tr>`;
+                return;
+            }
+
+            target.innerHTML = profiles.map(profile => `
                 <tr>
                     <td>#${profile.id}</td>
                     <td>${profile.username}</td>
@@ -218,7 +234,7 @@ class AdminApp {
                 }
             });
             if (response.ok) {
-                this.loadUsersView();
+                this.loadUsersView(this.currentView === 'users_verified' ? true : (this.currentView === 'users_unverified' ? false : null));
             } else {
                 alert('Failed to update verification status.');
             }
