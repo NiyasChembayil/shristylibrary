@@ -108,12 +108,17 @@ ASGI_APPLICATION = 'bookify_backend.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': env.db(
-        'DATABASE_URL', 
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
-    )
-}
+if env('DATABASE_URL', default=''):
+    DATABASES = {
+        'default': env.db('DATABASE_URL')
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Caching - Phase 6
 # Configuration for Redis (Production-ready), fallback to local memory for dev
