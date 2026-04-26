@@ -86,7 +86,7 @@ ROOT_URLCONF = 'bookify_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'frontend_static'],
+        'DIRS': [BASE_DIR / 'templates', BASE_DIR / 'frontend_static'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

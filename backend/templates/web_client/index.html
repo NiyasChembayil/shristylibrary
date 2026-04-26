@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Srishty | Where Stories Live</title>
+    <meta name="description" content="Srishty is the world's most-loved social storytelling platform. Connect through the power of story.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-dark: #5A52D5;
+            --secondary: #FF6584;
+            --bg-dark: #0F0F1E;
+            --surface: #1E1E2E;
+            --text-main: #FFFFFF;
+            --text-dim: #A0A0B8;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, .logo-text {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(15, 15, 30, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo img {
+            height: 40px;
+            width: 40px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #FFF 0%, #AAA 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+            font-size: 15px;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .btn-login {
+            color: white !important;
+            border: 1px solid var(--glass-border);
+            padding: 10px 25px;
+            border-radius: 100px;
+            background: var(--glass);
+        }
+
+        .btn-signup {
+            background: var(--primary);
+            color: white !important;
+            padding: 10px 25px;
+            border-radius: 100px;
+            box-shadow: 0 10px 20px rgba(108, 99, 255, 0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 10%;
+            position: relative;
+            background: radial-gradient(circle at 80% 20%, rgba(108, 99, 255, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 10% 80%, rgba(255, 101, 132, 0.1) 0%, transparent 40%);
+        }
+
+        .hero-content {
+            max-width: 600px;
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            font-weight: 900;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: var(--text-dim);
+            margin-bottom: 40px;
+            max-width: 500px;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-hero {
+            padding: 18px 40px;
+            border-radius: 100px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 18px;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 15px 30px rgba(108, 99, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(108, 99, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--glass);
+            color: white;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-5px);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 10%;
+            background: var(--surface);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-header h2 {
+            font-size: 42px;
+            margin-bottom: 15px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .card {
+            background: var(--bg-dark);
+            padding: 50px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            transition: 0.4s;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 25px;
+            display: block;
+        }
+
+        .card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .card p {
+            color: var(--text-dim);
+        }
+
+        /* Animation Background */
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: var(--primary);
+            filter: blur(150px);
+            opacity: 0.1;
+            z-index: -1;
+            animation: move 20s infinite alternate;
+        }
+
+        @keyframes move {
+            from { transform: translate(-10%, -10%); }
+            to { transform: translate(10%, 10%); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            nav { padding: 20px; }
+            .nav-links { display: none; }
+            .hero h1 { font-size: 42px; }
+            .cta-group { flex-direction: column; }
+            .hero { text-align: center; padding-top: 100px; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="blob"></div>
+
+    <nav>
+        <a href="/" class="logo">
+            <img src="./assets/logo.png" alt="Srishty Logo">
+            <span class="logo-text">Srishty</span>
+        </a>
+        <div class="nav-links">
+            <a href="#">Community</a>
+            <a href="./studio.html">Write</a>
+            <a href="https://srishty-backend.onrender.com/media/app/Srishty.apk" style="color: var(--secondary);">Download App</a>
+            <a href="./studio.html" class="btn-login">Sign In</a>
+            <a href="./studio.html" class="btn-signup">Get Started</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <h1>Hi, we're Srishty.<br>Where stories live.</h1>
+            <p>Connect with a global community of readers and writers through the power of story. Your next obsession is waiting.</p>
+            <div class="cta-group">
+                <a href="./studio.html" class="btn-hero btn-primary">Start Reading</a>
+                <a href="./studio.html" class="btn-hero btn-secondary">Start Writing</a>
+                <a href="https://srishty-backend.onrender.com/media/app/Srishty.apk" class="btn-hero btn-secondary" style="border-color: var(--secondary); color: var(--secondary);">Download APK</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="features">
+        <div class="section-header">
+            <h2>Your story starts here.</h2>
+            <p>Join the world's most-loved social storytelling platform.</p>
+        </div>
+        <div class="grid">
+            <div class="card">
+                <span class="card-icon">📖</span>
+                <h3>Read.</h3>
+                <p>Discover stories you'll love from writers around the world. From romance to mystery, find your next favorite read.</p>
+            </div>
+            <div class="card">
+                <span class="card-icon">✍️</span>
+                <h3>Write.</h3>
+                <p>Share your voice with the world. Our platform gives you the tools to create, publish, and grow your audience.</p>
+            </div>
+            <div class="card">
+                <span class="card-icon">🤝</span>
+                <h3>Connect.</h3>
+                <p>Join a community that celebrates creativity. Follow your favorite authors and discuss stories with fellow readers.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer style="padding: 50px 10%; background: var(--bg-dark); border-top: 1px solid var(--glass-border); text-align: center; color: var(--text-dim); font-size: 14px;">
+        <p>&copy; 2024 Srishty Platform. All rights reserved.</p>
+    </footer>
+</body>
+</html>
