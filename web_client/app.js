@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://srishty-backend.onrender.com/api';
+const API_BASE_URL = window.location.origin.includes('localhost') ? 'http://127.0.0.1:8000/api' : (window.location.origin + '/api');
 
 class SrishtyApp {
     constructor() {
@@ -38,9 +38,13 @@ class SrishtyApp {
     async fetchCategories() {
         try {
             const data = await this.fetchAPI('/core/categories/');
-            const cats = data?.results || data;
+            if (!data) return;
+            const cats = data.results || data;
             const select = document.getElementById('create-category');
-            if(select && cats && Array.isArray(cats)) {
+            if(select && Array.isArray(cats)) {
+                // Clear existing options except first
+                while (select.options.length > 1) select.remove(1);
+                
                 cats.forEach(c => {
                     const opt = document.createElement('option');
                     opt.value = c.id;
@@ -49,6 +53,7 @@ class SrishtyApp {
                 });
             }
         } catch (e) { console.error('Cat Fetch Error:', e); }
+    }
 
     setupQuill() {
         if (!document.getElementById('editor-container')) return;
