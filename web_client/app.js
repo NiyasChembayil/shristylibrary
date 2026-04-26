@@ -1,4 +1,4 @@
-const API_BASE_URL = window.location.origin.includes('localhost') ? 'http://127.0.0.1:8000/api' : (window.location.origin + '/api');
+const API_BASE_URL = window.location.origin.includes('localhost') ? 'http://127.0.0.1:8000/api' : 'https://srishty-backend.onrender.com/api';
 
 class SrishtyApp {
     constructor() {
