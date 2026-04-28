@@ -678,6 +678,16 @@ class StoryCharacterViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return StoryCharacter.objects.filter(book__author=self.request.user)
 
+    def perform_create(self, serializer):
+        # Security: Ensure the user owns the book they are adding a character to
+        book_id = self.request.data.get('book')
+        try:
+            book = Book.objects.get(id=book_id, author=self.request.user)
+            serializer.save(book=book)
+        except Book.DoesNotExist:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You don't own this book")
+
 
 class CharacterRelationshipViewSet(viewsets.ModelViewSet):
     serializer_class = CharacterRelationshipSerializer
@@ -685,6 +695,19 @@ class CharacterRelationshipViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return CharacterRelationship.objects.filter(from_character__book__author=self.request.user)
+
+    def perform_create(self, serializer):
+        # Security: Ensure characters belong to user's books
+        from_char_id = self.request.data.get('from_character')
+        to_char_id = self.request.data.get('to_character')
+        
+        try:
+            from_char = StoryCharacter.objects.get(id=from_char_id, book__author=self.request.user)
+            to_char = StoryCharacter.objects.get(id=to_char_id, book__author=self.request.user)
+            serializer.save()
+        except StoryCharacter.DoesNotExist:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You don't own these characters")
 
 
 class WritingSprintViewSet(viewsets.ModelViewSet):

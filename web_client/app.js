@@ -1972,8 +1972,8 @@ class SrishtyApp {
             <div style="display: flex; align-items: center; gap: 10px; background: #F8FAFC; padding: 10px; border-radius: 12px; border: 1px solid var(--border-color);">
                 <div style="width: 12px; height: 12px; border-radius: 50%; background: ${char.color}"></div>
                 <div style="flex: 1;">
-                    <div style="font-size: 13px; font-weight: 700;">${char.name}</div>
-                    <div style="font-size: 10px; color: var(--text-secondary);">${char.role || 'No role'}</div>
+                    <div style="font-size: 13px; font-weight: 700;">${escapeHTML(char.name)}</div>
+                    <div style="font-size: 10px; color: var(--text-secondary);">${escapeHTML(char.role) || 'No role'}</div>
                 </div>
                 <button class="btn-quiet" style="padding: 4px; color: var(--danger);" onclick="app.deleteCharacter(${char.id})">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -1996,7 +1996,7 @@ class SrishtyApp {
             
             return `
                 <div style="font-size: 12px; background: #F1F5F9; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 600;">${from.name} <span style="color: var(--text-secondary); font-weight: 400;">is ${rel.type} of</span> ${to.name}</span>
+                    <span style="font-weight: 600;">${escapeHTML(from.name)} <span style="color: var(--text-secondary); font-weight: 400;">is ${escapeHTML(rel.type)} of</span> ${escapeHTML(to.name)}</span>
                     <button class="btn-quiet" style="padding: 2px; color: var(--danger);" onclick="app.deleteRelationship(${rel.id})">×</button>
                 </div>
             `;
@@ -2184,7 +2184,7 @@ class SrishtyApp {
             <div style="display: flex; align-items: center; justify-content: space-between; background: white; padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border-color); ${p.username === this.currentUser ? 'border-color: var(--accent-primary); background: #EEF2FF;' : ''}">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-weight: 800; color: var(--text-secondary); width: 20px;">#${i + 1}</span>
-                    <span style="font-weight: 700;">${p.username}</span>
+                    <span style="font-weight: 700;">${escapeHTML(p.username)}</span>
                 </div>
                 <span style="font-weight: 800; color: #10B981;">${p.words_written} words</span>
             </div>
