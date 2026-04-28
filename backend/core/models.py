@@ -148,6 +148,13 @@ class UserLibrary(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('user', 'book')
+        verbose_name_plural = "User Libraries"
+
+    def __str__(self):
+        return f"{self.user.username}'s library: {self.book.title}"
+
 
 class ChapterChoice(models.Model):
     source_chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='choices')
@@ -156,13 +163,6 @@ class ChapterChoice(models.Model):
 
     def __str__(self):
         return f"Choice from {self.source_chapter.title}: {self.text} -> {self.target_chapter.title}"
-
-    class Meta:
-        unique_together = ('user', 'book')
-        verbose_name_plural = "User Libraries"
-
-    def __str__(self):
-        return f"{self.user.username}'s library: {self.book.title}"
 
 
 class Report(models.Model):
