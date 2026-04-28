@@ -1384,6 +1384,102 @@ class SrishtyApp {
 
         modal.classList.remove('hidden');
     }
+
+    showSocialToolkit() {
+        const selection = this.quill.getSelection();
+        const quote = selection ? this.quill.getText(selection.index, selection.length).trim() : "";
+        if (quote) {
+            document.getElementById('toolkit-quote').value = quote;
+        }
+
+        // Setup preview info
+        document.getElementById('card-book-title').textContent = document.getElementById('editor-story-title').textContent;
+        document.getElementById('card-author-name').textContent = `by ${document.getElementById('nav-username').textContent}`;
+        
+        const coverImg = document.getElementById('card-book-cover');
+        const bgImg = document.getElementById('card-bg-img');
+        
+        // Find cover from dashboard cards
+        let coverUrl = "";
+        const cards = document.querySelectorAll('.story-card');
+        cards.forEach(card => {
+            const title = card.querySelector('h3')?.textContent;
+            if (title === document.getElementById('editor-story-title').textContent) {
+                coverUrl = card.querySelector('img').src;
+            }
+        });
+
+        if (coverUrl) {
+            coverImg.src = coverUrl;
+            bgImg.src = coverUrl;
+        } else {
+            coverImg.src = 'https://placehold.co/400x600/E2E8F0/64748B?text=Book+Cover';
+            bgImg.src = 'https://placehold.co/400x600/0F172A/ffffff?text=Background';
+        }
+
+        this.updateToolkitPreview();
+        document.getElementById('toolkit-modal').classList.remove('hidden');
+    }
+
+    updateToolkitPreview() {
+        const quote = document.getElementById('toolkit-quote').value;
+        const template = document.getElementById('toolkit-template').value;
+        const renderArea = document.getElementById('card-template-render');
+        const quoteText = document.getElementById('card-quote-text');
+        const quoteMark = document.getElementById('card-quote-mark');
+        const bgImg = document.getElementById('card-bg-img');
+        
+        quoteText.textContent = quote || "Every story starts with a single word.";
+        
+        // Reset styles
+        renderArea.style.background = "transparent";
+        quoteText.style.display = "block";
+        quoteMark.style.display = "block";
+        bgImg.style.filter = "brightness(0.4) blur(10px)";
+        quoteText.style.color = "white";
+        document.getElementById('card-book-title').style.color = "white";
+        document.getElementById('card-author-name').style.color = "rgba(255,255,255,0.7)";
+
+        if (template === 'glass') {
+            renderArea.style.background = "linear-gradient(135deg, rgba(108, 99, 255, 0.8) 0%, rgba(0, 210, 255, 0.8) 100%)";
+            bgImg.style.filter = "brightness(0.6) blur(5px)";
+        } else if (template === 'bookish') {
+            renderArea.style.background = "rgba(255, 255, 255, 0.9)";
+            quoteText.style.color = "#0F172A";
+            document.getElementById('card-book-title').style.color = "#0F172A";
+            document.getElementById('card-author-name').style.color = "#475569";
+            bgImg.style.filter = "brightness(1) grayscale(1)";
+        } else if (template === 'announcement') {
+            quoteMark.style.display = "none";
+            quoteText.innerHTML = `<span style="font-size: 44px; font-weight: 900; display: block; margin-bottom: 10px; color: var(--accent-primary);">NEW CHAPTER</span> OUT NOW`;
+        }
+    }
+
+    async downloadSocialCard() {
+        const area = document.getElementById('social-card-canvas');
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "Generating...";
+        btn.disabled = true;
+
+        try {
+            const canvas = await html2canvas(area, {
+                useCORS: true,
+                scale: 3, // Ultra high res
+                backgroundColor: "#0F172A"
+            });
+            const link = document.createElement('a');
+            link.download = `Srishty_Toolkit_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (e) {
+            console.error(e);
+            alert("Failed to generate image. Please try again.");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
 }
 
 // Global initialization
