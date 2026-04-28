@@ -199,7 +199,10 @@ class SrishtyApp {
     }
 
     async handleAuth(e) {
-        if (e) e.preventDefault();
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         const user = document.getElementById('auth-user').value;
         const pass = document.getElementById('auth-pass').value;
         const errorEl = document.getElementById('auth-error');
@@ -214,7 +217,12 @@ class SrishtyApp {
                 const email = document.getElementById('auth-email').value;
                 await this.fetchAPI('/accounts/auth/register/', {
                     method: 'POST',
-                    body: JSON.stringify({ username: user, email, password: pass })
+                    body: JSON.stringify({ 
+                        username: user, 
+                        email: email || `${user}@srishty.internal`, // Fallback for blank email if backend requires it
+                        password: pass,
+                        role: 'author' // Default to author when signing up via Studio
+                    })
                 });
             }
             const res = await fetch(`${API_URL}/token/`, {
