@@ -97,6 +97,15 @@ class ChapterUnlock(models.Model):
         return f"{self.user.username} unlocked {self.chapter.title}"
 
 
+class StoryBible(models.Model):
+    book = models.OneToOneField(Book, on_delete=models.CASCADE, related_name='bible')
+    content = models.TextField(blank=True, default='')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Bible for {self.book.title}"
+
+
 class ReadStats(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='read_stats')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)

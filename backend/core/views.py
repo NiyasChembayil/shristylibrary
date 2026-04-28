@@ -4,8 +4,8 @@ from rest_framework.decorators import action
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report
-from .serializers import CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer
+from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report, StoryBible
+from .serializers import CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer, StoryBibleSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page
@@ -511,3 +511,32 @@ class ReportViewSet(viewsets.ModelViewSet):
         report.admin_notes = request.data.get('notes', '')
         report.save()
         return Response({'status': 'resolved'})
+
+
+class StoryBibleViewSet(viewsets.ModelViewSet):
+    serializer_class = StoryBibleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Only authors can see their own bibles
+        return StoryBible.objects.filter(book__author=self.request.user)
+
+    def perform_create(self, serializer):
+        book_id = self.request.data.get('book')
+        if book_id:
+            book = Book.objects.get(id=book_id, author=self.request.user)
+            serializer.save(book=book)
+
+    @action(detail=False, methods=['get'])
+    def get_by_book(self, request):
+        book_id = request.query_params.get('book_id')
+        if not book_id:
+            return Response({'error': 'book_id required'}, status=400)
+        
+        try:
+            book = Book.objects.get(id=book_id, author=request.user)
+            bible, created = StoryBible.objects.get_or_create(book=book)
+            serializer = self.get_serializer(bible)
+            return Response(serializer.data)
+        except Book.DoesNotExist:
+            return Response({'error': 'Book not found or access denied'}, status=404)

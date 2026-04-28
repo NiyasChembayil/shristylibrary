@@ -62,6 +62,7 @@
                 <span class="nav-link active" id="nav-home" onclick="app.switchView('home')">My Stories</span>
                 <span class="nav-link" id="nav-analytics" onclick="app.switchView('analytics')">Analytics</span>
                 <span class="nav-link" id="nav-comments" onclick="app.switchView('comments')">Comments</span>
+                <span class="nav-link hidden" id="nav-bible" onclick="app.switchView('bible')">Story Bible</span>
                 <span class="nav-link" id="nav-explore" onclick="app.switchView('explore')">Explore</span>
                 <a href="https://srishty-backend.onrender.com/media/app/Srishty.apk" class="nav-link" style="color: var(--accent-primary); font-weight: 800;">Get Mobile App</a>
             </div>
@@ -377,6 +378,23 @@
                     <div id="comments-hub-list" style="display: flex; flex-direction: column; gap: 20px;">
                         <!-- Dynamic Comments -->
                         <p style="text-align: center; color: var(--text-secondary); padding: 40px;">Loading feedback...</p>
+                </div>
+            </div>
+
+            <!-- VIEW: STORY BIBLE (Digital Notebook) -->
+            <div id="view-bible" class="view-content hidden">
+                <div class="container">
+                    <div class="dashboard-header" style="margin-bottom: 20px;">
+                        <div class="welcome-msg">
+                            <h2>Story Bible</h2>
+                            <p>Private character profiles, world-building, and plot notes.</p>
+                        </div>
+                        <div id="bible-save-status" style="font-size: 12px; color: #10B981; font-weight: 600;">Saved</div>
+                    </div>
+                    
+                    <div class="editor-main" style="background: white; border-radius: 24px; box-shadow: var(--shadow-lg); overflow: hidden; height: calc(100vh - 250px);">
+                        <div id="bible-editor-toolbar"></div>
+                        <div id="bible-editor" style="height: calc(100% - 42px); font-size: 16px;"></div>
                     </div>
                 </div>
             </div>

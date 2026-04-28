@@ -149,19 +149,37 @@ class SrishtyApp {
     setupQuill() {
         if (!document.getElementById('editor-container')) return;
 
+        const toolbarOptions = [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'image'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['clean']
+        ];
+
         this.quill = new Quill('#editor-container', {
             theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    ['blockquote', 'image'],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    ['clean']
-                ]
-            },
+            modules: { toolbar: toolbarOptions },
             placeholder: 'Start writing your masterpiece...'
         });
+
+        // Story Bible Editor
+        if (document.getElementById('bible-editor')) {
+            this.bibleQuill = new Quill('#bible-editor', {
+                theme: 'snow',
+                placeholder: 'Character profiles, world-building notes...',
+                modules: { 
+                    toolbar: {
+                        container: toolbarOptions,
+                        container: '#bible-editor-toolbar'
+                    }
+                }
+            });
+            
+            this.bibleQuill.on('text-change', () => {
+                this.debouncedSaveBible();
+            });
+        }
 
         this.quill.on('text-change', () => {
             const text = this.quill.getText().trim();
@@ -170,11 +188,23 @@ class SrishtyApp {
             if (wordCountEl) wordCountEl.textContent = `${count.toLocaleString()} words`;
 
             // Debounced Auto-save
-            if (this.autoSaveTimeout) clearTimeout(this.autoSaveTimeout);
-            this.autoSaveTimeout = setTimeout(() => {
-                this.saveCurrentChapter(true); // silent = true
-            }, 2000);
+            if (this.currentChapterId) {
+                if (this.autoSaveTimeout) clearTimeout(this.autoSaveTimeout);
+                this.autoSaveTimeout = setTimeout(() => {
+                    this.saveCurrentChapter(true); // silent = true
+                }, 2000);
+            }
         });
+
+        this.debouncedSaveBible = this.debounce(() => this.saveBible(), 2000);
+    }
+
+    debounce(func, timeout = 300) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
     }
 
     /* ======== API & AUTH ======== */
@@ -339,12 +369,20 @@ class SrishtyApp {
         if (viewName === 'home') document.getElementById('nav-home').classList.add('active');
         if (viewName === 'analytics') document.getElementById('nav-analytics').classList.add('active');
         if (viewName === 'comments') document.getElementById('nav-comments').classList.add('active');
+        if (viewName === 'bible') document.getElementById('nav-bible').classList.add('active');
 
-        if (viewName === 'home') this.loadDashboard();
+        if (viewName === 'home') {
+            this.loadDashboard();
+            document.getElementById('nav-bible').classList.add('hidden');
+        }
+        if (viewName === 'explore') {
+            this.loadExploreData();
+            document.getElementById('nav-bible').classList.add('hidden');
+        }
         if (viewName === 'create') this.resetCreateForm();
         if (viewName === 'analytics') this.loadAnalyticsData();
         if (viewName === 'comments') this.loadCommentsView();
-        if (viewName === 'explore') this.loadExploreData();
+        if (viewName === 'bible') this.loadBibleView();
     }
 
     /* ======== COMMENTS HUB (Feedback) ======== */
@@ -591,6 +629,7 @@ class SrishtyApp {
     async openEditor(bookId) {
         this.currentStoryId = bookId;
         this.switchView('editor');
+        document.getElementById('nav-bible').classList.remove('hidden');
         this.quill.setText('Loading chapter...\n');
 
         try {
@@ -873,6 +912,7 @@ class SrishtyApp {
 
         this.currentStoryId = bookId;
         this.switchView('settings');
+        document.getElementById('nav-bible').classList.remove('hidden');
 
         try {
             const book = await this.fetchAPI(`/core/books/${bookId}/`);
@@ -1184,6 +1224,52 @@ class SrishtyApp {
                 overlay.style.opacity = '1';
             }, 500);
         }, 2500);
+    }
+
+    /* ======== STORY BIBLE ======== */
+    async loadBibleView() {
+        if (!this.currentStoryId) return;
+        const status = document.getElementById('bible-save-status');
+        status.textContent = 'Loading notes...';
+
+        try {
+            const bible = await this.fetchAPI(`/core/story-bible/get_by_book/?book_id=${this.currentStoryId}`);
+            if (bible && bible.content) {
+                this.bibleQuill.root.innerHTML = bible.content;
+            } else {
+                this.bibleQuill.setText('');
+            }
+            status.textContent = 'Ready';
+        } catch (e) {
+            console.error('Bible Load Error:', e);
+            status.textContent = 'Error loading notes';
+        }
+    }
+
+    async saveBible() {
+        if (!this.currentStoryId) return;
+        const status = document.getElementById('bible-save-status');
+        status.textContent = 'Saving notes...';
+        status.style.color = 'var(--text-secondary)';
+
+        try {
+            // First get the bible to ensure we have the ID or create it
+            const bible = await this.fetchAPI(`/core/story-bible/get_by_book/?book_id=${this.currentStoryId}`);
+            
+            await this.fetchAPI(`/core/story-bible/${bible.id}/`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    content: this.bibleQuill.root.innerHTML
+                })
+            });
+            
+            status.textContent = 'Saved';
+            status.style.color = '#10B981';
+        } catch (e) {
+            console.error('Bible Save Error:', e);
+            status.textContent = 'Save failed';
+            status.style.color = 'var(--danger)';
+        }
     }
 }
 

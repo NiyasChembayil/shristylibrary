@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Book, Chapter, ReadStats, Report
+from .models import Category, Book, Chapter, ReadStats, Report, StoryBible
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -113,3 +113,9 @@ class ReportSerializer(serializers.ModelSerializer):
             'status', 'admin_notes', 'created_at', 'updated_at'
         ]
         read_only_fields = ['reporter', 'created_at', 'updated_at']
+
+class StoryBibleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StoryBible
+        fields = ['id', 'book', 'content', 'updated_at']
+        read_only_fields = ['book']
