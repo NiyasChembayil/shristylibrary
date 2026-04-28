@@ -293,11 +293,113 @@ class SrishtyApp {
 
         if (viewName === 'home') document.getElementById('nav-home').classList.add('active');
         if (viewName === 'analytics') document.getElementById('nav-analytics').classList.add('active');
+        if (viewName === 'comments') document.getElementById('nav-comments').classList.add('active');
 
         if (viewName === 'home') this.loadDashboard();
         if (viewName === 'create') this.resetCreateForm();
         if (viewName === 'analytics') this.loadAnalyticsData();
+        if (viewName === 'comments') this.loadCommentsView();
         if (viewName === 'explore') this.loadExploreData();
+    }
+
+    /* ======== COMMENTS HUB (Feedback) ======== */
+    async loadCommentsView() {
+        const list = document.getElementById('comments-hub-list');
+        list.innerHTML = `<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Checking for new feedback...</p>`;
+
+        try {
+            const comments = await this.fetchAPI('/social/comments/author_comments/');
+            
+            if (!comments || comments.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; padding: 60px; background: white; border-radius: 24px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 48px; margin-bottom: 16px;">💬</div>
+                        <h3>No feedback yet</h3>
+                        <p style="color: var(--text-secondary);">When readers comment on your stories, they will appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = comments.map(comment => {
+                const date = new Date(comment.created_at).toLocaleDateString();
+                const bookTitle = comment.book_title || 'Your Story';
+                const chapterTitle = comment.chapter_title ? ` - ${comment.chapter_title}` : '';
+                
+                let repliesHtml = '';
+                if (comment.replies && comment.replies.length > 0) {
+                    repliesHtml = `
+                        <div class="comment-replies" style="margin-left: 40px; margin-top: 15px; border-left: 2px solid var(--accent-primary); padding-left: 15px;">
+                            ${comment.replies.map(r => `
+                                <div class="reply-item" style="margin-bottom: 10px; font-size: 13px;">
+                                    <strong>${r.username}</strong> <span style="opacity: 0.6; font-size: 11px;">${new Date(r.created_at).toLocaleDateString()}</span>
+                                    <p style="margin-top: 4px;">${escapeHTML(r.text)}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="comment-card" style="background: white; padding: 24px; border-radius: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <div style="width: 40px; height: 40px; background: var(--accent-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                    ${comment.username.substring(0,2).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700;">${comment.username}</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">On <strong>${escapeHTML(bookTitle)}${escapeHTML(chapterTitle)}</strong> • ${date}</div>
+                                </div>
+                            </div>
+                            <button class="btn-quiet" onclick="app.showReplyInput(${comment.id})">Reply</button>
+                        </div>
+                        <p style="font-size: 15px; line-height: 1.6;">${escapeHTML(comment.text)}</p>
+                        
+                        <div id="reply-input-${comment.id}" class="hidden" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                            <textarea id="reply-text-${comment.id}" class="form-input" placeholder="Type your reply..." rows="2"></textarea>
+                            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                                <button class="btn-outline" style="padding: 6px 15px; font-size: 12px;" onclick="app.showReplyInput(${comment.id}, false)">Cancel</button>
+                                <button class="btn-primary" style="padding: 6px 15px; font-size: 12px;" onclick="app.submitReply(${comment.id}, ${comment.book}, ${comment.chapter || 'null'})">Send Reply</button>
+                            </div>
+                        </div>
+
+                        ${repliesHtml}
+                    </div>
+                `;
+            }).join('');
+
+        } catch (err) {
+            console.error('Comments Error:', err);
+            list.innerHTML = `<p style="text-align: center; color: var(--danger);">Failed to load feedback.</p>`;
+        }
+    }
+
+    showReplyInput(id, show = true) {
+        const el = document.getElementById(`reply-input-${id}`);
+        if (el) el.classList.toggle('hidden', !show);
+    }
+
+    async submitReply(parentId, bookId, chapterId) {
+        const textEl = document.getElementById(`reply-text-${parentId}`);
+        const text = textEl.value.trim();
+        if (!text) return;
+
+        try {
+            await this.fetchAPI('/social/comments/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    book: bookId,
+                    chapter: chapterId,
+                    text: text,
+                    parent: parentId
+                })
+            });
+            this.showSuccessAnimation();
+            this.loadCommentsView();
+        } catch (err) {
+            alert('Failed to send reply.');
+        }
     }
 
     getMediaUrl(path) {

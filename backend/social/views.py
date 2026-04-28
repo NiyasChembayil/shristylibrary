@@ -179,27 +179,58 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        queryset = Comment.objects.all()
+        queryset = Comment.objects.all().select_related('user', 'book', 'chapter')
         book_id = self.request.query_params.get('book')
         chapter_id = self.request.query_params.get('chapter')
         
+        # In general, only return top-level comments (parent=None)
+        # unless specifically requested. Replies are nested in serializers.
+        if not self.request.query_params.get('all_levels'):
+            queryset = queryset.filter(parent__isnull=True)
+
         if chapter_id:
             return queryset.filter(chapter_id=chapter_id)
         if book_id:
-            return queryset.filter(book_id=book_id, chapter__isnull=True)
+            return queryset.filter(book_id=book_id)
         return queryset
 
     def perform_create(self, serializer):
         comment = serializer.save(user=self.request.user)
-        # Create notification for author
+        
+        # 1. Notify the author of the book (if it's not the author's own comment)
         if comment.book.author != self.request.user:
             Notification.objects.create(
                 recipient=comment.book.author,
                 actor=self.request.user,
                 action_type='COMMENT',
                 book=comment.book,
-                message=comment.text[:50]
+                message=f"{self.request.user.username} commented on {comment.book.title}: {comment.text[:50]}"
             )
+        
+        # 2. Notify the parent commenter if this is a reply
+        if comment.parent and comment.parent.user != self.request.user:
+            Notification.objects.create(
+                recipient=comment.parent.user,
+                actor=self.request.user,
+                action_type='COMMENT',
+                book=comment.book,
+                message=f"{self.request.user.username} replied to your comment: {comment.text[:50]}"
+            )
+
+    @action(detail=False, methods=['get'])
+    def author_comments(self, request):
+        """Returns all comments on books authored by the current user."""
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Get all top-level comments on author's books
+        comments = Comment.objects.filter(
+            book__author=request.user,
+            parent__isnull=True
+        ).select_related('user', 'book', 'chapter').order_by('-created_at')
+        
+        serializer = self.get_serializer(comments, many=True)
+        return Response(serializer.data)
 
 class FollowViewSet(viewsets.ModelViewSet):
     queryset = Follow.objects.all()

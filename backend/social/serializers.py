@@ -116,11 +116,19 @@ class LikeSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
+    book_title = serializers.ReadOnlyField(source='book.title')
+    chapter_title = serializers.ReadOnlyField(source='chapter.title')
+    replies = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        fields = ['id', 'user', 'username', 'book', 'chapter', 'text', 'created_at']
+        fields = ['id', 'user', 'username', 'book', 'book_title', 'chapter', 'chapter_title', 'text', 'parent', 'replies', 'created_at']
         read_only_fields = ['user']
+
+    def get_replies(self, obj):
+        if obj.replies.exists():
+            return CommentSerializer(obj.replies.all(), many=True, context=self.context).data
+        return []
 
 class FollowSerializer(serializers.ModelSerializer):
     follower_name = serializers.ReadOnlyField(source='follower.username')
