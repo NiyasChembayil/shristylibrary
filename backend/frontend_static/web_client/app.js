@@ -100,9 +100,6 @@ class SrishtyApp {
         } catch (e) { console.error('Cat Fetch Error:', e); }
     }
 
-        } catch (e) { console.error('Cat Fetch Error:', e); }
-    }
-
     setupQuill() {
         if (!document.getElementById('editor-container')) return;
 
