@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Book, Chapter, ReadStats
+from .models import Category, Book, Chapter, ReadStats, Report
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,7 +34,7 @@ class BookSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'slug', 'author', 'author_name', 'author_is_verified', 'author_profile_id', 'is_author_following', 'cover', 'audio_file',
             'description', 'category', 'category_name', 'language', 'tags', 'price', 'region',
-            'is_published', 'created_at', 'updated_at', 'chapters', 'chapters_count',
+            'is_published', 'moderation_status', 'moderation_notes', 'created_at', 'updated_at', 'chapters', 'chapters_count',
             'likes_count', 'comments_count', 'total_reads', 'is_in_library', 'is_liked',
             'downloads_count'
         ]
@@ -84,3 +84,17 @@ class ReadStatsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadStats
         fields = '__all__'
+
+class ReportSerializer(serializers.ModelSerializer):
+    reporter_name = serializers.ReadOnlyField(source='reporter.username')
+    target_book_title = serializers.ReadOnlyField(source='target_book.title')
+    target_user_name = serializers.ReadOnlyField(source='target_user.username')
+
+    class Meta:
+        model = Report
+        fields = [
+            'id', 'reporter', 'reporter_name', 'target_book', 'target_book_title', 
+            'target_user', 'target_user_name', 'reason', 'description', 
+            'status', 'admin_notes', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['reporter', 'created_at', 'updated_at']

@@ -4,12 +4,13 @@ from rest_framework.decorators import action
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead
-from .serializers import CategorySerializer, BookSerializer, ChapterSerializer
+from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report
+from .serializers import CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
+from accounts.audit import log_admin_action
 import bleach
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -36,12 +37,15 @@ class BookViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         # 1. Start with visibility filtering
-        if user.is_authenticated:
-            # If the user is logged in, they see all published books + their own drafts
-            qs = qs.filter(Q(is_published=True) | Q(author=user))
+        if user.is_authenticated and user.is_staff:
+            # Admins see everything
+            pass
+        elif user.is_authenticated:
+            # If the user is logged in, they see all approved books + their own pending/rejected/draft books
+            qs = qs.filter(Q(moderation_status='approved', is_published=True) | Q(author=user))
         else:
-            # Guest users only see published books
-            qs = qs.filter(is_published=True)
+            # Guest users only see approved and published books
+            qs = qs.filter(moderation_status='approved', is_published=True)
 
         # 2. Apply author filter manually (since we removed it from filterset_fields)
         if author_id:
@@ -59,7 +63,42 @@ class BookViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
+        # New books are pending by default (model default)
         serializer.save(author=self.request.user)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def approve(self, request, pk=None):
+        book = self.get_object()
+        book.moderation_status = 'approved'
+        book.moderation_notes = request.data.get('notes', '')
+        book.save()
+        
+        log_admin_action(
+            admin=request.user,
+            action="BOOK_APPROVED",
+            target=book.title,
+            details=f"Approved book {book.title} (ID: {book.id})",
+            request=request
+        )
+        
+        return Response({'status': 'approved'})
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def reject(self, request, pk=None):
+        book = self.get_object()
+        book.moderation_status = 'rejected'
+        book.moderation_notes = request.data.get('notes', '')
+        book.save()
+        
+        log_admin_action(
+            admin=request.user,
+            action="BOOK_REJECTED",
+            target=book.title,
+            details=f"Rejected book {book.title} (ID: {book.id}). Notes: {book.moderation_notes}",
+            request=request
+        )
+        
+        return Response({'status': 'rejected'})
 
     @action(detail=True, methods=['post'])
     def record_read(self, request, pk=None):
@@ -99,7 +138,7 @@ class BookViewSet(viewsets.ModelViewSet):
         region = request.query_params.get('region')
         
         # Weighted Score: (Reads * 1) + (Likes * 3)
-        books = Book.objects.filter(is_published=True).annotate(
+        books = Book.objects.filter(is_published=True, moderation_status='approved').annotate(
             read_count=Count('read_stats', distinct=True),
             likes_count=Count('likes', distinct=True)
         ).annotate(
@@ -129,21 +168,22 @@ class BookViewSet(viewsets.ModelViewSet):
             category_name = top_category_stats.name
             mostly_read_category = Book.objects.filter(
                 category=top_category_stats, 
-                is_published=True
+                is_published=True,
+                moderation_status='approved'
             ).annotate(
                 reads=Count('read_stats')
             ).order_by('-reads')[:6]
 
         if not mostly_read_category:
-            mostly_read_category = Book.objects.filter(is_published=True).order_by('?')[:6]
+            mostly_read_category = Book.objects.filter(is_published=True, moderation_status='approved').order_by('?')[:6]
 
         # 2. New Arrivals (latest published books)
-        new_arrivals = Book.objects.filter(is_published=True).order_by('-created_at')[:10]
+        new_arrivals = Book.objects.filter(is_published=True, moderation_status='approved').order_by('-created_at')[:10]
 
         # 4. Local Hits (Books from the same region)
-        local_hits = Book.objects.filter(is_published=True, region__iexact=region)[:6]
+        local_hits = Book.objects.filter(is_published=True, moderation_status='approved', region__iexact=region)[:6]
         if not local_hits:
-            local_hits = Book.objects.filter(is_published=True).order_by('?')[:6]
+            local_hits = Book.objects.filter(is_published=True, moderation_status='approved').order_by('?')[:6]
 
         # 5. Mutual Friends' Books (Social Discovery)
         social_hits = []
@@ -151,11 +191,12 @@ class BookViewSet(viewsets.ModelViewSet):
             following_ids = request.user.following.values_list('followed_id', flat=True)
             social_hits = Book.objects.filter(
                 likes__user_id__in=following_ids,
-                is_published=True
+                is_published=True,
+                moderation_status='approved'
             ).exclude(author=request.user).distinct()[:6]
         
         if not social_hits:
-             social_hits = Book.objects.filter(is_published=True).order_by('?')[:6]
+             social_hits = Book.objects.filter(is_published=True, moderation_status='approved').order_by('?')[:6]
 
         return Response({
             'mostly_read': {
@@ -405,4 +446,22 @@ class ChapterViewSet(viewsets.ModelViewSet):
         except Exception:
             pass
 
+class ReportViewSet(viewsets.ModelViewSet):
+    queryset = Report.objects.all()
+    serializer_class = ReportSerializer
+    
+    def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAdminUser()]
 
+    def perform_create(self, serializer):
+        serializer.save(reporter=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def resolve(self, request, pk=None):
+        report = self.get_object()
+        report.status = 'resolved'
+        report.admin_notes = request.data.get('notes', '')
+        report.save()
+        return Response({'status': 'resolved'})

@@ -25,6 +25,7 @@ class Base64ImageField(serializers.ImageField):
 
 class ProfileSerializer(serializers.ModelSerializer):
     avatar = Base64ImageField(required=False, allow_null=True)
+    verification_id_image = Base64ImageField(required=False, allow_null=True)
     username = serializers.CharField(source='user.username', required=False)
     email = serializers.EmailField(source='user.email', required=False)
     # Password is write-only for the 'Change Password' feature
@@ -39,10 +40,11 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user_id', 'username', 'email', 'password', 'role', 'bio', 'avatar', 
             'followers_count', 'following_count', 'is_following', 'is_verified',
+            'verification_id_image', 'verification_links', 'verification_status',
             'is_private', 'notify_new_follower', 'notify_likes', 'notify_comments', 
             'notify_new_books', 'font_size', 'reader_theme', 'playback_speed'
         ]
-        read_only_fields = ['id', 'user_id', 'role', 'followers_count', 'following_count', 'is_following', 'is_verified']
+        read_only_fields = ['id', 'user_id', 'role', 'followers_count', 'following_count', 'is_following', 'is_verified', 'verification_status']
 
     def validate_username(self, value):
         user = self.instance.user if self.instance else None
@@ -155,3 +157,32 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.profile.role = role
             user.profile.save()
         return user
+
+class AdminUserHistorySerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    email = serializers.ReadOnlyField(source='user.email')
+    total_reads = serializers.SerializerMethodField()
+    published_books = serializers.SerializerMethodField()
+    reports_received = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Profile
+        fields = [
+            'id', 'username', 'email', 'role', 'bio', 'avatar', 'is_verified', 
+            'verification_id_image', 'verification_links', 'verification_status',
+            'total_reads', 'published_books', 'reports_received', 'created_at'
+        ]
+
+    def get_total_reads(self, obj):
+        from core.models import ReadStats
+        return ReadStats.objects.filter(user=obj.user).count()
+
+    def get_published_books(self, obj):
+        from core.models import Book
+        books = Book.objects.filter(author=obj.user)
+        return [{'id': b.id, 'title': b.title, 'status': b.moderation_status} for b in books]
+
+    def get_reports_received(self, obj):
+        from core.models import Report
+        reports = Report.objects.filter(target_user=obj.user)
+        return [{'id': r.id, 'reason': r.reason, 'status': r.status} for r in reports]

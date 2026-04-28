@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:glassmorphism/glassmorphism.dart';
+import 'package:lottie/lottie.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../audio/audio_player_screen.dart';
@@ -8,7 +9,7 @@ import '../../providers/book_provider.dart';
 import '../../widgets/follow_button.dart';
 import '../profile/profile_screen.dart';
 
-class BookDetailScreen extends ConsumerWidget {
+class BookDetailScreen extends ConsumerStatefulWidget {
   final int id;
   final String title;
   final String author;
@@ -25,8 +26,22 @@ class BookDetailScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bookAsync = ref.watch(currentBookProvider(id));
+  ConsumerState<BookDetailScreen> createState() => _BookDetailScreenState();
+}
+
+class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
+  bool _showLikeAnimation = false;
+
+  void _triggerLikeAnimation() {
+    setState(() => _showLikeAnimation = true);
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) setState(() => _showLikeAnimation = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bookAsync = ref.watch(currentBookProvider(widget.id));
     // All books are free and accessible now
 
     return bookAsync.when(
@@ -53,43 +68,53 @@ class BookDetailScreen extends ConsumerWidget {
           return const Scaffold(body: Center(child: Text('Book not found')));
         }
         return Scaffold(
-        body: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 450,
-              pinned: true,
-              flexibleSpace: FlexibleSpaceBar(
-                background: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Hero(
-                      tag: 'book-cover-${book.id}',
-                      child: CachedNetworkImage(
-                        imageUrl: book.coverUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => const ColoredBox(color: Color(0xFF1E1E2E)),
-                        errorWidget: (_, __, ___) => const ColoredBox(
-                          color: Color(0xFF1E1E2E),
-                          child: Icon(Icons.menu_book_rounded, size: 80, color: Colors.white24),
-                        ),
+        body: Stack(
+          children: [
+            CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  expandedHeight: 450,
+                  pinned: true,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: GestureDetector(
+                      onDoubleTap: () {
+                        if (!book.isLiked) {
+                          ref.read(bookProvider.notifier).likeBook(widget.id, ref);
+                        }
+                        _triggerLikeAnimation();
+                      },
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Hero(
+                            tag: 'book-cover-${book.id}',
+                            child: CachedNetworkImage(
+                              imageUrl: book.coverUrl,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => const ColoredBox(color: Color(0xFF1E1E2E)),
+                              errorWidget: (_, __, ___) => const ColoredBox(
+                                color: Color(0xFF1E1E2E),
+                                child: Icon(Icons.menu_book_rounded, size: 80, color: Colors.white24),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Theme.of(context).scaffoldBackgroundColor,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Theme.of(context).scaffoldBackgroundColor,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -224,6 +249,15 @@ class BookDetailScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            if (_showLikeAnimation)
+              Center(
+                child: Lottie.network(
+                  'https://assets9.lottiefiles.com/packages/lf20_oxkv15y6.json',
+                  width: 200,
+                  height: 200,
+                  repeat: false,
+                ),
+              ),
           ],
         ),
         bottomSheet: Container(
@@ -280,7 +314,10 @@ class BookDetailScreen extends ConsumerWidget {
                   Colors.white.withValues(alpha: 0.2)
                 ]),
                 child: IconButton(
-                  onPressed: () => ref.read(bookProvider.notifier).likeBook(id, ref),
+                  onPressed: () {
+                    ref.read(bookProvider.notifier).likeBook(widget.id, ref);
+                    if (!book.isLiked) _triggerLikeAnimation();
+                  },
                   icon: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

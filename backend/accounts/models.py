@@ -23,6 +23,14 @@ class Profile(models.Model):
     
     # Verification
     is_verified = models.BooleanField(default=False)
+    verification_id_image = models.ImageField(upload_to='verification_ids/', null=True, blank=True)
+    verification_links = models.TextField(blank=True, help_text="Social media or portfolio links")
+    verification_status = models.CharField(max_length=20, default='none', choices=(
+        ('none', 'Not Submitted'),
+        ('pending', 'Pending Review'),
+        ('verified', 'Verified'),
+        ('rejected', 'Rejected'),
+    ))
     
     # Reader & Audio Preferences
     font_size = models.FloatField(default=16.0)
@@ -32,9 +40,27 @@ class Profile(models.Model):
     # Push Notifications
     fcm_token = models.CharField(max_length=255, null=True, blank=True)
     
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
     def __str__(self):
         return f"{self.user.username}'s Profile"
 
     @property
     def is_author(self):
         return self.role == 'author'
+
+
+class AuditLog(models.Model):
+    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='audit_logs')
+    action = models.CharField(max_length=255)
+    target = models.CharField(max_length=255, blank=True, null=True)
+    details = models.TextField(blank=True, null=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.admin.username} - {self.action} at {self.timestamp}"

@@ -23,6 +23,7 @@ class SrishtyApp {
         this.currentView = 'home';
         this.isSignUpMode = false;
         this.quill = null;
+        this.successAnimation = null;
 
         // Studio State
         this.currentStoryId = null;
@@ -418,6 +419,7 @@ class SrishtyApp {
             }
 
             await this.openEditor(book.id);
+            this.showSuccessAnimation();
         } catch (err) {
             alert(`Failed to create story: ${err.message}`);
         } finally {
@@ -638,6 +640,7 @@ class SrishtyApp {
                 body: formData
             });
             alert('Story Published! 🚀');
+            this.showSuccessAnimation();
             this.switchView('home');
         } catch (e) {
             alert(`Failed to publish: ${e.message}`);
@@ -770,6 +773,7 @@ class SrishtyApp {
                 }
 
                 alert(`Successfully imported "${title}" with ${chapters.length} chapters! 🚀`);
+                this.showSuccessAnimation();
                 this.loadDashboard();
             } catch (err) {
                 alert(`Import failed: ${err.message}`);
@@ -963,6 +967,31 @@ class SrishtyApp {
                 </div>
             `;
         }).join('');
+    }
+
+    showSuccessAnimation() {
+        const overlay = document.getElementById('success-overlay');
+        overlay.style.display = 'flex';
+        
+        if (!this.successAnimation) {
+            this.successAnimation = lottie.loadAnimation({
+                container: document.getElementById('success-lottie'),
+                renderer: 'svg',
+                loop: false,
+                autoplay: true,
+                path: 'https://assets10.lottiefiles.com/packages/lf20_pqnfmone.json'
+            });
+        } else {
+            this.successAnimation.goToAndPlay(0, true);
+        }
+
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.style.opacity = '1';
+            }, 500);
+        }, 2500);
     }
 }
 

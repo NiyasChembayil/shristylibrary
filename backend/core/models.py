@@ -10,11 +10,18 @@ class Category(models.Model):
         return self.name
 
 class BookQuerySet(models.QuerySet):
+    def approved(self):
+        return self.filter(moderation_status='approved')
+
     def order_for_discovery(self):
-        # Placeholder for complex discovery logic (e.g. promoting high-rated books)
-        return self.order_by('?') 
+        return self.approved().order_by('?') 
 
 class Book(models.Model):
+    MODERATION_STATUS = (
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    )
     objects = BookQuerySet.as_manager()
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, null=True, blank=True)
@@ -30,6 +37,8 @@ class Book(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     audio_file = models.FileField(upload_to='book_audio/', null=True, blank=True)
+    moderation_status = models.CharField(max_length=20, choices=MODERATION_STATUS, default='pending', db_index=True)
+    moderation_notes = models.TextField(blank=True, null=True)
 
     class Meta:
         indexes = [
@@ -95,4 +104,36 @@ class UserLibrary(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s library: {self.book.title}"
+
+
+class Report(models.Model):
+    REASON_CHOICES = (
+        ('copyright', 'Copyright Infringement'),
+        ('inappropriate', 'Inappropriate Content'),
+        ('spam', 'Spam / Scams'),
+        ('harassment', 'Harassment'),
+        ('other', 'Other'),
+    )
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('resolved', 'Resolved'),
+        ('ignored', 'Ignored'),
+    )
+    
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports_filed')
+    target_book = models.ForeignKey(Book, on_delete=models.CASCADE, null=True, blank=True, related_name='reports')
+    target_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='reports_received')
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
+    description = models.TextField()
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
+    admin_notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        target = self.target_book.title if self.target_book else self.target_user.username
+        return f"Report on {target} - {self.reason}"
 

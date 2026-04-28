@@ -5,10 +5,11 @@ from rest_framework.decorators import action
 from django.contrib.auth.models import User
 from django.utils import timezone
 from .models import Profile
-from .serializers import UserSerializer, ProfileSerializer, RegisterSerializer, UserListSerializer
+from .serializers import UserSerializer, ProfileSerializer, RegisterSerializer, UserListSerializer, AdminUserHistorySerializer
 from core.models import ReadStats
 from social.models import Follow, Notification
-from core.permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly
+from .audit import log_admin_action
 
 class AuthViewSet(viewsets.GenericViewSet):
     permission_classes = [permissions.AllowAny]
@@ -148,14 +149,20 @@ class ProfileViewSet(viewsets.ModelViewSet):
         except Profile.DoesNotExist:
             return Response({"error": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=False, methods=['post'])
-    def upgrade_role(self, request):
-        profile = request.user.profile
-        if profile.role == 'reader':
-            profile.role = 'author'
-            profile.save()
-            return Response({"status": "success", "role": profile.role})
         return Response({"status": "already_author", "role": profile.role})
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def submit_verification(self, request):
+        profile = request.user.profile
+        if profile.role != 'author':
+            return Response({"error": "Only authors can apply for verification."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = self.get_serializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        # Manually set status to pending
+        serializer.save(verification_status='pending')
+        
+        return Response({"status": "success", "message": "Verification request submitted for admin review."})
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def toggle_verify(self, request, pk=None):
@@ -183,7 +190,83 @@ class ProfileViewSet(viewsets.ModelViewSet):
         if not token:
             return Response({"error": "Token is required"}, status=status.HTTP_400_BAD_REQUEST)
         
-        profile = request.user.profile
         profile.fcm_token = token
         profile.save()
         return Response({"status": "success"})
+
+
+class AdminProfileViewSet(viewsets.ModelViewSet):
+    queryset = Profile.objects.all().select_related('user')
+    serializer_class = AdminUserHistorySerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    @action(detail=True, methods=['get'])
+    def history(self, request, pk=None):
+        profile = self.get_object()
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def verify_approve(self, request, pk=None):
+        profile = self.get_object()
+        profile.is_verified = True
+        profile.verification_status = 'verified'
+        profile.save()
+        
+        log_admin_action(
+            admin=request.user,
+            action="VERIFIED_AUTHOR",
+            target=profile.user.username,
+            details=f"Verified author {profile.user.username}",
+            request=request
+        )
+
+        Notification.objects.create(
+            recipient=profile.user,
+            actor=request.user,
+            action_type='SYSTEM',
+            message="Congratulations! 🎉 Your account has been officially verified with the Blue Tick."
+        )
+        return Response({"status": "verified"})
+
+    @action(detail=True, methods=['post'])
+    def verify_reject(self, request, pk=None):
+        profile = self.get_object()
+        profile.is_verified = False
+        profile.verification_status = 'rejected'
+        profile.save()
+        
+        log_admin_action(
+            admin=request.user,
+            action="REJECTED_VERIFICATION",
+            target=profile.user.username,
+            details=f"Rejected verification for {profile.user.username}",
+            request=request
+        )
+
+        Notification.objects.create(
+            recipient=profile.user,
+            actor=request.user,
+            action_type='SYSTEM',
+            message="Your verification request was declined. Please ensure your links and ID are clear."
+        )
+        return Response({"status": "rejected"})
+
+    @action(detail=False, methods=['post'])
+    def bulk_verify(self, request):
+        user_ids = request.data.get('user_ids', [])
+        if not user_ids:
+            return Response({"error": "No user IDs provided"}, status=400)
+            
+        profiles = Profile.objects.filter(id__in=user_ids)
+        count = profiles.count()
+        profiles.update(is_verified=True, verification_status='verified')
+        
+        log_admin_action(
+            admin=request.user,
+            action="BULK_VERIFY",
+            details=f"Bulk verified {count} users: {list(profiles.values_list('user__username', flat=True))}",
+            request=request
+        )
+        
+        return Response({"status": "success", "count": count})

@@ -100,6 +100,7 @@ class Notification(models.Model):
         ('POST_COMMENT', 'New Post Comment'),
         ('REPOST', 'New Repost'),
         ('POST_COMMENT_LIKE', 'New Post Comment Like'),
+        ('DIRECT_MESSAGE', 'Direct Message'),
     )
     
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')

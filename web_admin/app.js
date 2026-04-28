@@ -142,6 +142,14 @@ class AdminApp {
                 title.textContent = 'Content Moderation';
                 this.loadBooksView();
                 break;
+            case 'broadcast':
+                title.textContent = 'Global System Broadcast';
+                this.loadBroadcastView();
+                break;
+            case 'security':
+                title.textContent = 'Platform Security Audit';
+                this.loadSecurityView();
+                break;
             case 'analytics':
                 title.textContent = 'Platform Analytics';
                 this.loadAnalyticsView();
@@ -149,6 +157,14 @@ class AdminApp {
             case 'settings':
                 title.textContent = 'System Settings';
                 this.loadSettingsView();
+                break;
+            case 'moderation':
+                title.textContent = 'Content Moderation Hub';
+                this.loadModerationView();
+                break;
+            case 'reports':
+                title.textContent = 'User Report Management';
+                this.loadReportsView();
                 break;
             default:
                 container.innerHTML = '<div class="glass section-card"><h3>Coming Soon</h3><p>This module is currently in development.</p></div>';
@@ -163,7 +179,8 @@ class AdminApp {
             // Update stats cards
             document.getElementById('count-users').textContent = stats.users.total.toLocaleString();
             document.getElementById('count-authors').textContent = stats.users.authors.toLocaleString();
-            document.getElementById('count-books').textContent = stats.books.total.toLocaleString();
+            document.getElementById('count-books').textContent = stats.users.live.toLocaleString(); // Use live users here for the "Live" pulse
+            document.querySelector('#nav-dashboard + .stat-card .stat-label').textContent = 'Live Readers'; // Adjust label
             document.getElementById('count-revenue').textContent = `$${stats.revenue.total.toFixed(2)}`;
 
             // Render recent books
@@ -211,6 +228,7 @@ class AdminApp {
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th style="width: 40px;"><input type="checkbox" onchange="adminApp.toggleAllUsers(this)"></th>
                                 <th>User ID</th>
                                 <th>Username</th>
                                 <th>Role</th>
@@ -242,16 +260,37 @@ class AdminApp {
             }
 
             target.innerHTML = profiles.map(profile => `
-                <tr>
+                <tr class="animate-slide-up" onclick="adminApp.showUserProfile(${profile.id})" style="cursor: pointer;">
+                    <td onclick="event.stopPropagation()"><input type="checkbox" class="user-checkbox" value="${profile.id}"></td>
                     <td>#${profile.id}</td>
-                    <td>${escapeHTML(profile.username)}</td>
-                    <td>${profile.role}</td>
+                    <td style="display: flex; align-items: center; gap: 10px;">
+                        <img src="${profile.avatar || 'https://via.placeholder.com/30'}" style="width: 30px; height: 30px; border-radius: 50%;">
+                        <span>${escapeHTML(profile.username)}</span>
+                    </td>
+                    <td><span class="status-badge" style="background: rgba(108, 99, 255, 0.1); color: var(--accent-primary);">${profile.role.toUpperCase()}</span></td>
                     <td>
-                        <button class="btn-action" onclick="adminApp.toggleVerify(${profile.id}, ${profile.is_verified})" style="background: ${profile.is_verified ? '#6C63FF' : '#444'}; margin-right: 5px;">${profile.is_verified ? 'Verified' : 'Verify'}</button>
-                        <button class="btn-action red">Block</button>
+                        <span class="status-badge ${profile.is_verified ? 'active' : (profile.verification_status === 'pending' ? 'pending' : '')}">
+                            ${profile.is_verified ? 'Verified' : (profile.verification_status === 'pending' ? 'Review' : 'Standard')}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-action" onclick="event.stopPropagation(); adminApp.showUserProfile(${profile.id})">View History</button>
                     </td>
                 </tr>
             `).join('');
+
+            // Add Bulk Action bar if not present
+            if (!document.getElementById('bulk-actions-bar')) {
+                const actionBar = document.createElement('div');
+                actionBar.id = 'bulk-actions-bar';
+                actionBar.className = 'glass';
+                actionBar.style = "margin-top: 20px; padding: 15px; border-radius: 15px; display: flex; gap: 15px; align-items: center;";
+                actionBar.innerHTML = `
+                    <span style="font-size: 13px; opacity: 0.7;">Bulk Actions:</span>
+                    <button class="btn-action green" onclick="adminApp.bulkVerifyUsers()">Verify Selected</button>
+                `;
+                target.parentElement.parentElement.appendChild(actionBar);
+            }
         } catch (e) {
             console.error(e);
             if (target) target.innerHTML = `<tr><td colspan="5">Error loading users.</td></tr>`;
@@ -322,14 +361,29 @@ class AdminApp {
         container.innerHTML = `
             <div class="chart-grid">
                 <div class="glass section-card animate-slide-up">
-                    <h3>Revenue Growth (30 Days)</h3>
-                    <div class="chart-container">
-                        <canvas id="revenueChart"></canvas>
+                    <h3>24-Hour Activity Heatmap</h3>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px;">Peak platform usage times (last 7 days)</p>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="heatmapChart"></canvas>
                     </div>
                 </div>
                 <div class="glass section-card animate-slide-up" style="animation-delay: 0.1s">
-                    <h3>User Demographics</h3>
-                    <div class="chart-container">
+                    <h3>Regional Performance</h3>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="regionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-grid" style="margin-top: 24px;">
+                <div class="glass section-card animate-slide-up" style="animation-delay: 0.2s">
+                    <h3>Category Popularity</h3>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                <div class="glass section-card animate-slide-up" style="animation-delay: 0.3s">
+                    <h3>User Distribution</h3>
+                    <div class="chart-container" style="height: 300px;">
                         <canvas id="userChart"></canvas>
                     </div>
                 </div>
@@ -339,54 +393,62 @@ class AdminApp {
         try {
             const stats = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/stats/`);
 
-            // Generate simulated 30-day historical data ending at 'total revenue'
-            const days = Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`);
-            let currentRev = 0;
-            const revData = days.map((_, i) => {
-                const increase = (stats.revenue.total / 30) * (Math.random() * 0.5 + 0.75);
-                currentRev += increase;
-                return currentRev;
-            });
-            // Force last point to be exactly the real total
-            revData[29] = stats.revenue.total;
-
-            // Render Revenue Line Chart
-            const ctxRev = document.getElementById('revenueChart').getContext('2d');
-            new Chart(ctxRev, {
-                type: 'line',
+            // 1. Heatmap Chart
+            const ctxHeat = document.getElementById('heatmapChart').getContext('2d');
+            new Chart(ctxHeat, {
+                type: 'bar',
                 data: {
-                    labels: days,
+                    labels: Object.keys(stats.heatmap).map(h => `${h}:00`),
                     datasets: [{
-                        label: 'Total Revenue ($)',
-                        data: revData,
-                        borderColor: '#00D2FF',
-                        backgroundColor: 'rgba(0, 210, 255, 0.1)',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true
+                        label: 'Active Reads',
+                        data: Object.values(stats.heatmap),
+                        backgroundColor: 'rgba(108, 99, 255, 0.6)',
+                        borderColor: '#6C63FF',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: this.getChartOptions()
+            });
+
+            // 2. Region Chart
+            const ctxRegion = document.getElementById('regionChart').getContext('2d');
+            new Chart(ctxRegion, {
+                type: 'bar',
+                data: {
+                    labels: stats.breakdowns.regions.map(r => r.region),
+                    datasets: [{
+                        label: 'Total Reads by Region',
+                        data: stats.breakdowns.regions.map(r => r.total_reads),
+                        backgroundColor: '#00D2FF'
+                    }]
+                },
+                options: this.getChartOptions(true)
+            });
+
+            // 3. Category Chart
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: stats.breakdowns.categories.map(c => c.name),
+                    datasets: [{
+                        data: stats.breakdowns.categories.map(c => c.total_reads),
+                        backgroundColor: ['#6C63FF', '#00D2FF', '#FF6584', '#FFD700', '#4CAF50'],
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#fff' } } },
-                    scales: {
-                        y: {
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            ticks: { color: '#rgba(255, 255, 255, 0.6)' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { display: false }
-                        }
-                    }
+                    plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } }
                 }
             });
 
-            // Render User Pie Chart
+            // 4. User Distribution
             const ctxUser = document.getElementById('userChart').getContext('2d');
             new Chart(ctxUser, {
-                type: 'doughnut',
+                type: 'pie',
                 data: {
                     labels: ['Readers', 'Authors'],
                     datasets: [{
@@ -398,16 +460,26 @@ class AdminApp {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#fff', padding: 20 } }
-                    },
-                    cutout: '70%'
+                    plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } }
                 }
             });
 
         } catch (e) {
             console.error('Failed to load analytics:', e);
         }
+    }
+
+    getChartOptions(horizontal = false) {
+        return {
+            indexAxis: horizontal ? 'y' : 'x',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1E1E2E' } },
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } },
+                x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+            }
+        };
     }
 
     loadSettingsView() {
@@ -482,6 +554,382 @@ class AdminApp {
             localStorage.setItem('srishty_settings', JSON.stringify(newSettings));
             alert('Settings successfully saved!');
         });
+    }
+
+    async loadModerationView() {
+        const container = document.getElementById('view-container');
+        container.innerHTML = `<div class="glass section-card animate-slide-up">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">Pending Approval Queue</h3>
+                <span class="status-badge" style="background: rgba(255,165,0,0.2); color: orange;">Review Required</span>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Book Title</th>
+                            <th>Author</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="moderation-list-target">
+                        <tr><td colspan="5">Loading pending books...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+
+        try {
+            const data = await this.fetchWithAuth(`${API_BASE_URL}/core/books/?moderation_status=pending`);
+            const target = document.getElementById('moderation-list-target');
+            const books = data.results || data;
+
+            if (books.length === 0) {
+                target.innerHTML = `<tr><td colspan="5">No books pending approval. ☕</td></tr>`;
+                return;
+            }
+
+            target.innerHTML = books.map(book => `
+                <tr>
+                    <td>#${book.id}</td>
+                    <td><strong>${escapeHTML(book.title)}</strong></td>
+                    <td>${escapeHTML(book.author_name)}</td>
+                    <td>${new Date(book.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn-action green" onclick="adminApp.approveBook(${book.id})">Approve</button>
+                        <button class="btn-action red" onclick="adminApp.rejectBook(${book.id})">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async approveBook(id) {
+        if (!confirm('Approve this book for public discovery?')) return;
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/core/books/${id}/approve/`, { method: 'POST' });
+            this.loadModerationView();
+        } catch (e) { alert('Action failed'); }
+    }
+
+    async rejectBook(id) {
+        const notes = prompt('Enter reason for rejection:');
+        if (notes === null) return;
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/core/books/${id}/reject/`, { 
+                method: 'POST',
+                body: JSON.stringify({ notes })
+            });
+            this.loadModerationView();
+        } catch (e) { alert('Action failed'); }
+    }
+
+    async loadReportsView() {
+        const container = document.getElementById('view-container');
+        container.innerHTML = `<div class="glass section-card animate-slide-up">
+            <h3>Community Reports</h3>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Target</th>
+                            <th>Reporter</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-list-target">
+                        <tr><td colspan="6">Loading reports...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+
+        try {
+            const data = await this.fetchWithAuth(`${API_BASE_URL}/core/reports/`);
+            const target = document.getElementById('reports-list-target');
+            const reports = data.results || data;
+
+            if (reports.length === 0) {
+                target.innerHTML = `<tr><td colspan="6">No reports found. Clean platform! ✨</td></tr>`;
+                return;
+            }
+
+            target.innerHTML = reports.map(r => `
+                <tr>
+                    <td>${r.target_book ? '📖 Book' : '👤 User'}</td>
+                    <td>${escapeHTML(r.target_book_title || r.target_user_name)}</td>
+                    <td>${escapeHTML(r.reporter_name)}</td>
+                    <td><span style="color: #FF6584;">${r.reason.toUpperCase()}</span></td>
+                    <td><span class="status-badge ${r.status === 'pending' ? 'pending' : 'active'}">${r.status}</span></td>
+                    <td>
+                        <button class="btn-action" onclick="adminApp.resolveReport(${r.id})">Resolve</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async resolveReport(id) {
+        const notes = prompt('Admin resolution notes:');
+        if (notes === null) return;
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/core/reports/${id}/resolve/`, { 
+                method: 'POST',
+                body: JSON.stringify({ notes })
+            });
+            this.loadReportsView();
+        } catch (e) { alert('Action failed'); }
+    }
+
+    async showUserProfile(id) {
+        const modal = document.getElementById('user-modal');
+        const content = document.getElementById('user-modal-content');
+        modal.style.display = 'flex';
+        content.innerHTML = '<div style="padding: 40px; text-align: center;"><div class="loading-spinner"></div><p>Gathering 360° Profile Data...</p></div>';
+
+        try {
+            const user = await this.fetchWithAuth(`${API_BASE_URL}/accounts/admin-profiles/${id}/history/`);
+            
+            content.innerHTML = `
+                <div class="user-details-view animate-slide-up">
+                    <div style="display: flex; gap: 30px; margin-bottom: 30px;">
+                        <img src="${user.avatar || 'https://via.placeholder.com/150'}" style="width: 120px; height: 120px; border-radius: 20px; object-fit: cover; border: 2px solid var(--accent-primary);">
+                        <div style="flex: 1;">
+                            <h2 style="margin: 0 0 5px 0; color: white;">${escapeHTML(user.username)} ${user.is_verified ? '<span title="Verified" style="color: #00D2FF; font-size: 0.8em;">✔️</span>' : ''}</h2>
+                            <p style="color: var(--text-secondary); margin: 0 0 15px 0;">${user.email}</p>
+                            <div style="display: flex; gap: 10px;">
+                                <span class="status-badge active">${user.role.toUpperCase()}</span>
+                                <button class="btn-action" style="padding: 2px 10px; font-size: 11px;" onclick="adminApp.messageUser(${user.id}, '${escapeHTML(user.username)}')">Direct Message</button>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <button class="btn-action red" onclick="document.getElementById('user-modal').style.display='none'">Close</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-mini-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+                        <div class="glass" style="padding: 15px; border-radius: 15px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: var(--accent-primary);">${user.total_reads}</div>
+                            <div style="font-size: 12px; opacity: 0.7;">Books Read</div>
+                        </div>
+                        <div class="glass" style="padding: 15px; border-radius: 15px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: var(--accent-secondary);">${user.published_books.length}</div>
+                            <div style="font-size: 12px; opacity: 0.7;">Stories Published</div>
+                        </div>
+                        <div class="glass" style="padding: 15px; border-radius: 15px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #FF6584;">${user.reports_received.length}</div>
+                            <div style="font-size: 12px; opacity: 0.7;">Safety Flags</div>
+                        </div>
+                    </div>
+
+                    ${user.verification_status === 'pending' ? `
+                        <div class="glass" style="padding: 20px; border-radius: 15px; border: 1px solid rgba(0, 210, 255, 0.3); margin-bottom: 30px; background: rgba(0, 210, 255, 0.05);">
+                            <h4 style="margin-top: 0; color: #00D2FF;">🛡️ Verification Review</h4>
+                            <p style="font-size: 14px;">This author has requested a verified badge.</p>
+                            <div style="display: flex; gap: 20px; margin-top: 15px;">
+                                <div style="flex: 1;">
+                                    <label style="font-size: 12px; opacity: 0.6; display: block; margin-bottom: 5px;">ID DOCUMENT</label>
+                                    <img src="${user.verification_id_image || 'https://via.placeholder.com/100?text=No+ID'}" style="width: 100%; max-height: 150px; border-radius: 10px; object-fit: contain; background: black;">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="font-size: 12px; opacity: 0.6; display: block; margin-bottom: 5px;">SOCIAL LINKS</label>
+                                    <div class="glass" style="padding: 10px; border-radius: 10px; font-size: 13px; height: 120px; overflow-y: auto;">
+                                        ${user.verification_links || 'No links provided'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button class="btn-action green" style="flex: 1;" onclick="adminApp.approveVerification(${user.id})">Approve & Grant Badge</button>
+                                <button class="btn-action red" style="flex: 1;" onclick="adminApp.rejectVerification(${user.id})">Reject Request</button>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px;">
+                        <div>
+                            <h3 style="margin-top: 0;">Author Portfolio</h3>
+                            <div class="table-container" style="max-height: 250px; overflow-y: auto;">
+                                <table class="data-table">
+                                    <thead><tr><th>Title</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        ${user.published_books.map(b => `
+                                            <tr>
+                                                <td>${escapeHTML(b.title)}</td>
+                                                <td><span class="status-badge ${b.status === 'approved' ? 'active' : ''}">${b.status}</span></td>
+                                            </tr>
+                                        `).join('') || '<tr><td colspan="2">No stories yet.</td></tr>'}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 style="margin-top: 0;">Safety Flags</h3>
+                            <div class="table-container" style="max-height: 250px; overflow-y: auto;">
+                                <table class="data-table">
+                                    <thead><tr><th>Reason</th><th>Status</th></tr></thead>
+                                    <tbody>
+                                        ${user.reports_received.map(r => `
+                                            <tr>
+                                                <td style="color: #FF6584;">${r.reason.toUpperCase()}</td>
+                                                <td><span class="status-badge ${r.status === 'resolved' ? 'active' : ''}">${r.status}</span></td>
+                                            </tr>
+                                        `).join('') || '<tr><td colspan="2">No flags. Good citizen!</td></tr>'}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            console.error(e);
+            content.innerHTML = '<p style="padding: 40px; text-align: center; color: #FF6584;">Error loading user profile.</p>';
+        }
+    }
+
+    async approveVerification(id) {
+        if (!confirm('Confirm verification for this author? They will receive the blue badge.')) return;
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/accounts/admin-profiles/${id}/verify_approve/`, { method: 'POST' });
+            this.showUserProfile(id);
+            this.loadUsersView(); // Refresh list in background
+        } catch (e) { alert('Failed to approve'); }
+    }
+
+    async rejectVerification(id) {
+        if (!confirm('Reject this verification request?')) return;
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/accounts/admin-profiles/${id}/verify_reject/`, { method: 'POST' });
+            this.showUserProfile(id);
+            this.loadUsersView();
+        } catch (e) { alert('Failed to reject'); }
+    }
+
+    async loadBroadcastView() {
+        const container = document.getElementById('view-container');
+        container.innerHTML = `<div class="glass section-card animate-slide-up" style="max-width: 600px; margin: 0 auto;">
+            <h3>📢 Send System Broadcast</h3>
+            <p style="font-size: 14px; opacity: 0.7; margin-bottom: 20px;">
+                This message will be sent as a system notification to <strong>ALL</strong> registered users in the mobile app.
+            </p>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 12px; opacity: 0.6;">BROADCAST MESSAGE</label>
+                <textarea id="broadcast-message" placeholder="e.g. We are performing maintenance tonight at 12 AM UTC..." 
+                    style="width: 100%; height: 150px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; padding: 15px; font-family: inherit; resize: none;"></textarea>
+            </div>
+            <button class="btn-action green" style="width: 100%; padding: 15px;" onclick="adminApp.sendBroadcast()">🚀 Blast Message to All Users</button>
+            <p style="font-size: 11px; text-align: center; margin-top: 15px; opacity: 0.5;">
+                ⚠️ Use this sparingly to avoid spamming users.
+            </p>
+        </div>`;
+    }
+
+    async sendBroadcast() {
+        const message = document.getElementById('broadcast-message').value;
+        if (!message) return alert('Please enter a message');
+        if (!confirm('Are you sure you want to send this to EVERY user?')) return;
+
+        try {
+            const res = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/broadcast/`, {
+                method: 'POST',
+                body: JSON.stringify({ message })
+            });
+            alert(`Success! Broadcast sent to ${res.count} users.`);
+            document.getElementById('broadcast-message').value = '';
+        } catch (e) { alert('Broadcast failed'); }
+    }
+
+    async messageUser(id, username) {
+        const message = prompt(`Send a direct message to ${username}:`);
+        if (!message) return;
+
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/message_user/`, {
+                method: 'POST',
+                body: JSON.stringify({ user_id: id, message })
+            });
+            alert('Message sent successfully!');
+        } catch (e) { alert('Failed to send message'); }
+    }
+
+    async loadSecurityView() {
+        const container = document.getElementById('view-container');
+        container.innerHTML = `<div class="glass section-card animate-slide-up">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">Administrative Audit Logs</h3>
+                <span class="status-badge active">System Health: Secure</span>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Admin</th>
+                            <th>Action</th>
+                            <th>Target</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-logs-target">
+                        <tr><td colspan="6">Loading logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+
+        try {
+            const logs = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/audit_logs/`);
+            const target = document.getElementById('audit-logs-target');
+            
+            if (logs.length === 0) {
+                target.innerHTML = `<tr><td colspan="6">No logs found.</td></tr>`;
+                return;
+            }
+
+            target.innerHTML = logs.map(l => `
+                <tr>
+                    <td style="font-size: 12px; opacity: 0.7;">${new Date(l.timestamp).toLocaleString()}</td>
+                    <td><strong>${escapeHTML(l.admin)}</strong></td>
+                    <td><span class="status-badge" style="background: rgba(108, 99, 255, 0.1); color: var(--accent-primary); font-size: 10px;">${l.action}</span></td>
+                    <td>${escapeHTML(l.target || '-')}</td>
+                    <td style="font-size: 12px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHTML(l.details)}">
+                        ${escapeHTML(l.details || '-')}
+                    </td>
+                    <td style="font-family: monospace; font-size: 11px; opacity: 0.6;">${l.ip || 'Local'}</td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    toggleAllUsers(master) {
+        document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = master.checked);
+    }
+
+    async bulkVerifyUsers() {
+        const selected = Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => parseInt(cb.value));
+        if (selected.length === 0) return alert('Select users first');
+        if (!confirm(`Verify ${selected.length} users at once?`)) return;
+
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/accounts/admin-profiles/bulk_verify/`, {
+                method: 'POST',
+                body: JSON.stringify({ user_ids: selected })
+            });
+            alert(`Success! ${selected.length} users verified.`);
+            this.loadUsersView();
+        } catch (e) { alert('Bulk verification failed'); }
     }
 }
 

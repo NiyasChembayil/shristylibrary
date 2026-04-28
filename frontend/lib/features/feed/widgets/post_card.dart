@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:lottie/lottie.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/post_model.dart';
 import '../../../providers/post_provider.dart';
@@ -387,10 +388,11 @@ class _PostCardState extends ConsumerState<PostCard>
                       parent: _heartController,
                       curve: Curves.elasticOut,
                     ),
-                    child: const Icon(
-                      Icons.favorite_rounded,
-                      color: Color(0xFFFF6584),
-                      size: 80,
+                    child: Lottie.network(
+                      'https://assets9.lottiefiles.com/packages/lf20_oxkv15y6.json',
+                      width: 150,
+                      height: 150,
+                      repeat: false,
                     ),
                   ),
                 ),
