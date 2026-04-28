@@ -21,7 +21,7 @@
             <h1>Srishty</h1>
             <p>Digital Author Studio</p>
             
-            <form id="auth-form" onsubmit="app.handleAuth(event); return false;">
+            <form id="auth-form" onsubmit="return false;">
                 <div class="form-group"><input type="text" id="auth-user" class="form-input" placeholder="Username" required></div>
                 <div id="signup-extra" class="hidden form-group">
                     <input type="email" id="auth-email" class="form-input" placeholder="Email (optional)">
@@ -30,7 +30,7 @@
                 
                 <p id="auth-error" style="color: #ef4444; margin-bottom: 20px; font-size: 13px; font-weight: 600; display: none;"></p>
                 
-                <button type="submit" class="btn-primary" id="auth-btn">Sign In</button>
+                <button type="button" class="btn-primary" id="auth-btn" onclick="app.handleAuth(event)">Sign In</button>
             </form>
             
             <p style="margin-top: 24px; font-size: 14px; color: var(--text-secondary); font-weight: 500;">
