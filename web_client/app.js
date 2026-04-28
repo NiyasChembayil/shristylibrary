@@ -76,9 +76,54 @@ class SrishtyApp {
         try {
             this.setupQuill();
             this.fetchCategories();
+            this.initDropZones();
         } catch (e) {
             console.warn('Init delayed/failed:', e);
         }
+    }
+
+    initDropZones() {
+        ['create-drop-zone', 'settings-drop-zone'].forEach(id => {
+            const zone = document.getElementById(id);
+            if (!zone) return;
+
+            const input = zone.querySelector('input[type="file"]');
+            const preview = zone.querySelector('.drop-zone-preview');
+
+            ['dragover', 'dragleave', 'drop'].forEach(evt => {
+                zone.addEventListener(evt, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+
+            zone.addEventListener('dragover', () => zone.classList.add('over'));
+            zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+            zone.addEventListener('drop', e => {
+                zone.classList.remove('over');
+                const files = e.dataTransfer.files;
+                if (files.length) {
+                    input.files = files;
+                    this.handleFilePreview(files[0], preview);
+                }
+            });
+
+            input.addEventListener('change', () => {
+                if (input.files.length) {
+                    this.handleFilePreview(input.files[0], preview);
+                }
+            });
+        });
+    }
+
+    handleFilePreview(file, previewImg) {
+        if (!file || !previewImg) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            previewImg.src = e.target.result;
+            previewImg.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
     }
 
     async fetchCategories() {
@@ -647,6 +692,16 @@ class SrishtyApp {
         }
         document.getElementById('editor-chapter-label').textContent = chapterObj.title || 'Untitled Chapter';
         
+        // Audiobook Player
+        const audioContainer = document.getElementById('chapter-audio-container');
+        const audioPlayer = document.getElementById('chapter-audio-player');
+        if (chapterObj.audio_file) {
+            audioPlayer.src = this.getMediaUrl(chapterObj.audio_file);
+            audioContainer.classList.remove('hidden');
+        } else {
+            audioContainer.classList.add('hidden');
+        }
+
         // Premium fields
         const premiumToggle = document.getElementById('chapter-is-premium');
         const coinsInput = document.getElementById('chapter-coins');
@@ -724,7 +779,11 @@ class SrishtyApp {
                     body: formData
                 });
                 const idx = this.currentChapters.findIndex(c => c.id === this.currentChapterId);
-                if (idx !== -1) this.currentChapters[idx].content = content;
+                if (idx !== -1) {
+                    this.currentChapters[idx].content = content;
+                    this.currentChapters[idx].is_premium = isPremium;
+                    this.currentChapters[idx].coins_required = coins;
+                }
             } else {
                 const order = this.currentChapters.length;
                 formData.append('order', order);
@@ -791,6 +850,13 @@ class SrishtyApp {
             });
             statusText.textContent = 'Audio Uploaded';
             statusText.style.color = '#10B981';
+            
+            // Update local state and player
+            const chapter = this.currentChapters.find(c => c.id === this.currentChapterId);
+            if (chapter) {
+                chapter.audio_file = res.url;
+                this.loadChapterContent(chapter); // Refresh player
+            }
             alert('Chapter audio uploaded successfully!');
         } catch (e) {
             console.error('Audio Upload Error:', e);
@@ -818,17 +884,21 @@ class SrishtyApp {
             const coverUrl = this.getMediaUrl(book.cover);
             if (coverUrl) {
                 preview.src = coverUrl;
-                preview.style.display = 'block';
+                preview.classList.remove('hidden');
             } else {
-                preview.style.display = 'none';
+                preview.classList.add('hidden');
             }
 
             const audioLabel = document.getElementById('settings-audio-label');
+            const audioPlayer = document.getElementById('settings-audio-player');
             if (book.audio_file) {
-                const parts = book.audio_file.split('/');
-                audioLabel.textContent = parts[parts.length - 1];
+                const url = this.getMediaUrl(book.audio_file);
+                audioPlayer.src = url;
+                audioPlayer.classList.remove('hidden');
+                audioLabel.textContent = 'Currently uploaded audiobook';
             } else {
-                audioLabel.textContent = 'No audio';
+                audioPlayer.classList.add('hidden');
+                audioLabel.textContent = 'No audiobook uploaded';
             }
         } catch (e) {
             console.error(e);
