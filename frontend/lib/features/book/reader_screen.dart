@@ -12,11 +12,14 @@ class ReaderScreen extends ConsumerStatefulWidget {
   final String title;
   final List chapters;
 
+  final int initialChapterIndex;
+
   const ReaderScreen({
     super.key,
     required this.bookId,
     required this.title,
     required this.chapters,
+    this.initialChapterIndex = 0,
   });
 
   @override
