@@ -436,6 +436,33 @@ class BookViewSet(viewsets.ModelViewSet):
         except (Chapter.DoesNotExist, ValueError):
             return Response({'error': f'Chapter {chapter_number} not found'}, status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=True, methods=['get'])
+    def export_pdf(self, request, pk=None):
+        book = self.get_object()
+        chapters = book.chapters.all().order_by('order')
+        
+        from .export_utils import generate_pdf
+        pdf_content = generate_pdf(book, chapters)
+        
+        if not pdf_content:
+            return Response({'error': 'PDF generation failed'}, status=500)
+            
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{book.slug or "book"}.pdf"'
+        return response
+
+    @action(detail=True, methods=['get'])
+    def export_epub(self, request, pk=None):
+        book = self.get_object()
+        chapters = book.chapters.all().order_by('order')
+        
+        from .export_utils import generate_epub
+        epub_content = generate_epub(book, chapters)
+        
+        response = HttpResponse(epub_content, content_type='application/epub+zip')
+        response['Content-Disposition'] = f'attachment; filename="{book.slug or "book"}.epub"'
+        return response
+
 class ChapterViewSet(viewsets.ModelViewSet):
     queryset = Chapter.objects.all().select_related('book')
     serializer_class = ChapterSerializer

@@ -2237,6 +2237,43 @@ class SrishtyApp {
         document.getElementById('sprint-modal').classList.add('hidden');
         if (this.sprintPoller) clearInterval(this.sprintPoller);
     }
+
+    async exportBook(format) {
+        if (!this.currentStoryId) return;
+        
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span style="font-size: 12px;">Generating...</span>';
+        btn.disabled = true;
+
+        try {
+            const url = `${API_URL}/core/books/${this.currentStoryId}/export_${format}/`;
+            
+            const response = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${this.token}` }
+            });
+            
+            if (!response.ok) throw new Error('Export failed');
+            
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `srishty_export_${this.currentStoryId}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(downloadUrl);
+            a.remove();
+            
+            this.showSuccessAnimation();
+        } catch (err) {
+            console.error(err);
+            alert(`Export failed: ${err.message}`);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
 }
 
 // Global initialization

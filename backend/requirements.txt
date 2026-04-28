@@ -23,3 +23,5 @@ cloudinary
 django-cloudinary-storage
 firebase-admin
 bleach
+xhtml2pdf
+EbookLib
