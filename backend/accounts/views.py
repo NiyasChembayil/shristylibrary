@@ -8,7 +8,7 @@ from .models import Profile
 from .serializers import UserSerializer, ProfileSerializer, RegisterSerializer, UserListSerializer, AdminUserHistorySerializer
 from core.models import ReadStats
 from social.models import Follow, Notification
-from .permissions import IsOwnerOrReadOnly
+from core.permissions import IsOwnerOrReadOnly
 from .audit import log_admin_action
 
 class AuthViewSet(viewsets.GenericViewSet):
