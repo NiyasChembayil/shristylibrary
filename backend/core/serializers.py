@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Book, Chapter, ReadStats, Report, StoryBible, ChapterChoice, StoryCharacter, CharacterRelationship
+from .models import Category, Book, Chapter, ReadStats, Report, StoryBible, ChapterChoice, StoryCharacter, CharacterRelationship, WritingSprint, SprintParticipant
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -116,6 +116,25 @@ class ReadStatsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadStats
         fields = '__all__'
+
+class WritingSprintSerializer(serializers.ModelSerializer):
+    participants = serializers.SerializerMethodField()
+    participant_count = serializers.IntegerField(source='participants.count', read_only=True)
+    
+    class Meta:
+        model = WritingSprint
+        fields = ['id', 'title', 'start_time', 'end_time', 'is_active', 'participants', 'participant_count']
+
+    def get_participants(self, obj):
+        # Sort by words written
+        participants = obj.participants.all().order_by('-words_written')
+        return SprintParticipantSerializer(participants, many=True).data
+
+class SprintParticipantSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    class Meta:
+        model = SprintParticipant
+        fields = ['id', 'username', 'words_written', 'last_updated']
 
 class ReportSerializer(serializers.ModelSerializer):
     reporter_name = serializers.ReadOnlyField(source='reporter.username')

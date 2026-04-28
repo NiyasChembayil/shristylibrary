@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework_nested import routers
 from .views import (
     CategoryViewSet, BookViewSet, ChapterViewSet, ReportViewSet, 
-    StoryBibleViewSet, StoryCharacterViewSet, CharacterRelationshipViewSet
+    StoryBibleViewSet, StoryCharacterViewSet, CharacterRelationshipViewSet,
+    WritingSprintViewSet
 )
 
 router = routers.DefaultRouter()
@@ -12,6 +13,7 @@ router.register(r'reports', ReportViewSet, basename='report')
 router.register(r'story-bible', StoryBibleViewSet, basename='story-bible')
 router.register(r'characters', StoryCharacterViewSet, basename='character')
 router.register(r'relationships', CharacterRelationshipViewSet, basename='relationship')
+router.register(r'sprints', WritingSprintViewSet, basename='sprint')
 
 books_router = routers.NestedDefaultRouter(router, r'books', lookup='book')
 books_router.register(r'chapters', ChapterViewSet, basename='book-chapters')

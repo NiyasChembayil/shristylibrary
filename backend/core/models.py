@@ -255,6 +255,26 @@ class AppBanner(models.Model):
         ordering = ['order']
 
 
+class WritingSprint(models.Model):
+    title = models.CharField(max_length=255, default="Community Sprint")
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.start_time})"
+
+
+class SprintParticipant(models.Model):
+    sprint = models.ForeignKey(WritingSprint, on_delete=models.CASCADE, related_name='participants')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    words_written = models.PositiveIntegerField(default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('sprint', 'user')
+
+
 class Transaction(models.Model):
     TYPE_CHOICES = (
         ('purchase', 'Book Purchase'),

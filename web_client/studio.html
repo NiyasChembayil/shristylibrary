@@ -285,6 +285,10 @@
                                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 4L9 7"/></svg>
                                     Interactive
                                 </button>
+                                <button class="btn-outline" onclick="app.showSprintModal()">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Join Sprint
+                                </button>
                                 <button class="btn-primary" id="save-indicator" onclick="app.saveCurrentChapter()">
                                     Save Draft
                                 </button>
@@ -753,6 +757,33 @@
             <div style="display: flex; gap: 12px; margin-top: 32px;">
                 <button class="btn-primary" style="flex: 1;" onclick="app.saveRelationship()">Connect</button>
                 <button class="btn-outline" style="flex: 1;" onclick="document.getElementById('rel-modal').classList.add('hidden')">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <!-- MODAL: WRITING SPRINT -->
+    <div id="sprint-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 600px; padding: 40px; background: white; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 20px;">🏆</div>
+            <h2 id="sprint-title">Writing Sprint</h2>
+            <p id="sprint-timer" style="font-size: 64px; font-weight: 800; font-family: monospace; margin: 24px 0; color: var(--accent-primary);">25:00</p>
+            
+            <div style="margin-bottom: 32px;">
+                <p id="sprint-status-msg" style="color: var(--text-secondary); margin-bottom: 12px;">Waiting for next sprint...</p>
+                <div id="sprint-progress-container" class="hidden">
+                    <p style="font-size: 14px; font-weight: 700;">Your Words: <span id="sprint-user-words" style="color: #10B981;">0</span></p>
+                </div>
+            </div>
+
+            <div style="background: #F8FAFC; border-radius: 20px; padding: 24px; border: 1px solid var(--border-color); text-align: left;">
+                <h4 style="margin-bottom: 16px;">Leaderboard</h4>
+                <div id="sprint-leaderboard" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
+                    <!-- Leaderboard items -->
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 32px;">
+                <button id="btn-join-sprint" class="btn-primary" style="flex: 1;" onclick="app.joinSprint()">Join Sprint</button>
+                <button class="btn-outline" style="flex: 1;" onclick="app.closeSprintModal()">Close</button>
             </div>
         </div>
     </div>

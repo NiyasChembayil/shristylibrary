@@ -43,6 +43,9 @@ class SrishtyApp {
         this.currentStoryCharacters = [];
         this.currentStoryRelationships = [];
         this.charNetwork = null;
+        this.currentSprint = null;
+        this.wordsWrittenAtSprintStart = 0;
+        this.sprintPoller = null;
     }
 
     initTheme() {
@@ -2125,6 +2128,114 @@ class SrishtyApp {
             await this.fetchAPI(`/core/relationships/${id}/`, { method: 'DELETE' });
             this.loadCharacterData();
         } catch (e) { alert("Failed to delete relationship"); }
+    }
+
+    async showSprintModal() {
+        document.getElementById('sprint-modal').classList.remove('hidden');
+        await this.loadActiveSprint();
+        this.startSprintPoller();
+    }
+
+    async loadActiveSprint() {
+        try {
+            const sprint = await this.fetchAPI('/core/sprints/active_sprint/');
+            this.currentSprint = sprint;
+            if (sprint) {
+                document.getElementById('sprint-title').textContent = sprint.title;
+                this.updateSprintTimer();
+                this.renderSprintLeaderboard();
+                
+                const isPart = sprint.participants.some(p => p.username === this.currentUser);
+                document.getElementById('btn-join-sprint').classList.toggle('hidden', isPart);
+                document.getElementById('sprint-progress-container').classList.toggle('hidden', !isPart);
+                document.getElementById('sprint-status-msg').textContent = isPart ? "Sprint in progress! Keep writing." : "Join this active sprint!";
+            }
+        } catch (e) {
+            console.error("Sprint load error", e);
+        }
+    }
+
+    updateSprintTimer() {
+        if (!this.currentSprint) return;
+        const end = new Date(this.currentSprint.end_time).getTime();
+        const now = new Date().getTime();
+        const diff = end - now;
+
+        if (diff <= 0) {
+            document.getElementById('sprint-timer').textContent = "00:00";
+            document.getElementById('sprint-status-msg').textContent = "Sprint finished! Well done.";
+            return;
+        }
+
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+        document.getElementById('sprint-timer').textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        
+        // Only trigger next timeout if modal is visible to save resources
+        if (!document.getElementById('sprint-modal').classList.contains('hidden')) {
+            setTimeout(() => this.updateSprintTimer(), 1000);
+        }
+    }
+
+    renderSprintLeaderboard() {
+        if (!this.currentSprint) return;
+        const list = document.getElementById('sprint-leaderboard');
+        list.innerHTML = this.currentSprint.participants.map((p, i) => `
+            <div style="display: flex; align-items: center; justify-content: space-between; background: white; padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border-color); ${p.username === this.currentUser ? 'border-color: var(--accent-primary); background: #EEF2FF;' : ''}">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-weight: 800; color: var(--text-secondary); width: 20px;">#${i + 1}</span>
+                    <span style="font-weight: 700;">${p.username}</span>
+                </div>
+                <span style="font-weight: 800; color: #10B981;">${p.words_written} words</span>
+            </div>
+        `).join('') || '<p style="text-align: center; font-size: 12px; color: var(--text-secondary);">Be the first to join!</p>';
+        
+        const userPart = this.currentSprint.participants.find(p => p.username === this.currentUser);
+        if (userPart) {
+            document.getElementById('sprint-user-words').textContent = userPart.words_written;
+        }
+    }
+
+    async joinSprint() {
+        if (!this.currentSprint) return;
+        try {
+            await this.fetchAPI(`/core/sprints/${this.currentSprint.id}/join/`, { method: 'POST' });
+            this.wordsWrittenAtSprintStart = parseInt(document.getElementById('word-count').textContent) || 0;
+            await this.loadActiveSprint();
+        } catch (e) {
+            alert("Failed to join sprint.");
+        }
+    }
+
+    startSprintPoller() {
+        if (this.sprintPoller) clearInterval(this.sprintPoller);
+        this.sprintPoller = setInterval(async () => {
+            const modal = document.getElementById('sprint-modal');
+            if (modal.classList.contains('hidden')) {
+                clearInterval(this.sprintPoller);
+                return;
+            }
+            
+            // If participating, update progress first
+            if (this.currentSprint) {
+                const isPart = this.currentSprint.participants.some(p => p.username === this.currentUser);
+                if (isPart) {
+                    const currentWords = parseInt(document.getElementById('word-count').textContent) || 0;
+                    const delta = Math.max(0, currentWords - this.wordsWrittenAtSprintStart);
+                    await this.fetchAPI(`/core/sprints/${this.currentSprint.id}/update_progress/`, {
+                        method: 'POST',
+                        body: JSON.stringify({ words_written: delta })
+                    });
+                }
+            }
+            
+            await this.loadActiveSprint();
+        }, 10000); // Every 10 seconds
+    }
+
+    closeSprintModal() {
+        document.getElementById('sprint-modal').classList.add('hidden');
+        if (this.sprintPoller) clearInterval(this.sprintPoller);
     }
 }
 

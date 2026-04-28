@@ -4,11 +4,11 @@ from rest_framework.decorators import action
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report, StoryBible, ChapterVersion, ChapterChoice, StoryCharacter, CharacterRelationship
+from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report, StoryBible, ChapterVersion, ChapterChoice, StoryCharacter, CharacterRelationship, WritingSprint, SprintParticipant
 from .serializers import (
     CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer, 
     StoryBibleSerializer, ChapterChoiceSerializer, StoryCharacterSerializer, 
-    CharacterRelationshipSerializer
+    CharacterRelationshipSerializer, WritingSprintSerializer, SprintParticipantSerializer
 )
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -685,3 +685,53 @@ class CharacterRelationshipViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return CharacterRelationship.objects.filter(from_character__book__author=self.request.user)
+
+
+class WritingSprintViewSet(viewsets.ModelViewSet):
+    serializer_class = WritingSprintSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        now = timezone.now()
+        return WritingSprint.objects.filter(end_time__gt=now - timedelta(hours=1))
+
+    @action(detail=True, methods=['post'])
+    def join(self, request, pk=None):
+        sprint = self.get_object()
+        now = timezone.now()
+        if now > sprint.end_time:
+            return Response({'error': 'Sprint already ended'}, status=400)
+            
+        participant, created = SprintParticipant.objects.get_or_create(
+            sprint=sprint,
+            user=request.user
+        )
+        return Response(SprintParticipantSerializer(participant).data)
+
+    @action(detail=True, methods=['post'])
+    def update_progress(self, request, pk=None):
+        sprint = self.get_object()
+        words = request.data.get('words_written', 0)
+        
+        try:
+            participant = SprintParticipant.objects.get(sprint=sprint, user=request.user)
+            participant.words_written = words
+            participant.save()
+            return Response({'status': 'updated'})
+        except SprintParticipant.DoesNotExist:
+            return Response({'error': 'Not participating'}, status=404)
+
+    @action(detail=False, methods=['get'])
+    def active_sprint(self, request):
+        now = timezone.now()
+        sprint = WritingSprint.objects.filter(start_time__lte=now, end_time__gt=now, is_active=True).first()
+        if not sprint:
+            # Create a new 25-min sprint if none exists
+            start = now
+            end = now + timedelta(minutes=25)
+            sprint = WritingSprint.objects.create(
+                title=f"Sprint @ {now.strftime('%H:%M')}",
+                start_time=start,
+                end_time=end
+            )
+        return Response(WritingSprintSerializer(sprint).data)
