@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Book, Chapter, ReadStats, Report, StoryBible, ChapterChoice
+from .models import Category, Book, Chapter, ReadStats, Report, StoryBible, ChapterChoice, StoryCharacter, CharacterRelationship
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,6 +49,7 @@ class BookSerializer(serializers.ModelSerializer):
     is_liked = serializers.SerializerMethodField()
     downloads_count = serializers.SerializerMethodField()
     chapters_count = serializers.SerializerMethodField()
+    characters = StoryCharacterSerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
@@ -57,7 +58,7 @@ class BookSerializer(serializers.ModelSerializer):
             'description', 'category', 'category_name', 'language', 'tags', 'price', 'region',
             'is_published', 'moderation_status', 'moderation_notes', 'created_at', 'updated_at', 'chapters', 'chapters_count',
             'likes_count', 'comments_count', 'total_reads', 'is_in_library', 'is_liked',
-            'downloads_count'
+            'downloads_count', 'characters'
         ]
 
     def get_author_profile_id(self, obj):
@@ -100,6 +101,16 @@ class BookSerializer(serializers.ModelSerializer):
 
     def get_chapters_count(self, obj):
         return obj.chapters.count()
+
+class StoryCharacterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StoryCharacter
+        fields = '__all__'
+
+class CharacterRelationshipSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CharacterRelationship
+        fields = '__all__'
 
 class ReadStatsSerializer(serializers.ModelSerializer):
     class Meta:

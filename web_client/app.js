@@ -39,6 +39,10 @@ class SrishtyApp {
         } else {
             this.init();
         }
+
+        this.currentStoryCharacters = [];
+        this.currentStoryRelationships = [];
+        this.charNetwork = null;
     }
 
     initTheme() {
@@ -1925,6 +1929,202 @@ class SrishtyApp {
         } catch (e) {
             alert("Failed to remove choice.");
         }
+    }
+
+    switchBibleTab(tab) {
+        document.getElementById('bible-tab-notes').classList.toggle('active', tab === 'notes');
+        document.getElementById('bible-tab-characters').classList.toggle('active', tab === 'characters');
+        
+        document.getElementById('bible-content-notes').classList.toggle('hidden', tab !== 'notes');
+        document.getElementById('bible-content-characters').classList.toggle('hidden', tab !== 'characters');
+        
+        if (tab === 'characters') {
+            this.loadCharacterData();
+        }
+    }
+
+    async loadCharacterData() {
+        if (!this.currentStoryId) return;
+        
+        // Refresh book data to get characters
+        const book = await this.fetchAPI(`/core/books/${this.currentStoryId}/`);
+        this.currentStoryCharacters = book.characters || [];
+        
+        const rels = await this.fetchAPI(`/core/books/${this.currentStoryId}/relationships/`);
+        this.currentStoryRelationships = rels || [];
+        
+        this.renderCharacterList();
+        this.renderRelationshipList();
+        this.renderCharacterGraph();
+    }
+
+    renderCharacterList() {
+        const list = document.getElementById('bible-character-list');
+        if (this.currentStoryCharacters.length === 0) {
+            list.innerHTML = '<p style="font-size: 12px; color: var(--text-secondary); text-align: center;">No characters yet.</p>';
+            return;
+        }
+
+        list.innerHTML = this.currentStoryCharacters.map(char => `
+            <div style="display: flex; align-items: center; gap: 10px; background: #F8FAFC; padding: 10px; border-radius: 12px; border: 1px solid var(--border-color);">
+                <div style="width: 12px; height: 12px; border-radius: 50%; background: ${char.color}"></div>
+                <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 700;">${char.name}</div>
+                    <div style="font-size: 10px; color: var(--text-secondary);">${char.role || 'No role'}</div>
+                </div>
+                <button class="btn-quiet" style="padding: 4px; color: var(--danger);" onclick="app.deleteCharacter(${char.id})">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    renderRelationshipList() {
+        const list = document.getElementById('bible-rel-list');
+        if (this.currentStoryRelationships.length === 0) {
+            list.innerHTML = '<p style="font-size: 12px; color: var(--text-secondary); text-align: center;">No relationships yet.</p>';
+            return;
+        }
+
+        list.innerHTML = this.currentStoryRelationships.map(rel => {
+            const from = this.currentStoryCharacters.find(c => c.id === rel.from_character);
+            const to = this.currentStoryCharacters.find(c => c.id === rel.to_character);
+            if (!from || !to) return '';
+            
+            return `
+                <div style="font-size: 12px; background: #F1F5F9; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600;">${from.name} <span style="color: var(--text-secondary); font-weight: 400;">is ${rel.type} of</span> ${to.name}</span>
+                    <button class="btn-quiet" style="padding: 2px; color: var(--danger);" onclick="app.deleteRelationship(${rel.id})">×</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    renderCharacterGraph() {
+        const container = document.getElementById('character-graph');
+        if (!container) return;
+        
+        const nodes = new vis.DataSet(this.currentStoryCharacters.map(c => ({
+            id: c.id,
+            label: c.name,
+            color: {
+                background: c.color,
+                border: '#ffffff',
+                highlight: { background: c.color, border: '#000000' }
+            },
+            font: { color: '#ffffff', weight: 'bold' },
+            shape: 'dot',
+            size: 25
+        })));
+
+        const edges = new vis.DataSet(this.currentStoryRelationships.map(r => ({
+            from: r.from_character,
+            to: r.to_character,
+            label: r.type,
+            font: { align: 'horizontal', size: 10 },
+            arrows: 'to',
+            color: { color: '#94A3B8' }
+        })));
+
+        const data = { nodes, edges };
+        const options = {
+            physics: {
+                enabled: true,
+                stabilization: true
+            },
+            layout: {
+                randomSeed: 2
+            }
+        };
+
+        if (this.charNetwork) this.charNetwork.destroy();
+        this.charNetwork = new vis.Network(container, data, options);
+    }
+
+    showAddCharacter() {
+        document.getElementById('char-name').value = '';
+        document.getElementById('char-role').value = '';
+        document.getElementById('character-modal').classList.remove('hidden');
+    }
+
+    async saveCharacter() {
+        const name = document.getElementById('char-name').value;
+        const role = document.getElementById('char-role').value;
+        const color = document.getElementById('char-color').value;
+
+        if (!name) return alert("Character name is required");
+
+        try {
+            await this.fetchAPI('/core/characters/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    book: this.currentStoryId,
+                    name, role, color
+                })
+            });
+            document.getElementById('character-modal').classList.add('hidden');
+            this.loadCharacterData();
+            this.showSuccessAnimation();
+        } catch (e) {
+            alert("Failed to save character");
+        }
+    }
+
+    showAddRelationship() {
+        if (this.currentStoryCharacters.length < 2) {
+            alert("Add at least 2 characters first.");
+            return;
+        }
+
+        const fromSelect = document.getElementById('rel-from');
+        const toSelect = document.getElementById('rel-to');
+        
+        const options = this.currentStoryCharacters.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        fromSelect.innerHTML = options;
+        toSelect.innerHTML = options;
+        
+        document.getElementById('rel-modal').classList.remove('hidden');
+    }
+
+    async saveRelationship() {
+        const from = document.getElementById('rel-from').value;
+        const to = document.getElementById('rel-to').value;
+        const type = document.getElementById('rel-type').value;
+        const desc = document.getElementById('rel-desc').value;
+
+        if (from === to) return alert("Characters must be different");
+
+        try {
+            await this.fetchAPI('/core/relationships/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    from_character: from,
+                    to_character: to,
+                    type, description: desc
+                })
+            });
+            document.getElementById('rel-modal').classList.add('hidden');
+            this.loadCharacterData();
+            this.showSuccessAnimation();
+        } catch (e) {
+            alert("Failed to save relationship");
+        }
+    }
+
+    async deleteCharacter(id) {
+        if (!confirm("Delete this character and all their relationships?")) return;
+        try {
+            await this.fetchAPI(`/core/characters/${id}/`, { method: 'DELETE' });
+            this.loadCharacterData();
+        } catch (e) { alert("Failed to delete character"); }
+    }
+
+    async deleteRelationship(id) {
+        if (!confirm("Remove this relationship?")) return;
+        try {
+            await this.fetchAPI(`/core/relationships/${id}/`, { method: 'DELETE' });
+            this.loadCharacterData();
+        } catch (e) { alert("Failed to delete relationship"); }
     }
 }
 

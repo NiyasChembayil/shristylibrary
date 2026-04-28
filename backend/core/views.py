@@ -4,8 +4,12 @@ from rest_framework.decorators import action
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report, StoryBible, ChapterVersion, ChapterChoice
-from .serializers import CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer, StoryBibleSerializer, ChapterChoiceSerializer
+from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report, StoryBible, ChapterVersion, ChapterChoice, StoryCharacter, CharacterRelationship
+from .serializers import (
+    CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer, 
+    StoryBibleSerializer, ChapterChoiceSerializer, StoryCharacterSerializer, 
+    CharacterRelationshipSerializer
+)
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page
@@ -147,6 +151,13 @@ class BookViewSet(viewsets.ModelViewSet):
             'current_streak': profile.current_streak,
             'goal_reached': stats.goal_reached
         })
+
+    @action(detail=True, methods=['get'])
+    def relationships(self, request, pk=None):
+        book = self.get_object()
+        rels = CharacterRelationship.objects.filter(from_character__book=book)
+        serializer = CharacterRelationshipSerializer(rels, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def trending(self, request):
@@ -660,3 +671,17 @@ class StoryBibleViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         except Book.DoesNotExist:
             return Response({'error': 'Book not found or access denied'}, status=404)
+class StoryCharacterViewSet(viewsets.ModelViewSet):
+    serializer_class = StoryCharacterSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return StoryCharacter.objects.filter(book__author=self.request.user)
+
+
+class CharacterRelationshipViewSet(viewsets.ModelViewSet):
+    serializer_class = CharacterRelationshipSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return CharacterRelationship.objects.filter(from_character__book__author=self.request.user)

@@ -105,6 +105,35 @@ class StoryBible(models.Model):
     def __str__(self):
         return f"Bible for {self.book.title}"
 
+
+class StoryCharacter(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='characters')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    role = models.CharField(max_length=100, blank=True)
+    color = models.CharField(max_length=7, default='#4F46E5')
+
+    def __str__(self):
+        return f"{self.name} ({self.book.title})"
+
+
+class CharacterRelationship(models.Model):
+    REL_TYPES = (
+        ('friend', 'Friend'),
+        ('enemy', 'Enemy'),
+        ('family', 'Family'),
+        ('lover', 'Lover'),
+        ('ally', 'Ally'),
+        ('other', 'Other'),
+    )
+    from_character = models.ForeignKey(StoryCharacter, on_delete=models.CASCADE, related_name='relationships_from')
+    to_character = models.ForeignKey(StoryCharacter, on_delete=models.CASCADE, related_name='relationships_to')
+    type = models.CharField(max_length=20, choices=REL_TYPES, default='friend')
+    description = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"{self.from_character.name} -> {self.to_character.name} ({self.type})"
+
 class ChapterVersion(models.Model):
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='versions')
     content = models.TextField()
