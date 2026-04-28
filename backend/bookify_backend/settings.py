@@ -224,29 +224,17 @@ CLOUDINARY_STORAGE = {
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "https://shristylibrary.onrender.com",
+    "https://srishty-studio.onrender.com",
+    "https://srishty-web.onrender.com",
+    "https://srishty-backend.onrender.com",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:8000",
+]
 CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://shristylibrary.onrender.com",
@@ -257,6 +245,20 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:8000",
 ]
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+REFERRER_POLICY = 'same-origin'
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000 # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

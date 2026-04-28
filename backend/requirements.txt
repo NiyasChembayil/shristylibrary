@@ -22,3 +22,4 @@ gunicorn
 cloudinary
 django-cloudinary-storage
 firebase-admin
+bleach

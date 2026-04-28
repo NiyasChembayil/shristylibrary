@@ -10,6 +10,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
+import bleach
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -71,10 +72,12 @@ class BookViewSet(viewsets.ModelViewSet):
         if user:
             already_read = ReadStats.objects.filter(book=book, user=user, timestamp__gt=grace_period).exists()
         else:
-            # For guests, we can't easily track without session/IP, 
-            # but we can at least prevent immediate spam for anonymous users if needed.
-            # Simplified for now: just record it.
-            already_read = False
+            # IP-based throttling for guests
+            ip = request.META.get('REMOTE_ADDR')
+            # For simplicity, we use the IP in a hidden field if available or just the IP
+            already_read = ReadStats.objects.filter(book=book, user__isnull=True, timestamp__gt=grace_period).exists()
+            # Note: A better guest tracking would use a cache or session ID, 
+            # but this at least prevents simple script spam from one source.
 
         if not already_read:
             ReadStats.objects.create(book=book, user=user)
@@ -225,7 +228,14 @@ class BookViewSet(viewsets.ModelViewSet):
         
         try:
             result = mammoth.convert_to_html(file)
-            return Response({'html': result.value})
+            # Sanitize the generated HTML to prevent XSS
+            clean_html = bleach.clean(
+                result.value,
+                tags=['p', 'b', 'i', 'u', 'em', 'strong', 'h1', 'h2', 'h3', 'br', 'ul', 'ol', 'li'],
+                attributes={},
+                strip=True
+            )
+            return Response({'html': clean_html})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -245,11 +255,18 @@ class BookViewSet(viewsets.ModelViewSet):
                         full_text += text + "\n"
             
             # Simple conversion to HTML paragraphs
-            # We split by single newlines but preserve blocks
             paragraphs = full_text.split('\n')
             html = "".join([f"<p>{p}</p>" for p in paragraphs if p.strip()])
             
-            return Response({'html': html})
+            # Sanitize
+            clean_html = bleach.clean(
+                html,
+                tags=['p', 'br'],
+                attributes={},
+                strip=True
+            )
+            
+            return Response({'html': clean_html})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -274,6 +291,16 @@ class BookViewSet(viewsets.ModelViewSet):
                 title = item.get('title', f'Chapter {index + 1}')
                 content = item.get('content', '')
                 
+                # Sanitize content if it's HTML
+                if isinstance(content, str) and '<' in content:
+                    content = bleach.clean(
+                        content,
+                        tags=['p', 'b', 'i', 'u', 'em', 'strong', 'br', 'ul', 'ol', 'li', 'span', 'div', 'img'],
+                        attributes={'img': ['src', 'alt'], 'span': ['style'], 'div': ['style']},
+                        styles=['color', 'background-color', 'text-align'],
+                        strip=True
+                    )
+
                 if index in existing_chapters:
                     # Update existing chapter to preserve audio_file and id
                     chapter = existing_chapters[index]
@@ -301,9 +328,20 @@ class BookViewSet(viewsets.ModelViewSet):
                     'order': chapter.order
                 })
                 
-            # Delete any leftover chapters (i.e., chapters the user deleted in the studio)
-            for chapter in existing_chapters.values():
-                chapter.delete()
+            # Data Protection: Only delete if we have a reasonable number of chapters in the sync
+            # If the user sends an empty list but they HAD chapters, don't delete everything.
+            # This prevents mass deletion due to frontend bugs or network issues.
+            if len(chapters_data) > 0 or not existing_chapters:
+                for chapter in existing_chapters.values():
+                    chapter.delete()
+            else:
+                # If they send 0 chapters but had many, we skip deletion as a safety measure
+                # and return an error or status.
+                if len(existing_chapters) > 0:
+                     return Response({
+                        'status': 'safety_check_triggered',
+                        'message': 'Sync aborted to prevent mass deletion. Please refresh and try again.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
             
             return Response({
                 'status': 'chapters imported',

@@ -44,6 +44,18 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'user_id', 'role', 'followers_count', 'following_count', 'is_following', 'is_verified']
 
+    def validate_username(self, value):
+        user = self.instance.user if self.instance else None
+        if User.objects.exclude(pk=user.pk if user else None).filter(username__iexact=value).exists():
+            raise serializers.ValidationError("This username is already taken.")
+        return value
+
+    def validate_email(self, value):
+        user = self.instance.user if self.instance else None
+        if User.objects.exclude(pk=user.pk if user else None).filter(email__iexact=value).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        return value
+
     def update(self, instance, validated_data):
         user_data = validated_data.pop('user', {})
         password = validated_data.pop('password', None)
@@ -122,7 +134,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'role']
+        fields = ['username', 'email', 'password']
 
 
     def validate_username(self, value):
@@ -131,7 +143,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        role = validated_data.pop('role', 'reader')
+        # Strictly control the default role for new registrations
+        role = 'reader' 
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
