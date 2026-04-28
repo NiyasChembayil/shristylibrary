@@ -11,6 +11,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/push_notification_service.dart';
 import 'core/api_client.dart';
+import 'package:uni_links/uni_links.dart';
+import 'dart:async';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // No longer needed: AudioHandler is managed via Riverpod provider now.
 
@@ -40,45 +44,108 @@ void main() async {
 }
 
 
-class SrishtyApp extends ConsumerWidget {
+class SrishtyApp extends ConsumerStatefulWidget {
   const SrishtyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-    debugPrint('UI: authState.status = ${authState.status}');
+  ConsumerState<SrishtyApp> createState() => _SrishtyAppState();
+}
+
+class _SrishtyAppState extends ConsumerState<SrishtyApp> {
+  StreamSubscription? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initDeepLinks() async {
+    // Handle initial link
+    try {
+      final initialLink = await getInitialLink();
+      if (initialLink != null) {
+        _processLink(initialLink);
+      }
+    } catch (e) {
+      debugPrint('DeepLink: Error fetching initial link: $e');
+    }
+
+    // Handle incoming links
+    _sub = linkStream.listen((String? link) {
+      if (link != null) _processLink(link);
+    }, onError: (err) {
+      debugPrint('DeepLink: Stream Error: $err');
+    });
+  }
+
+  void _processLink(String link) {
+    debugPrint('DeepLink: Processing link: $link');
+    final uri = Uri.parse(link);
     
-    // Warm up purchase provider once authenticated so isOwned() works immediately
+    // Format: srishty://preview/123
+    if (uri.scheme == 'srishty' && uri.host == 'preview') {
+      final bookIdStr = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+      if (bookIdStr != null) {
+        final bookId = int.tryParse(bookIdStr);
+        if (bookId != null) {
+          _navigateToPreview(bookId);
+        }
+      }
+    }
+  }
+
+  void _navigateToPreview(int bookId) {
+    debugPrint('DeepLink: Navigating to preview for book $bookId');
+    navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      '/', // Reset to home
+      (route) => false,
+    );
+    
+    // Add small delay to ensure navigator is ready
+    Future.delayed(const Duration(milliseconds: 500), () {
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => BookDetailScreen(
+            id: bookId,
+            title: 'Preview',
+            author: '...',
+            coverUrl: '',
+            description: 'Loading preview...',
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    
     if (authState.status == AuthStatus.authenticated) {
       ref.watch(purchaseProvider);
-      // Initialize Real-time Notifications
       ref.read(notificationServiceProvider).init();
-      // Initialize Push Notifications (FCM)
       PushNotificationService.initialize(ref.read(apiClientProvider));
     } else {
-      // Disconnect if no longer authenticated
       ref.read(notificationServiceProvider).disconnect();
     }
 
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Srishty',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        // FlutterQuillLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('en', 'US'),
-      ],
       home: _getHome(authState.status),
     );
   }
 
   Widget _getHome(AuthStatus status) {
-    debugPrint('UI: Selecting home for status: $status');
     switch (status) {
       case AuthStatus.initial:
       case AuthStatus.loading:

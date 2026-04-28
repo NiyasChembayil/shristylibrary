@@ -1360,6 +1360,29 @@ class SrishtyApp {
             toast.style.transition = '0.5s';
             setTimeout(() => toast.remove(), 500);
         }, 4000);
+    showLivePreview() {
+        if (!this.currentStoryId) {
+            alert("Please select a story first.");
+            return;
+        }
+
+        const modal = document.getElementById('qr-modal');
+        const container = document.getElementById('qrcode-container');
+        container.innerHTML = ""; // Clear old QR
+
+        // Format: srishty://preview/<book_id>
+        const deepLink = `srishty://preview/${this.currentStoryId}`;
+        
+        new QRCode(container, {
+            text: deepLink,
+            width: 200,
+            height: 200,
+            colorDark: "#0F172A",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        modal.classList.remove('hidden');
     }
 }
 
