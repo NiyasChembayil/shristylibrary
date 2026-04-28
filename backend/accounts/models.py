@@ -13,6 +13,11 @@ class Profile(models.Model):
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     coins = models.PositiveIntegerField(default=100) # Give new users 100 coins to start
     
+    # Writing Goals & Streaks
+    daily_word_goal = models.PositiveIntegerField(default=500)
+    current_streak = models.PositiveIntegerField(default=0)
+    last_writing_date = models.DateField(null=True, blank=True)
+    
     # Privacy & Safety
     is_private = models.BooleanField(default=False)
     

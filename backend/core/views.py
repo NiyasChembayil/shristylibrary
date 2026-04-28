@@ -133,6 +133,21 @@ class BookViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(books, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='writing-stats')
+    def writing_stats(self, request):
+        from .models import DailyWritingStats
+        from django.utils import timezone
+        today = timezone.now().date()
+        stats, created = DailyWritingStats.objects.get_or_create(user=request.user, date=today)
+        profile = request.user.profile
+        
+        return Response({
+            'today_words': stats.word_count,
+            'daily_goal': profile.daily_word_goal,
+            'current_streak': profile.current_streak,
+            'goal_reached': stats.goal_reached
+        })
+
     @action(detail=False, methods=['get'])
     def trending(self, request):
         region = request.query_params.get('region')
@@ -477,6 +492,45 @@ class ChapterViewSet(viewsets.ModelViewSet):
         )
         
         return Response({'status': 'unlocked', 'remaining_coins': profile.coins})
+
+    def perform_update(self, serializer):
+        old_content = self.get_object().content
+        instance = serializer.save()
+        new_content = instance.content
+        
+        # Calculate words added (simple whitespace split)
+        import bleach
+        def count_words(html):
+            text = bleach.clean(html, tags=[], strip=True).strip()
+            return len(text.split()) if text else 0
+            
+        old_words = count_words(old_content)
+        new_words = count_words(new_content)
+        diff = max(0, new_words - old_words)
+        
+        if diff > 0:
+            from .models import DailyWritingStats
+            from django.utils import timezone
+            today = timezone.now().date()
+            user = self.request.user
+            stats, created = DailyWritingStats.objects.get_or_create(user=user, date=today)
+            stats.word_count += diff
+            
+            profile = user.profile
+            if stats.word_count >= profile.daily_word_goal and not stats.goal_reached:
+                stats.goal_reached = True
+                
+                # Streak Logic
+                yesterday = today - timezone.timedelta(days=1)
+                if profile.last_writing_date == yesterday:
+                    profile.current_streak += 1
+                elif profile.last_writing_date != today:
+                    profile.current_streak = 1
+                
+                profile.last_writing_date = today
+                profile.save()
+            
+            stats.save()
 
     def perform_create(self, serializer):
         from django.core.exceptions import PermissionDenied

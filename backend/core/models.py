@@ -106,6 +106,19 @@ class StoryBible(models.Model):
         return f"Bible for {self.book.title}"
 
 
+class DailyWritingStats(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='writing_stats')
+    date = models.DateField(auto_now_add=True)
+    word_count = models.PositiveIntegerField(default=0)
+    goal_reached = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'date')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.date}: {self.word_count} words"
+
+
 class ReadStats(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='read_stats')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)

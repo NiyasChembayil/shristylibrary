@@ -68,10 +68,11 @@
             </div>
 
             <div class="nav-right">
-                <button class="btn-quiet" onclick="app.toggleTheme()" title="Toggle Theme" style="padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                    <svg id="theme-icon-sun" class="hidden" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
-                    <svg id="theme-icon-moon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
                 </button>
+                <div id="streak-indicator" class="hidden" style="display: flex; align-items: center; gap: 6px; background: rgba(255, 107, 0, 0.1); padding: 4px 12px; border-radius: 100px; color: #FF6B00; font-weight: 700; font-size: 13px; border: 1px solid rgba(255, 107, 0, 0.2);">
+                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 18s-4.5-1.92-4.5-6.5c0-5.25 4.5-9.5 4.5-9.5s4.5 4.25 4.5 9.5c0 4.58-4.5 6.5-4.5 6.5z"/></svg>
+                    <span id="streak-count">0</span> Day Streak
+                </div>
                 <div class="profile-group" onclick="alert('Profile settings coming soon!')">
                     <div class="profile-info">
                         <span class="profile-name" id="nav-username">Author</span>
@@ -101,6 +102,22 @@
                                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                 Create New Story
                             </button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px;">
+                        <!-- DAILY GOAL WIDGET -->
+                        <div class="card" style="padding: 24px; display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, #6C63FF 0%, #3F37C9 100%); color: white; border: none; border-radius: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <span style="font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Daily Writing Goal</span>
+                                <span id="dashboard-goal-percent" style="font-weight: 800; font-size: 18px;">0%</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 10px; overflow: hidden; margin-bottom: 15px;">
+                                <div id="dashboard-goal-bar" style="width: 0%; height: 100%; background: white; transition: 1s ease-out;"></div>
+                            </div>
+                            <div style="font-size: 13px; opacity: 0.9;">
+                                <span id="dashboard-goal-words">0</span> / <span id="dashboard-goal-target">500</span> words written today
+                            </div>
                         </div>
                     </div>
 
@@ -266,6 +283,15 @@
                                 <div id="chapter-audio-container" class="hidden" style="display: flex; align-items: center; gap: 10px;">
                                     <audio id="chapter-audio-player" controls style="height: 30px;"></audio>
                                 </div>
+                                
+                                <!-- Writing Goal Mini Bar -->
+                                <div id="editor-goal-container" style="display: flex; align-items: center; gap: 10px; background: var(--glass-bg); padding: 4px 12px; border-radius: 8px; border: 1px solid var(--border-color); min-width: 150px;">
+                                    <div style="flex: 1; height: 4px; background: var(--border-color); border-radius: 10px; overflow: hidden;">
+                                        <div id="editor-goal-bar" style="width: 0%; height: 100%; background: #10B981; transition: 0.3s;"></div>
+                                    </div>
+                                    <span id="editor-goal-text" style="font-size: 10px; font-weight: 700; color: var(--text-secondary);">0%</span>
+                                </div>
+
                                 <div style="display: flex; align-items: center; gap: 8px; background: var(--glass-bg); padding: 4px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
                                     <label style="font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                                         <input type="checkbox" id="chapter-is-premium" style="accent-color: var(--accent-primary);" onchange="app.togglePremiumInput(this.checked)">

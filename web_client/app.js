@@ -187,11 +187,18 @@ class SrishtyApp {
             const wordCountEl = document.getElementById('word-count');
             if (wordCountEl) wordCountEl.textContent = `${count.toLocaleString()} words`;
 
+            // Update real-time progress bar if we have session data
+            if (this.dailyStats) {
+                const sessionWords = Math.max(0, count - (this.chapterInitialWords || 0));
+                this.updateWritingProgress(this.dailyStats.today_words + sessionWords);
+            }
+
             // Debounced Auto-save
             if (this.currentChapterId) {
                 if (this.autoSaveTimeout) clearTimeout(this.autoSaveTimeout);
                 this.autoSaveTimeout = setTimeout(() => {
                     this.saveCurrentChapter(true); // silent = true
+                    this.fetchWritingStats(); // Refresh stats after save
                 }, 2000);
             }
         });
@@ -496,6 +503,9 @@ class SrishtyApp {
     /* ======== DASHBOARD ======== */
     async loadDashboard() {
         const grid = document.getElementById('story-grid');
+        // Load Writing Stats
+        this.fetchWritingStats();
+
         // Show Loading Skeletons
         grid.innerHTML = `
             <div class="skeleton-card"></div>
@@ -636,6 +646,7 @@ class SrishtyApp {
             const book = await this.fetchAPI(`/core/books/${bookId}/`);
             document.getElementById('editor-story-title').textContent = book.title;
             this.currentChapters = book.chapters || [];
+            this.fetchWritingStats();
 
             this.renderChapterList();
 
@@ -729,6 +740,10 @@ class SrishtyApp {
         } catch (e) {
             this.quill.setText(chapterObj.content);
         }
+        
+        const text = this.quill.getText().trim();
+        this.chapterInitialWords = text ? text.split(/\s+/).length : 0;
+        
         document.getElementById('editor-chapter-label').textContent = chapterObj.title || 'Untitled Chapter';
         
         // Audiobook Player
@@ -1270,6 +1285,81 @@ class SrishtyApp {
             status.textContent = 'Save failed';
             status.style.color = 'var(--danger)';
         }
+    }
+
+    /* ======== WRITING GOALS & STREAKS ======== */
+    async fetchWritingStats() {
+        try {
+            const stats = await this.fetchAPI('/core/books/writing-stats/');
+            this.dailyStats = stats;
+            this.updateWritingUI(stats);
+        } catch (e) { console.error('Stats Error:', e); }
+    }
+
+    updateWritingUI(stats) {
+        // Streak Nav
+        const streakIndicator = document.getElementById('streak-indicator');
+        const streakCount = document.getElementById('streak-count');
+        if (stats.current_streak > 0) {
+            streakIndicator.classList.remove('hidden');
+            streakCount.textContent = stats.current_streak;
+        } else {
+            streakIndicator.classList.add('hidden');
+        }
+
+        // Dashboard Widget
+        const dWords = document.getElementById('dashboard-goal-words');
+        const dTarget = document.getElementById('dashboard-goal-target');
+        const dBar = document.getElementById('dashboard-goal-bar');
+        const dPercent = document.getElementById('dashboard-goal-percent');
+
+        if (dWords) {
+            dWords.textContent = stats.today_words;
+            dTarget.textContent = stats.daily_goal;
+            const percent = Math.min(100, Math.floor((stats.today_words / stats.daily_goal) * 100));
+            dBar.style.width = `${percent}%`;
+            dPercent.textContent = `${percent}%`;
+        }
+
+        // Editor Footer
+        this.updateWritingProgress(stats.today_words);
+    }
+
+    updateWritingProgress(todayTotal) {
+        const bar = document.getElementById('editor-goal-bar');
+        const text = document.getElementById('editor-goal-text');
+        if (bar && this.dailyStats) {
+            const percent = Math.min(100, Math.floor((todayTotal / this.dailyStats.daily_goal) * 100));
+            bar.style.width = `${percent}%`;
+            text.textContent = `${percent}%`;
+            
+            if (percent >= 100) {
+                bar.style.background = '#00D2FF';
+                if (!this.goalCelebrated) {
+                    this.goalCelebrated = true;
+                    this.showGoalToast();
+                }
+            }
+        }
+    }
+
+    showGoalToast() {
+        const toast = document.createElement('div');
+        toast.innerHTML = `
+            <div style="position: fixed; top: 80px; right: 20px; background: #00D2FF; color: white; padding: 16px 24px; border-radius: 16px; box-shadow: var(--shadow-lg); z-index: 10000; display: flex; align-items: center; gap: 12px; animation: slideIn 0.5s ease-out;">
+                <div style="font-size: 24px;">🎯</div>
+                <div>
+                    <div style="font-weight: 800; font-size: 16px;">Daily Goal Reached!</div>
+                    <div style="font-size: 12px; opacity: 0.9;">You're on fire! Keep going.</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = '0.5s';
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
     }
 }
 
