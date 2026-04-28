@@ -34,6 +34,16 @@ class ChapterSerializer(serializers.ModelSerializer):
             return ChapterUnlock.objects.filter(user=request.user, chapter=obj).exists()
         return False
 
+class StoryCharacterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StoryCharacter
+        fields = '__all__'
+
+class CharacterRelationshipSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CharacterRelationship
+        fields = '__all__'
+
 class BookSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(read_only=True)
     author_name = serializers.ReadOnlyField(source='author.username')
@@ -101,16 +111,6 @@ class BookSerializer(serializers.ModelSerializer):
 
     def get_chapters_count(self, obj):
         return obj.chapters.count()
-
-class StoryCharacterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StoryCharacter
-        fields = '__all__'
-
-class CharacterRelationshipSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CharacterRelationship
-        fields = '__all__'
 
 class ReadStatsSerializer(serializers.ModelSerializer):
     class Meta:
