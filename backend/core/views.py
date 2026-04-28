@@ -4,8 +4,8 @@ from rest_framework.decorators import action
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report, StoryBible, ChapterVersion
-from .serializers import CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer, StoryBibleSerializer
+from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report, StoryBible, ChapterVersion, ChapterChoice
+from .serializers import CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer, StoryBibleSerializer, ChapterChoiceSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page
@@ -516,6 +516,36 @@ class ChapterViewSet(viewsets.ModelViewSet):
             return Response({'status': 'restored', 'content': chapter.content})
         except ChapterVersion.DoesNotExist:
             return Response({'error': 'Version not found'}, status=404)
+
+    @action(detail=True, methods=['post'])
+    def add_choice(self, request, book_pk=None, pk=None):
+        chapter = self.get_object()
+        text = request.data.get('text')
+        target_chapter_id = request.data.get('target_chapter_id')
+        
+        if not text or not target_chapter_id:
+            return Response({'error': 'text and target_chapter_id are required'}, status=400)
+            
+        try:
+            target_chapter = Chapter.objects.get(id=target_chapter_id, book_id=book_pk)
+            choice = ChapterChoice.objects.create(
+                source_chapter=chapter,
+                text=text,
+                target_chapter=target_chapter
+            )
+            return Response(ChapterChoiceSerializer(choice).data, status=201)
+        except Chapter.DoesNotExist:
+            return Response({'error': 'Target chapter not found in this book'}, status=404)
+
+    @action(detail=True, methods=['post'])
+    def remove_choice(self, request, book_pk=None, pk=None):
+        choice_id = request.data.get('choice_id')
+        try:
+            choice = ChapterChoice.objects.get(id=choice_id, source_chapter_id=pk)
+            choice.delete()
+            return Response({'status': 'deleted'})
+        except ChapterChoice.DoesNotExist:
+            return Response({'error': 'Choice not found'}, status=404)
 
     def perform_update(self, serializer):
         old_content = self.get_object().content

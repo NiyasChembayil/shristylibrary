@@ -1,19 +1,25 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Book, Chapter, ReadStats, Report, StoryBible
+from .models import Category, Book, Chapter, ReadStats, Report, StoryBible, ChapterChoice
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
 
+class ChapterChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChapterChoice
+        fields = ['id', 'text', 'target_chapter']
+
 class ChapterSerializer(serializers.ModelSerializer):
     book = serializers.PrimaryKeyRelatedField(read_only=True)
     is_unlocked = serializers.SerializerMethodField()
+    choices = ChapterChoiceSerializer(many=True, read_only=True)
 
     class Meta:
         model = Chapter
-        fields = ['id', 'book', 'title', 'content', 'order', 'audio_file', 'is_premium', 'coins_required', 'is_unlocked']
+        fields = ['id', 'book', 'title', 'content', 'order', 'audio_file', 'is_premium', 'coins_required', 'is_unlocked', 'choices']
 
     def get_is_unlocked(self, obj):
         request = self.context.get('request')

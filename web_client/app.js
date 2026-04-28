@@ -791,6 +791,7 @@ class SrishtyApp {
 
         // Update UI state
         this.renderChapterList();
+        document.getElementById('branching-panel').classList.add('hidden');
     }
 
     async createNewChapter() {
@@ -1832,6 +1833,98 @@ class SrishtyApp {
             
             document.getElementById('designer-modal').classList.add('hidden');
         }, 'image/png');
+    }
+
+    toggleBranching() {
+        const panel = document.getElementById('branching-panel');
+        panel.classList.toggle('hidden');
+        if (!panel.classList.contains('hidden')) {
+            this.loadBranchingData();
+        }
+    }
+
+    async loadBranchingData() {
+        const targetSelect = document.getElementById('choice-target');
+        targetSelect.innerHTML = '<option value="">Select Chapter...</option>' + 
+            this.currentChapters
+                .filter(ch => ch.id !== this.currentChapterId)
+                .map(ch => `<option value="${ch.id}">${ch.title || 'Untitled'}</option>`)
+                .join('');
+
+        this.renderChoices();
+    }
+
+    renderChoices() {
+        const currentChapter = this.currentChapters.find(ch => ch.id === this.currentChapterId);
+        const list = document.getElementById('choice-list');
+        
+        if (!currentChapter || !currentChapter.choices || currentChapter.choices.length === 0) {
+            list.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 20px;">No paths added yet.</p>';
+            return;
+        }
+
+        list.innerHTML = currentChapter.choices.map(c => `
+            <div style="background: white; border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm);">
+                <div>
+                    <div style="font-weight: 700; font-size: 14px;">"${c.text}"</div>
+                    <div style="font-size: 11px; color: var(--accent-primary); font-weight: 600; margin-top: 4px;">➡️ Goes to: ${this.getChapterTitle(c.target_chapter)}</div>
+                </div>
+                <button class="btn-quiet" style="color: var(--danger); padding: 5px;" onclick="app.removeChoice(${c.id})">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    getChapterTitle(id) {
+        const ch = this.currentChapters.find(c => c.id === id);
+        return ch ? (ch.title || 'Untitled') : 'Unknown Chapter';
+    }
+
+    async addChoice() {
+        const text = document.getElementById('choice-text').value;
+        const targetId = document.getElementById('choice-target').value;
+
+        if (!text || !targetId) {
+            alert("Please provide choice text and select a target chapter.");
+            return;
+        }
+
+        try {
+            const res = await this.fetchAPI(`/core/books/${this.currentStoryId}/chapters/${this.currentChapterId}/add_choice/`, {
+                method: 'POST',
+                body: JSON.stringify({ text, target_chapter_id: targetId })
+            });
+
+            // Update local state
+            const ch = this.currentChapters.find(c => c.id === this.currentChapterId);
+            if (!ch.choices) ch.choices = [];
+            ch.choices.push(res);
+            
+            document.getElementById('choice-text').value = '';
+            this.renderChoices();
+            this.showSuccessAnimation();
+        } catch (e) {
+            alert("Failed to add choice.");
+        }
+    }
+
+    async removeChoice(choiceId) {
+        if (!confirm("Remove this path?")) return;
+
+        try {
+            await this.fetchAPI(`/core/books/${this.currentStoryId}/chapters/${this.currentChapterId}/remove_choice/`, {
+                method: 'POST',
+                body: JSON.stringify({ choice_id: choiceId })
+            });
+
+            // Update local state
+            const ch = this.currentChapters.find(c => c.id === this.currentChapterId);
+            ch.choices = ch.choices.filter(c => c.id !== choiceId);
+            this.renderChoices();
+        } catch (e) {
+            alert("Failed to remove choice.");
+        }
     }
 }
 
