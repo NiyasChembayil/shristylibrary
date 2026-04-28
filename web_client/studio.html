@@ -66,6 +66,7 @@
                 <span class="nav-link" id="nav-comments" onclick="app.switchView('comments')">Comments</span>
                 <span class="nav-link hidden" id="nav-bible" onclick="app.switchView('bible')">Story Bible</span>
                 <span class="nav-link" id="nav-explore" onclick="app.switchView('explore')">Explore</span>
+                <span class="nav-link" id="nav-achievements" onclick="app.switchView('achievements')">🏆 Achievements</span>
                 <a href="https://srishty-backend.onrender.com/media/app/Srishty.apk" class="nav-link" style="color: var(--accent-primary); font-weight: 800;">Get Mobile App</a>
             </div>
 
@@ -261,6 +262,18 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- VIEW: ACHIEVEMENTS -->
+            <div id="view-achievements" class="view-content hidden">
+                <div class="view-header">
+                    <h2>🏆 Milestone Achievements</h2>
+                    <p style="color: var(--text-secondary);">Your author journey badges and milestones.</p>
+                </div>
+                
+                <div id="achievements-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding-bottom: 40px;">
+                    <!-- Badges populated here -->
                 </div>
             </div>
 
@@ -804,5 +817,54 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL: ACHIEVEMENT UNLOCKED -->
+    <div id="achievement-modal" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal-content" style="max-width: 400px; padding: 40px; background: white; text-align: center; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <div id="achievement-icon" style="font-size: 80px; margin-bottom: 10px; animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);">🏆</div>
+            <h3 style="color: var(--accent-primary); font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">Achievement Unlocked!</h3>
+            <h2 id="achievement-title" style="margin-bottom: 16px; font-size: 28px;">Badge Title</h2>
+            <p id="achievement-desc" style="color: var(--text-secondary); margin-bottom: 32px; font-size: 15px;"></p>
+            <button class="btn-primary" style="width: 100%;" onclick="document.getElementById('achievement-modal').classList.add('hidden')">Awesome!</button>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.1); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .achievement-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+        .achievement-card.locked {
+            opacity: 0.5;
+            filter: grayscale(100%);
+            background: #F8FAFC;
+        }
+        .achievement-card.unlocked {
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+        }
+        .ach-icon-wrapper {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #EEF2FF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+        }
+    </style>
 </body>
 </html>

@@ -785,3 +785,38 @@ class WritingSprintViewSet(viewsets.ModelViewSet):
                 end_time=end
             )
         return Response(WritingSprintSerializer(sprint).data)
+
+from .models import Achievement, UserAchievement
+from .serializers import AchievementSerializer, UserAchievementSerializer
+from .achievements import AchievementService
+
+class AchievementViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Achievement.objects.all()
+    serializer_class = AchievementSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def mine(self, request):
+        user_achievements = UserAchievement.objects.filter(user=request.user).select_related('achievement')
+        serializer = UserAchievementSerializer(user_achievements, many=True)
+        
+        all_achievements = Achievement.objects.all()
+        all_serializer = self.get_serializer(all_achievements, many=True)
+        
+        return Response({
+            'unlocked': serializer.data,
+            'all': all_serializer.data
+        })
+        
+    @action(detail=False, methods=['post'])
+    def check_all(self, request):
+        new_unlocks = []
+        new_unlocks.extend(AchievementService.check_word_count_badges(request.user))
+        new_unlocks.extend(AchievementService.check_streak_badges(request.user))
+        new_unlocks.extend(AchievementService.check_sprint_badges(request.user))
+        new_unlocks.extend(AchievementService.check_world_building_badges(request.user))
+        
+        if new_unlocks:
+            serializer = UserAchievementSerializer(new_unlocks, many=True)
+            return Response({'new_unlocks': serializer.data})
+        return Response({'new_unlocks': []})

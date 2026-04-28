@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Book, Chapter, ReadStats, Report, StoryBible, ChapterChoice, StoryCharacter, CharacterRelationship, WritingSprint, SprintParticipant
+from .models import Category, Book, Chapter, ReadStats, Report, StoryBible, ChapterChoice, StoryCharacter, CharacterRelationship, WritingSprint, SprintParticipant, Achievement, UserAchievement, PayoutRequest
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -155,3 +155,20 @@ class StoryBibleSerializer(serializers.ModelSerializer):
         model = StoryBible
         fields = ['id', 'book', 'content', 'updated_at']
         read_only_fields = ['book']
+
+class PayoutRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PayoutRequest
+        fields = ['id', 'author', 'amount', 'status', 'timestamp']
+
+class AchievementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Achievement
+        fields = ['id', 'title', 'description', 'icon', 'category', 'criteria_type', 'threshold']
+
+class UserAchievementSerializer(serializers.ModelSerializer):
+    achievement = AchievementSerializer(read_only=True)
+    
+    class Meta:
+        model = UserAchievement
+        fields = ['id', 'achievement', 'unlocked_at']

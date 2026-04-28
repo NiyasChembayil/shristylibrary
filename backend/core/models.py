@@ -290,7 +290,35 @@ class Transaction(models.Model):
     class Meta:
         ordering = ['-timestamp']
 
+class Achievement(models.Model):
+    CATEGORY_CHOICES = (
+        ('consistency', 'Consistency & Grit'),
+        ('words', 'Word Count Milestones'),
+        ('community', 'Community & Sprints'),
+        ('world', 'World-Building'),
+        ('reader', 'Reader Engagement'),
+    )
+    title = models.CharField(max_length=100)
+    description = models.CharField(max_length=255)
+    icon = models.CharField(max_length=20, help_text="Emoji or icon code", default="🏆")
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    criteria_type = models.CharField(max_length=50, help_text="Internal identifier for evaluation logic")
+    threshold = models.IntegerField(default=1, help_text="Number required to unlock")
+    
+    def __str__(self):
+        return self.title
 
+class UserAchievement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'achievement')
+        ordering = ['-unlocked_at']
+
+    def __str__(self):
+        return f"{self.user.username} unlocked {self.achievement.title}"
 class PayoutRequest(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
@@ -304,29 +332,4 @@ class PayoutRequest(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
-
-
-class Achievement(models.Model):
-    CRITERIA_CHOICES = (
-        ('streak', 'Writing Streak'),
-        ('word_count', 'Total Word Count'),
-        ('sprint', 'Sprints Joined'),
-        ('bible', 'World Building'),
-    )
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    badge_icon = models.CharField(max_length=50, help_text="Emoji or Icon name")
-    criteria_type = models.CharField(max_length=20, choices=CRITERIA_CHOICES)
-    threshold = models.IntegerField()
-    
-    def __str__(self):
-        return self.name
-
-class UserAchievement(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
-    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
-    earned_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        unique_together = ('user', 'achievement')
 

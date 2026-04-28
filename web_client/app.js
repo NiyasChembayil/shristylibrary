@@ -384,6 +384,7 @@ class SrishtyApp {
         if (viewName === 'analytics') document.getElementById('nav-analytics').classList.add('active');
         if (viewName === 'comments') document.getElementById('nav-comments').classList.add('active');
         if (viewName === 'bible') document.getElementById('nav-bible').classList.add('active');
+        if (viewName === 'achievements') document.getElementById('nav-achievements').classList.add('active');
 
         if (viewName === 'home') {
             this.loadDashboard();
@@ -397,6 +398,7 @@ class SrishtyApp {
         if (viewName === 'analytics') this.loadAnalyticsData();
         if (viewName === 'comments') this.loadCommentsView();
         if (viewName === 'bible') this.loadBibleView();
+        if (viewName === 'achievements') this.loadAchievementsView();
     }
 
     /* ======== COMMENTS HUB (Feedback) ======== */
@@ -2273,6 +2275,71 @@ class SrishtyApp {
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
+    }
+
+    async loadAchievementsView() {
+        const container = document.getElementById('achievements-container');
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; grid-column: 1 / -1;">Loading achievements...</p>';
+        
+        try {
+            const checkRes = await this.fetchAPI('/core/achievements/check_all/', { method: 'POST' });
+            if (checkRes && checkRes.new_unlocks && checkRes.new_unlocks.length > 0) {
+                this.showAchievementUnlocked(checkRes.new_unlocks[0].achievement);
+            }
+
+            const data = await this.fetchAPI('/core/achievements/mine/');
+            const unlockedIds = data.unlocked.map(ua => ua.achievement.id);
+            const allAchievements = data.all;
+            
+            if (allAchievements.length === 0) {
+                container.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">No achievements configured.</p>';
+                return;
+            }
+
+            let html = '';
+            
+            allAchievements.forEach(ach => {
+                const isUnlocked = unlockedIds.includes(ach.id);
+                const statusClass = isUnlocked ? 'unlocked' : 'locked';
+                const dateStr = isUnlocked ? data.unlocked.find(ua => ua.achievement.id === ach.id).unlocked_at : null;
+                const dateHtml = isUnlocked ? 
+                    `<div style="font-size: 11px; color: var(--accent-primary); margin-top: 4px; font-weight: bold;">Unlocked on ${new Date(dateStr).toLocaleDateString()}</div>` : 
+                    `<div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Locked</div>`;
+
+                html += `
+                    <div class="achievement-card ${statusClass}">
+                        <div class="ach-icon-wrapper">
+                            ${ach.icon}
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0; font-size: 15px; color: var(--text-primary);">${escapeHTML(ach.title)}</h4>
+                            <p style="margin: 4px 0 0; font-size: 12px; color: var(--text-secondary); line-height: 1.4;">${escapeHTML(ach.description)}</p>
+                            ${dateHtml}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = '<p style="color: red; grid-column: 1 / -1;">Error loading achievements.</p>';
+        }
+    }
+
+    showAchievementUnlocked(achievement) {
+        document.getElementById('achievement-icon').innerText = achievement.icon || '🏆';
+        document.getElementById('achievement-title').innerText = achievement.title;
+        document.getElementById('achievement-desc').innerText = achievement.description;
+        
+        const modal = document.getElementById('achievement-modal');
+        modal.classList.remove('hidden');
+        
+        setTimeout(() => {
+            if(!modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+            }
+        }, 5000);
     }
 }
 
