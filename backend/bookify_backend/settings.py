@@ -40,7 +40,13 @@ DEBUG = env.bool('DEBUG', default=False)
 
 # Parse database configuration from $DATABASE_URL
 # Automatically fall back to SQLite if no variable provided.
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', 'srishty-backend.onrender.com', 'shristylibrary.onrender.com'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
+    'localhost', 
+    '127.0.0.1', 
+    'srishty-backend.onrender.com', 
+    'shristylibrary.onrender.com',
+    'srishty-studio.onrender.com'
+])
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
@@ -219,6 +225,8 @@ CLOUDINARY_STORAGE = {
 MEDIA_ROOT = BASE_DIR / 'media'
 
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = [
     "https://shristylibrary.onrender.com",
     "https://srishty-studio.onrender.com",
@@ -234,6 +242,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://shristylibrary.onrender.com",
     "https://srishty-studio.onrender.com",
     "https://srishty-web.onrender.com",
+    "https://srishty-backend.onrender.com",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:8000",

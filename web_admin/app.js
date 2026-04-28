@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://srishty-backend.onrender.com/api';
+const API_BASE_URL = window.location.origin.includes('localhost') ? 'http://127.0.0.1:8000/api' : 'https://srishty-backend.onrender.com/api';
 
 function escapeHTML(str) {
     if (!str) return '';
