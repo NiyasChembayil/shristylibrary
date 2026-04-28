@@ -21,6 +21,11 @@ class Profile(models.Model):
     notify_comments = models.BooleanField(default=True)
     notify_new_books = models.BooleanField(default=True)
     
+    # Suspension
+    is_suspended = models.BooleanField(default=False)
+    suspension_reason = models.TextField(blank=True, null=True)
+    suspension_until = models.DateTimeField(blank=True, null=True)
+    
     # Verification
     is_verified = models.BooleanField(default=False)
     verification_id_image = models.ImageField(upload_to='verification_ids/', null=True, blank=True)

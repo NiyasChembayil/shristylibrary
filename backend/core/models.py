@@ -91,6 +91,8 @@ class ReadStats(models.Model):
 class ChapterRead(models.Model):
     chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='reads')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    is_completed = models.BooleanField(default=False)
+    seconds_read = models.IntegerField(default=0)
     timestamp = models.DateTimeField(auto_now_add=True)
 
 class UserLibrary(models.Model):
@@ -136,4 +138,64 @@ class Report(models.Model):
     def __str__(self):
         target = self.target_book.title if self.target_book else self.target_user.username
         return f"Report on {target} - {self.reason}"
+
+
+class SupportTicket(models.Model):
+    STATUS_CHOICES = (
+        ('open', 'Open'),
+        ('in_progress', 'In Progress'),
+        ('closed', 'Closed'),
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets')
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    admin_response = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class AppBanner(models.Model):
+    title = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='banners/')
+    target_url = models.CharField(max_length=255, blank=True, null=True, help_text="Link or book slug")
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+
+class Transaction(models.Model):
+    TYPE_CHOICES = (
+        ('purchase', 'Book Purchase'),
+        ('payout', 'Author Payout'),
+        ('gift', 'Gift'),
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    status = models.CharField(max_length=20, default='completed')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+
+class PayoutRequest(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('processed', 'Processed'),
+        ('rejected', 'Rejected'),
+    )
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payout_requests')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
 

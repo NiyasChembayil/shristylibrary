@@ -544,6 +544,9 @@ input:checked + .slider:before {
 .btn-action.blue { background: rgba(0, 210, 255, 0.15); color: #00D2FF; }
 .btn-action.blue:hover { background: #00D2FF; color: white; }
 
+.btn-action.purple { background: rgba(108, 99, 255, 0.15); color: #6C63FF; }
+.btn-action.purple:hover { background: #6C63FF; color: white; }
+
 .book-preview-content img {
     box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }

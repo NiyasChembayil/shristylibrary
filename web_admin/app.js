@@ -186,6 +186,22 @@ class AdminApp {
                 title.textContent = 'User Report Management';
                 this.loadReportsView();
                 break;
+            case 'finance':
+                title.textContent = 'Financial Oversight';
+                this.loadFinanceView();
+                break;
+            case 'support':
+                title.textContent = 'Help & Support Tickets';
+                this.loadSupportView();
+                break;
+            case 'banners':
+                title.textContent = 'Banner & Promo Manager';
+                this.loadBannersView();
+                break;
+            case 'emails':
+                title.textContent = 'Email Communications';
+                this.loadEmailsView();
+                break;
             default:
                 container.innerHTML = '<div class="glass section-card"><h3>Coming Soon</h3><p>This module is currently in development.</p></div>';
         }
@@ -369,7 +385,10 @@ class AdminApp {
                     <td>${escapeHTML(book.title)}</td>
                     <td>${escapeHTML(book.author_name)}</td>
                     <td><span class="status-badge active">Live</span></td>
-                    <td><button class="btn-action red">Remove</button></td>
+                    <td>
+                        <button class="btn-action blue" onclick="adminApp.loadDropOffView(${book.id}, '${escapeHTML(book.title)}')">📈 Drop-off</button>
+                        <button class="btn-action red">Remove</button>
+                    </td>
                 </tr>
             `).join('');
         } catch (e) {
@@ -795,6 +814,12 @@ class AdminApp {
                         </div>
                     </div>
 
+                    <div class="glass" style="padding: 20px; border-radius: 15px; margin-bottom: 30px; display: flex; gap: 10px;">
+                        <button class="btn-action red" onclick="adminApp.suspendUser(${user.id}, '${escapeHTML(user.username)}')">🚫 Suspend User</button>
+                        <button class="btn-action blue" onclick="adminApp.resetPassword(${user.id}, '${escapeHTML(user.username)}')">🔑 Reset Password</button>
+                        <button class="btn-action purple" onclick="adminApp.messageUser(${user.id}, '${escapeHTML(user.username)}')">💬 Send Message</button>
+                    </div>
+
                     ${user.verification_status === 'pending' ? `
                         <div class="glass" style="padding: 20px; border-radius: 15px; border: 1px solid rgba(0, 210, 255, 0.3); margin-bottom: 30px; background: rgba(0, 210, 255, 0.05);">
                             <h4 style="margin-top: 0; color: #00D2FF;">🛡️ Verification Review</h4>
@@ -993,7 +1018,240 @@ class AdminApp {
             });
             alert(`Success! ${selected.length} users verified.`);
             this.loadUsersView();
-        } catch (e) { alert('Bulk verification failed'); }
+        } catch (e) { alert('Failed to reject'); }
+    }
+
+    async loadFinanceView() {
+        const container = document.getElementById('view-container');
+        container.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-card glass">
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="stat-value" id="fin-revenue">$0.00</div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-label">Total Payouts</div>
+                    <div class="stat-value" id="fin-payouts">$0.00</div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-label">Pending Requests</div>
+                    <div class="stat-value" id="fin-pending">$0.00</div>
+                </div>
+            </div>
+            <div class="chart-grid" style="margin-top: 30px;">
+                <div class="glass section-card">
+                    <h3>Revenue by Category</h3>
+                    <div style="height: 300px;"><canvas id="finCategoryChart"></canvas></div>
+                </div>
+                <div class="glass section-card">
+                    <h3>Recent Transactions</h3>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead><tr><th>User</th><th>Amount</th><th>Type</th></tr></thead>
+                            <tbody id="fin-transactions-target"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        try {
+            const data = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/financial_stats/`);
+            document.getElementById('fin-revenue').textContent = `$${data.total_revenue.toFixed(2)}`;
+            document.getElementById('fin-payouts').textContent = `$${data.total_payouts.toFixed(2)}`;
+            document.getElementById('fin-pending').textContent = `$${data.pending_payouts.toFixed(2)}`;
+
+            const list = document.getElementById('fin-transactions-target');
+            list.innerHTML = data.recent_transactions.map(t => `
+                <tr>
+                    <td>${escapeHTML(t.user__username)}</td>
+                    <td style="color: ${t.type === 'purchase' ? 'var(--accent-green)' : '#FF6584'}">${t.type === 'purchase' ? '+' : '-'}$${t.amount}</td>
+                    <td><span class="status-badge">${t.type}</span></td>
+                </tr>
+            `).join('') || '<tr><td colspan="3">No transactions.</td></tr>';
+
+            new Chart(document.getElementById('finCategoryChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.category_breakdown.map(c => c.category__name || 'Unknown'),
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: data.category_breakdown.map(c => c.revenue),
+                        backgroundColor: '#6C63FF'
+                    }]
+                },
+                options: this.getChartOptions(true)
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    async loadSupportView() {
+        const container = document.getElementById('view-container');
+        container.innerHTML = `
+            <div class="glass section-card animate-slide-up">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Support Tickets</h3>
+                    <select id="ticket-status-filter" class="glass" style="padding: 8px; border-radius: 8px; color: white; background: rgba(0,0,0,0.3);" onchange="adminApp.loadSupportView()">
+                        <option value="open">Open</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead><tr><th>User</th><th>Subject</th><th>Created</th><th>Action</th></tr></thead>
+                        <tbody id="tickets-target"></tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        const status = document.getElementById('ticket-status-filter').value;
+        try {
+            const tickets = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/tickets/?status=${status}`);
+            const target = document.getElementById('tickets-target');
+            target.innerHTML = tickets.map(t => `
+                <tr>
+                    <td>${escapeHTML(t.user__username)}</td>
+                    <td><strong>${escapeHTML(t.subject)}</strong></td>
+                    <td>${new Date(t.created_at).toLocaleDateString()}</td>
+                    <td><button class="btn-action" onclick="adminApp.viewTicket(${t.id}, '${escapeHTML(t.user__username)}', '${escapeHTML(t.message)}')">View & Reply</button></td>
+                </tr>
+            `).join('') || '<tr><td colspan="4">No tickets found.</td></tr>';
+        } catch (e) { console.error(e); }
+    }
+
+    viewTicket(id, user, msg) {
+        const response = prompt(`Ticket from ${user}:\n\n"${msg}"\n\nEnter your response:`);
+        if (!response) return;
+        this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/respond_ticket/`, {
+            method: 'POST',
+            body: JSON.stringify({ ticket_id: id, response })
+        }).then(() => {
+            this.showSuccess('Response Sent');
+            this.loadSupportView();
+        });
+    }
+
+    async loadBannersView() {
+        const container = document.getElementById('view-container');
+        container.innerHTML = `
+            <div class="glass section-card animate-slide-up">
+                <h3>App Banner Manager</h3>
+                <p style="opacity: 0.7; margin-bottom: 20px;">Manage promotional banners shown on the mobile app home screen.</p>
+                <div class="stats-grid" id="banners-target"></div>
+            </div>
+        `;
+
+        try {
+            const banners = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/banners/`);
+            const target = document.getElementById('banners-target');
+            target.innerHTML = banners.map(b => `
+                <div class="stat-card glass" style="padding: 15px;">
+                    <img src="${b.image}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 10px; margin-bottom: 10px;">
+                    <h4>${escapeHTML(b.title)}</h4>
+                    <div class="toggle-row">
+                        <span>Active</span>
+                        <label class="switch">
+                            <input type="checkbox" ${b.is_active ? 'checked' : ''} onchange="adminApp.toggleBanner(${b.id}, this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            `).join('') || '<p>No banners configured.</p>';
+        } catch (e) { console.error(e); }
+    }
+
+    async toggleBanner(id, active) {
+        await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/update_banner/`, {
+            method: 'POST',
+            body: JSON.stringify({ id, is_active: active })
+        });
+        this.showSuccess('Banner Updated');
+    }
+
+    loadEmailsView() {
+        const container = document.getElementById('view-container');
+        container.innerHTML = `
+            <div class="glass section-card animate-slide-up" style="max-width: 600px; margin: 0 auto;">
+                <h3>📧 Send Official Email</h3>
+                <div style="margin-top: 20px;">
+                    <label style="display: block; font-size: 12px; opacity: 0.6;">TARGET USER ID</label>
+                    <input type="number" id="email-user-id" class="glass" style="width: 100%; padding: 10px; margin-bottom: 20px; color: white;">
+                    
+                    <label style="display: block; font-size: 12px; opacity: 0.6;">SUBJECT</label>
+                    <input type="text" id="email-subject" class="glass" style="width: 100%; padding: 10px; margin-bottom: 20px; color: white;">
+                    
+                    <label style="display: block; font-size: 12px; opacity: 0.6;">MESSAGE</label>
+                    <textarea id="email-message" class="glass" style="width: 100%; height: 200px; padding: 15px; color: white; resize: none;"></textarea>
+                    
+                    <button class="btn-action purple" style="width: 100%; padding: 15px; margin-top: 20px;" onclick="adminApp.sendEmail()">Send Professional Email</button>
+                </div>
+            </div>
+        `;
+    }
+
+    async sendEmail() {
+        const user_id = document.getElementById('email-user-id').value;
+        const subject = document.getElementById('email-subject').value;
+        const message = document.getElementById('email-message').value;
+        if (!user_id || !subject || !message) return alert('All fields required');
+
+        await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/send_email/`, {
+            method: 'POST',
+            body: JSON.stringify({ user_id, subject, message })
+        });
+        this.showSuccess('Email Queued');
+    }
+
+    async suspendUser(id, username) {
+        const reason = prompt(`Suspend ${username}?\nEnter reason:`);
+        if (!reason) return;
+        const days = prompt('Suspend for how many days?', '7');
+        if (!days) return;
+
+        await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/suspend_user/`, {
+            method: 'POST',
+            body: JSON.stringify({ user_id: id, reason, days })
+        });
+        this.showSuccess('User Suspended');
+        this.showUserProfile(id);
+    }
+
+    async loadDropOffView(bookId, title) {
+        const container = document.getElementById('view-container');
+        container.innerHTML = `
+            <div class="glass section-card animate-slide-up">
+                <h3>📖 Drop-off Analytics: ${title}</h3>
+                <p style="opacity: 0.7; margin-bottom: 25px;">Percentage of readers who finished each chapter.</p>
+                <div style="height: 400px;"><canvas id="dropOffChart"></canvas></div>
+            </div>
+        `;
+
+        try {
+            const data = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/drop_off_stats/?book_id=${bookId}`);
+            new Chart(document.getElementById('dropOffChart'), {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.chapter__title),
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: data.map(d => (d.completions / (d.total_reads || 1) * 100).toFixed(1)),
+                        borderColor: '#00D2FF',
+                        backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 0, max: 100, ticks: { color: 'rgba(255,255,255,0.5)' } },
+                        x: { ticks: { color: 'rgba(255,255,255,0.5)' } }
+                    }
+                }
+            });
+        } catch (e) { console.error(e); }
     }
 }
 
