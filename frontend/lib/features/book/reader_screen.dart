@@ -10,19 +10,17 @@ import 'chapter_comments_screen.dart';
 class ReaderScreen extends ConsumerStatefulWidget {
   final int bookId;
   final String title;
-  final List<ChapterModel> chapters;
-  final int initialChapterIndex;
+  final List chapters;
 
   const ReaderScreen({
     super.key,
     required this.bookId,
     required this.title,
     required this.chapters,
-    this.initialChapterIndex = 0,
   });
 
   @override
-  State<ReaderScreen> createState() => _ReaderScreenState();
+  ConsumerState<ReaderScreen> createState() => _ReaderScreenState();
 }
 
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
@@ -296,3 +294,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   String _timeAgo(DateTime dateTime) {
+    final duration = DateTime.now().difference(dateTime);
+    if (duration.inDays >= 1) return '${duration.inDays}d ago';
+    if (duration.inHours >= 1) return '${duration.inHours}h ago';
+    if (duration.inMinutes >= 1) return '${duration.inMinutes}m ago';
+    return 'Just now';
+  }
+}

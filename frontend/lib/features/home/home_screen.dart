@@ -160,7 +160,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // Continue Reading: Books in library with some progress
         final continueReading = allBooks.where((b) => b.isInLibrary).take(5).toList();
         
-        // Prepare sub-lists
+        // Remaining books or random for Secret Obsessions
+        final obsessions = allBooks.length > 20 
+            ? allBooks.skip(20).toList() 
+            : allBooks.reversed.toList();
 
         return RefreshIndicator(
           color: const Color(0xFF6C63FF),
