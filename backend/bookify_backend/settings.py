@@ -96,7 +96,7 @@ ROOT_URLCONF = 'bookify_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates', BASE_DIR.parent],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -205,6 +205,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'frontend_static',
+    ('web_admin', BASE_DIR.parent / 'web_admin'),
 ]
 
 MEDIA_URL = '/media/'

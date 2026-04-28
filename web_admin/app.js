@@ -58,6 +58,26 @@ class AdminApp {
                 item.classList.add('active');
             });
         });
+
+        // Theme Toggle
+        document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
+    }
+
+    toggleTheme() {
+        const currentTheme = document.body.getAttribute('data-theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('srishty_admin_theme', newTheme);
+    }
+
+    showSuccess(msg = "Action Successful!") {
+        const overlay = document.getElementById('success-overlay');
+        const text = document.getElementById('success-msg');
+        text.textContent = msg;
+        overlay.classList.remove('hidden');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+        }, 2000);
     }
 
     async login(e) {
@@ -598,6 +618,7 @@ class AdminApp {
                     <td>${escapeHTML(book.author_name)}</td>
                     <td>${new Date(book.created_at).toLocaleDateString()}</td>
                     <td>
+                        <button class="btn-action blue" onclick="adminApp.previewBook(${book.id})">Preview</button>
                         <button class="btn-action green" onclick="adminApp.approveBook(${book.id})">Approve</button>
                         <button class="btn-action red" onclick="adminApp.rejectBook(${book.id})">Reject</button>
                     </td>
@@ -612,6 +633,7 @@ class AdminApp {
         if (!confirm('Approve this book for public discovery?')) return;
         try {
             await this.fetchWithAuth(`${API_BASE_URL}/core/books/${id}/approve/`, { method: 'POST' });
+            this.showSuccess('Book Approved!');
             this.loadModerationView();
         } catch (e) { alert('Action failed'); }
     }
@@ -624,8 +646,50 @@ class AdminApp {
                 method: 'POST',
                 body: JSON.stringify({ notes })
             });
+            this.showSuccess('Book Rejected');
             this.loadModerationView();
         } catch (e) { alert('Action failed'); }
+    }
+
+    async previewBook(id) {
+        const modal = document.getElementById('user-modal');
+        const content = document.getElementById('user-modal-content');
+        modal.style.display = 'flex';
+        content.innerHTML = '<p>Loading preview...</p>';
+
+        try {
+            const book = await this.fetchWithAuth(`${API_BASE_URL}/core/books/${id}/`);
+            content.innerHTML = `
+                <div class="book-preview-content">
+                    <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                        <img src="${book.cover || ''}" style="width: 150px; border-radius: 10px;">
+                        <div>
+                            <h2>${escapeHTML(book.title)}</h2>
+                            <p><strong>Category:</strong> ${book.category_name}</p>
+                            <p><strong>Description:</strong> ${escapeHTML(book.description)}</p>
+                        </div>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px;">
+                        <h4>Sample Content (Chapter 1)</h4>
+                        <div id="sample-content">Loading...</div>
+                    </div>
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button class="btn-action" onclick="document.getElementById('user-modal').style.display='none'">Close Preview</button>
+                    </div>
+                </div>
+            `;
+            
+            // Load first chapter if exists
+            if (book.chapters && book.chapters.length > 0) {
+                const chapter = await this.fetchWithAuth(`${API_BASE_URL}/core/chapters/${book.chapters[0].id}/`);
+                document.getElementById('sample-content').innerHTML = chapter.content || 'No content in this chapter.';
+            } else {
+                document.getElementById('sample-content').textContent = 'No chapters uploaded yet.';
+            }
+
+        } catch (e) {
+            content.innerHTML = '<p>Error loading preview.</p>';
+        }
     }
 
     async loadReportsView() {

@@ -14,6 +14,15 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+[data-theme="light"] {
+    --bg-dark: #f0f2f5;
+    --bg-gradient: linear-gradient(135deg, #f0f2f5, #e0e6ed, #ffffff);
+    --glass-bg: rgba(0, 0, 0, 0.03);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --text-primary: #1e1e2e;
+    --text-secondary: rgba(30, 30, 46, 0.7);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -118,24 +127,30 @@ h1 {
     font-weight: 700;
 }
 
-.user-profile {
+.top-nav-right {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 20px;
 }
 
-.user-info {
-    text-align: right;
+.btn-icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: var(--transition);
 }
 
-.user-name {
-    display: block;
-    font-weight: 600;
-}
-
-.user-role {
-    font-size: 12px;
-    color: var(--text-secondary);
+.btn-icon-circle:hover {
+    background: var(--accent-purple);
+    color: white;
 }
 
 .avatar-circle {
@@ -484,4 +499,60 @@ input:checked + .slider:before {
 .btn-save:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 242, 96, 0.3);
+}
+
+/* Modals */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: var(--bg-dark);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(108, 99, 255, 0.2);
+    border-top: 3px solid var(--accent-purple);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.status-badge.pending {
+    background: rgba(255, 165, 0, 0.2);
+    color: #FFA500;
+}
+
+.btn-action.blue { background: rgba(0, 210, 255, 0.15); color: #00D2FF; }
+.btn-action.blue:hover { background: #00D2FF; color: white; }
+
+.book-preview-content img {
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+[data-theme="light"] .glass {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+[data-theme="light"] .sidebar {
+    background: rgba(255, 255, 255, 0.8);
 }

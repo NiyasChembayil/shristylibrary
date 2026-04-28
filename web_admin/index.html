@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/web_admin/style.css?v=20240426_v1">
     <link rel="icon" href="/static/assets/logo.png" type="image/x-icon">
+    <!-- Lottie Animation Library -->
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </head>
 <body>
     <div id="app" class="app-container">
@@ -70,12 +72,15 @@
         <main class="main-content">
             <header class="top-nav">
                 <h1 id="page-title">Dashboard Overview</h1>
-                <div class="user-profile">
-                    <div class="user-info">
-                        <span class="user-name" id="admin-name">Admin User</span>
-                        <span class="user-role">Platform Manager</span>
+                <div class="top-nav-right">
+                    <button id="theme-toggle" class="btn-icon-circle" title="Toggle Theme">🌓</button>
+                    <div class="user-profile">
+                        <div class="user-info">
+                            <span class="user-name" id="admin-name">Admin User</span>
+                            <span class="user-role">Platform Manager</span>
+                        </div>
+                        <div class="avatar-circle">A</div>
                     </div>
-                    <div class="avatar-circle">A</div>
                 </div>
             </header>
 
@@ -161,6 +166,14 @@
                 <input type="password" placeholder="Password" required id="password">
                 <button type="submit" class="btn-primary">Authenticate</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Success Overlay (Lottie) -->
+    <div id="success-overlay" class="overlay hidden" style="background: rgba(0,0,0,0.8); z-index: 10000;">
+        <div style="text-align: center;">
+            <lottie-player src="https://assets10.lottiefiles.com/packages/lf20_7W9v9S.json" background="transparent" speed="1" style="width: 300px; height: 300px;" autoplay></lottie-player>
+            <h2 id="success-msg" style="color: white; margin-top: -50px;">Action Successful!</h2>
         </div>
     </div>
 
