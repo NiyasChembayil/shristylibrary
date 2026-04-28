@@ -9,9 +9,24 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ChapterSerializer(serializers.ModelSerializer):
     book = serializers.PrimaryKeyRelatedField(read_only=True)
+    is_unlocked = serializers.SerializerMethodField()
+
     class Meta:
         model = Chapter
-        fields = ['id', 'book', 'title', 'content', 'order', 'audio_file']
+        fields = ['id', 'book', 'title', 'content', 'order', 'audio_file', 'is_premium', 'coins_required', 'is_unlocked']
+
+    def get_is_unlocked(self, obj):
+        request = self.context.get('request')
+        if not obj.is_premium:
+            return True
+        if request and request.user.is_authenticated:
+            # Author always has access
+            if obj.book.author == request.user or request.user.is_staff:
+                return True
+            # Check if user has unlocked it
+            from .models import ChapterUnlock
+            return ChapterUnlock.objects.filter(user=request.user, chapter=obj).exists()
+        return False
 
 class BookSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(read_only=True)

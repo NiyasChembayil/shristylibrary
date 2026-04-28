@@ -74,6 +74,8 @@ class Chapter(models.Model):
     content = models.TextField(null=True, blank=True) # Rich text content
     order = models.PositiveIntegerField(default=0)
     audio_file = models.FileField(upload_to='chapter_audio/', null=True, blank=True)
+    is_premium = models.BooleanField(default=False)
+    coins_required = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ['order']
@@ -81,6 +83,18 @@ class Chapter(models.Model):
 
     def __str__(self):
         return f"{self.book.title} - {self.title}"
+
+
+class ChapterUnlock(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='unlocked_chapters')
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='unlocks')
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'chapter')
+
+    def __str__(self):
+        return f"{self.user.username} unlocked {self.chapter.title}"
 
 
 class ReadStats(models.Model):

@@ -432,6 +432,52 @@ class ChapterViewSet(viewsets.ModelViewSet):
             
         return Chapter.objects.filter(book_id=book_id)
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        
+        # Enforce lock: If premium and not unlocked, hide content
+        if instance.is_premium and not data.get('is_unlocked'):
+            data['content'] = "LOCK: This is a premium chapter. Please unlock to read."
+            data['audio_file'] = None
+            
+        return Response(data)
+
+    @action(detail=True, methods=['post'])
+    def unlock(self, request, book_pk=None, pk=None):
+        chapter = self.get_object()
+        user = request.user
+        
+        if not chapter.is_premium:
+            return Response({'status': 'already free'})
+            
+        from .models import ChapterUnlock
+        if ChapterUnlock.objects.filter(user=user, chapter=chapter).exists():
+            return Response({'status': 'already unlocked'})
+            
+        # Check coins
+        profile = user.profile
+        if profile.coins < chapter.coins_required:
+            return Response({'error': 'Insufficient coins'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Deduct coins and unlock
+        profile.coins -= chapter.coins_required
+        profile.save()
+        
+        ChapterUnlock.objects.create(user=user, chapter=chapter)
+        
+        # Create a transaction for audit
+        from .models import Transaction
+        Transaction.objects.create(
+            user=user,
+            amount=chapter.coins_required,
+            type='purchase',
+            status='completed'
+        )
+        
+        return Response({'status': 'unlocked', 'remaining_coins': profile.coins})
+
     def perform_create(self, serializer):
         from django.core.exceptions import PermissionDenied
         book_id = self.kwargs['book_pk']

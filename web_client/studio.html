@@ -256,6 +256,13 @@
                                 <span id="save-status" style="color: #10B981">Auto-saved</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="display: flex; align-items: center; gap: 8px; background: var(--glass-bg); padding: 4px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                    <label style="font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                        <input type="checkbox" id="chapter-is-premium" style="accent-color: var(--accent-primary);" onchange="app.togglePremiumInput(this.checked)">
+                                        Premium Chapter
+                                    </label>
+                                    <input type="number" id="chapter-coins" class="hidden" placeholder="Coins" style="width: 60px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 11px;">
+                                </div>
                                 <button class="btn-quiet" onclick="app.openSettings()">Settings</button>
                                 <label for="chapter-audio-upload" class="btn-quiet" style="cursor: pointer;">
                                     Upload Chapter Audio

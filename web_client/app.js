@@ -574,10 +574,11 @@ class SrishtyApp {
             const div = document.createElement('div');
             div.className = `chapter-item ${ch.id === this.currentChapterId ? 'active' : ''}`;
             div.setAttribute('data-id', ch.id);
+            const premiumIcon = ch.is_premium ? `<span title="Premium Chapter" style="font-size: 10px; margin-left: 4px;">🔒</span>` : '';
             div.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
                     <svg style="cursor: grab; color: var(--text-secondary);" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 8h16M4 16h16"/></svg>
-                    <span style="flex: 1;">${escapeHTML(ch.title) || 'Chapter ' + (idx + 1)}</span>
+                    <span style="flex: 1;">${escapeHTML(ch.title) || 'Chapter ' + (idx + 1)}${premiumIcon}</span>
                 </div>
             `;
             div.onclick = (e) => {
@@ -645,6 +646,20 @@ class SrishtyApp {
             this.quill.setText(chapterObj.content);
         }
         document.getElementById('editor-chapter-label').textContent = chapterObj.title || 'Untitled Chapter';
+        
+        // Premium fields
+        const premiumToggle = document.getElementById('chapter-is-premium');
+        const coinsInput = document.getElementById('chapter-coins');
+        if (premiumToggle && coinsInput) {
+            premiumToggle.checked = chapterObj.is_premium || false;
+            coinsInput.value = chapterObj.coins_required || 0;
+            this.togglePremiumInput(premiumToggle.checked);
+        }
+    }
+
+    togglePremiumInput(isPremium) {
+        const coinsInput = document.getElementById('chapter-coins');
+        if (coinsInput) coinsInput.classList.toggle('hidden', !isPremium);
     }
 
     loadSelectedChapter(id) {
@@ -693,9 +708,14 @@ class SrishtyApp {
         statusText.textContent = 'Saving...';
 
         const label = document.getElementById('editor-chapter-label').textContent;
+        const isPremium = document.getElementById('chapter-is-premium').checked;
+        const coins = document.getElementById('chapter-coins').value || 0;
+
         const formData = new FormData();
         formData.append('title', label === 'New Chapter' ? `Chapter ${this.currentChapters.length + 1}` : label);
         formData.append('content', content);
+        formData.append('is_premium', isPremium);
+        formData.append('coins_required', coins);
 
         try {
             if (this.currentChapterId) {
