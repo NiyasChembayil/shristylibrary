@@ -32,6 +32,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# IMPORTANT: Change this in your Render/Production environment settings!
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-nt#3g3^zxpq&rohn2+x%9#z9j7+$a43q@p1&6x(l=+_&#l!zg7')
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -202,7 +203,8 @@ STATICFILES_DIRS = [
 
 MEDIA_URL = '/media/'
 # Use Cloudinary for media if configured, otherwise fallback to local filesystem
-if env('CLOUDINARY_CLOUD_NAME', default=''):
+CLOUDINARY_CLOUD_NAME = env('CLOUDINARY_CLOUD_NAME', default='')
+if CLOUDINARY_CLOUD_NAME:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
@@ -224,6 +226,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://localhost:8081",
     "http://localhost:3000",
+    "http://localhost:5173",
     "http://127.0.0.1:8000",
 ]
 
@@ -232,6 +235,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://srishty-studio.onrender.com",
     "https://srishty-web.onrender.com",
     "http://localhost:3000",
+    "http://localhost:5173",
     "http://127.0.0.1:8000",
 ]
 
@@ -278,7 +282,5 @@ if USE_S3:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
 else:
-    # Use Cloudinary as an alternative if configured
-    CLOUDINARY_URL = env('CLOUDINARY_URL', default='')
-    if CLOUDINARY_URL and not env('CLOUDINARY_CLOUD_NAME', default=''):
-        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    # Cloudinary is handled above, S3 takes precedence if USE_S3 is True
+    pass

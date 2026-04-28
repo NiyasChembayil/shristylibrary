@@ -9,6 +9,7 @@ import '../../providers/book_provider.dart';
 import '../notifications/notification_screen.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/navigation_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -41,25 +42,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             // App bar row
             Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Srishty',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Good ${DateTime.now().hour < 12 ? "Morning" : DateTime.now().hour < 17 ? "Afternoon" : "Evening"},',
+                        style: const TextStyle(color: Colors.white54, fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        ref.watch(authProvider).profile?.username ?? 'Storyteller',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () {
-                          ref.read(navigationProvider.notifier).state = 2;
-                        },
-                        icon: const Icon(Icons.search_rounded, size: 28, color: Colors.white70),
+                        onPressed: () => ref.read(navigationProvider.notifier).state = 2,
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.search_rounded, size: 24, color: Colors.white70),
+                        ),
                       ),
                       Stack(
                         children: [
@@ -67,7 +82,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             onPressed: () {
                               Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen()));
                             },
-                            icon: const Icon(Icons.notifications_none_rounded, size: 28),
+                            icon: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.05),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.notifications_none_rounded, size: 24),
+                            ),
                           ),
                           if (unreadCount > 0)
                             Positioned(
@@ -135,10 +157,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ..sort((a, b) => b.likesCount.compareTo(a.likesCount));
         final top10 = top10Books.take(10).toList();
         
-        // Remaining books or random for Secret Obsessions
-        final obsessions = allBooks.length > 20 
-            ? allBooks.skip(20).toList() 
-            : allBooks.reversed.toList();
+        // Continue Reading: Books in library with some progress
+        final continueReading = allBooks.where((b) => b.isInLibrary).take(5).toList();
+        
+        // Prepare sub-lists
 
         return RefreshIndicator(
           color: const Color(0xFF6C63FF),
@@ -150,6 +172,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (continueReading.isNotEmpty)
+                  _buildHorizontalSection(
+                    context,
+                    title: 'Continue Reading',
+                    books: continueReading,
+                    isProgressSection: true,
+                  ),
+                const SizedBox(height: 10),
                 _buildHorizontalSection(
                   context,
                   title: 'Top picks for you',
@@ -182,6 +212,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     String? subtitle,
     required List books,
     bool showRank = false,
+    bool isProgressSection = false,
   }) {
     if (books.isEmpty) return const SizedBox.shrink();
 
@@ -237,6 +268,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   categoryName: book.categoryName,
                   views: book.totalReads > 0 ? book.totalReads : book.likesCount,
                   rank: showRank ? (index + 1) : null,
+                  readingProgress: isProgressSection ? 0.65 : null, // Mock progress for demo
                   onTap: openContainer,
                   onPlay: () {
                     // Record a read event for the stats

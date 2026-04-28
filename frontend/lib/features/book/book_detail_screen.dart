@@ -169,7 +169,54 @@ class BookDetailScreen extends ConsumerWidget {
                       delay: 400,
                       child: Text(
                         book.description,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6, color: Colors.white70),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Community Section Preview
+                    _fadeIn(
+                      delay: 500,
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.white10),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Community Feed',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    // Navigate to all comments (placeholder for now)
+                                  },
+                                  child: const Text('See All', style: TextStyle(color: Color(0xFF6C63FF))),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            const Row(
+                              children: [
+                                CircleAvatar(radius: 12, backgroundColor: Colors.orangeAccent, child: Text('A', style: TextStyle(fontSize: 10, color: Colors.white))),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    '"This plot twist in Chapter 3 literally blew my mind! 🤯"',
+                                    style: TextStyle(color: Colors.white70, fontStyle: FontStyle.italic, fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 150),
@@ -365,9 +412,31 @@ class BookDetailScreen extends ConsumerWidget {
   Widget _buildStatColumn(String value, String label) {
     return Column(
       children: [
-        Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF6C63FF),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.1,
+            color: Colors.white38,
+          ),
+        ),
       ],
     );
   }

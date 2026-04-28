@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .models import Category, Book, Chapter, ReadStats
+from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead
 from .serializers import CategorySerializer, BookSerializer, ChapterSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -166,20 +166,38 @@ class BookViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def toggle_library(self, request, pk=None):
-        from .models import UserLibrary
         book = self.get_object()
-        user = request.user
-        
-        if not user.is_authenticated:
-            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
-            
-        library_item, created = UserLibrary.objects.get_or_create(user=user, book=book)
-        
+        ul, created = UserLibrary.objects.get_or_create(user=request.user, book=book)
         if not created:
-            library_item.delete()
-            return Response({'status': 'removed', 'is_in_library': False})
+            ul.delete()
+            return Response({'status': 'removed'})
+        return Response({'status': 'added'})
+
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        book = self.get_object()
+        chapter_id = request.data.get('chapter_id')
+        try:
+            chapter = book.chapters.get(id=chapter_id)
+            ChapterRead.objects.get_or_create(user=request.user, chapter=chapter)
+            return Response({'status': 'marked as read'})
+        except Chapter.DoesNotExist:
+            return Response({'error': 'Chapter not found'}, status=404)
+
+    @action(detail=True, methods=['get'])
+    def retention_stats(self, request, pk=None):
+        book = self.get_object()
+        chapters = book.chapters.all().order_by('order')
+        
+        stats = []
+        for chapter in chapters:
+            stats.append({
+                'chapter_id': chapter.id,
+                'title': chapter.title,
+                'reads_count': chapter.reads.count()
+            })
             
-        return Response({'status': 'added', 'is_in_library': True})
+        return Response(stats)
 
     @action(detail=False, methods=['get'])
     def my_library(self, request):
@@ -319,7 +337,21 @@ class ChapterViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        return Chapter.objects.filter(book_id=self.kwargs['book_pk'])
+        book_id = self.kwargs['book_pk']
+        user = self.request.user
+        
+        # Ensure the user has access to the book before showing chapters
+        if user.is_authenticated:
+            # Authors can see chapters of their own drafts, others only see published
+            books = Book.objects.filter(id=book_id).filter(Q(is_published=True) | Q(author=user))
+        else:
+            # Guests only see published
+            books = Book.objects.filter(id=book_id, is_published=True)
+            
+        if not books.exists():
+            return Chapter.objects.none()
+            
+        return Chapter.objects.filter(book_id=book_id)
 
     def perform_create(self, serializer):
         from django.core.exceptions import PermissionDenied

@@ -176,7 +176,18 @@ class LikeViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        queryset = Comment.objects.all()
+        book_id = self.request.query_params.get('book')
+        chapter_id = self.request.query_params.get('chapter')
+        
+        if chapter_id:
+            return queryset.filter(chapter_id=chapter_id)
+        if book_id:
+            return queryset.filter(book_id=book_id, chapter__isnull=True)
+        return queryset
 
     def perform_create(self, serializer):
         comment = serializer.save(user=self.request.user)

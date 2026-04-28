@@ -1,5 +1,5 @@
 :root {
-    /* Premium Srishty Studio Palette */
+    /* Premium Srishty Studio Palette (Light) */
     --bg-main: #F8FAFC;
     --bg-surface: #FFFFFF;
     --text-primary: #0F172A;
@@ -9,6 +9,7 @@
     --border-color: #E2E8F0;
     --input-bg: #FFFFFF;
     --danger: #EF4444;
+    --nav-bg: rgba(255, 255, 255, 0.6);
     
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -24,6 +25,18 @@
     --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
     
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.dark-mode {
+    --bg-main: #0F172A;
+    --bg-surface: #1E293B;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --border-color: #334155;
+    --input-bg: #1E293B;
+    --nav-bg: rgba(15, 23, 42, 0.8);
+    --glass-bg: rgba(30, 41, 59, 0.8);
+    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.3);
 }
 
 * {
@@ -349,7 +362,7 @@ button {
 
 /* Vertical Story Card (Wattpad Style) */
 .story-card {
-    background: white;
+    background: var(--bg-surface);
     padding: 16px;
     border-radius: var(--radius-lg);
     display: flex;
@@ -457,7 +470,7 @@ button {
 #view-editor {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: white;
+    background: var(--bg-surface);
     z-index: 2000;
 }
 
@@ -468,7 +481,7 @@ button {
 
 .pane-sidebar {
     width: 320px;
-    background: #F8FAFC;
+    background: var(--bg-main);
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
@@ -503,8 +516,13 @@ button {
     color: var(--text-secondary);
     transition: var(--transition);
 }
-.chapter-item:hover { background: #F1F5F9; color: var(--text-primary); }
-.chapter-item.active { background: white; color: var(--accent-primary); box-shadow: var(--shadow-sm); }
+.chapter-item:hover { background: var(--bg-surface); color: var(--text-primary); }
+.chapter-item.active { background: var(--bg-surface); color: var(--accent-primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
+.sortable-ghost {
+    opacity: 0.4;
+    background: var(--accent-primary) !important;
+    color: white !important;
+}
 
 .pane-main {
     flex: 1;
@@ -576,7 +594,7 @@ button {
 /* Category Chips */
 .cat-chip {
     padding: 8px 20px;
-    background: white;
+    background: var(--bg-surface);
     border: 1px solid var(--border-color);
     border-radius: 50px;
     font-size: 14px;
@@ -584,6 +602,7 @@ button {
     cursor: pointer;
     transition: var(--transition);
     white-space: nowrap;
+    color: var(--text-secondary);
 }
 
 .cat-chip:hover {

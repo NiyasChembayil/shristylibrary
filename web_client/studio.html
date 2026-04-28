@@ -66,6 +66,10 @@
             </div>
 
             <div class="nav-right">
+                <button class="btn-quiet" onclick="app.toggleTheme()" title="Toggle Theme" style="padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <svg id="theme-icon-sun" class="hidden" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+                    <svg id="theme-icon-moon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                </button>
                 <div class="profile-group" onclick="alert('Profile settings coming soon!')">
                     <div class="profile-info">
                         <span class="profile-name" id="nav-username">Author</span>
@@ -252,6 +256,10 @@
                             </div>
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <button class="btn-quiet" onclick="app.openSettings()">Settings</button>
+                                <label for="chapter-audio-upload" class="btn-quiet" style="cursor: pointer;">
+                                    Upload Chapter Audio
+                                    <input type="file" id="chapter-audio-upload" accept="audio/*" style="display: none;" onchange="app.handleChapterAudioUpload(this)">
+                                </label>
                             </div>
                         </div>
                     </section>
@@ -311,8 +319,17 @@
                         </div>
                     </div>
 
+                    <!-- Reader Retention Chart -->
+                    <div style="background: var(--bg-surface); border-radius: 24px; padding: 32px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); margin-bottom: 40px;">
+                        <h3 style="margin-bottom: 24px;">Reader Retention Rate</h3>
+                        <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 20px;">Percentage of readers who continue from chapter to chapter.</p>
+                        <div style="height: 300px; width: 100%;">
+                            <canvas id="retentionChart"></canvas>
+                        </div>
+                    </div>
+
                     <!-- Story Breakdown -->
-                    <div style="background: white; border-radius: 24px; padding: 32px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
+                    <div style="background: var(--bg-surface); border-radius: 24px; padding: 32px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
                         <h3 style="margin-bottom: 24px;">Story-by-Story Breakdown</h3>
                         <div style="overflow-x: auto;">
                             <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -340,6 +357,8 @@
 
     <!-- Scripts -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="./app.js?v=20240426_v1"></script>
     <div style="position: fixed; bottom: 16px; left: 16px; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); color: white; padding: 6px 12px; border-radius: 100px; font-size: 10px; font-weight: 700; pointer-events: none; border: 1px solid rgba(255,255,255,0.1);">
         STUDIO v4.0 PRO

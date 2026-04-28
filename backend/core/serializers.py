@@ -11,7 +11,7 @@ class ChapterSerializer(serializers.ModelSerializer):
     book = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Chapter
-        fields = ['id', 'book', 'title', 'content', 'order']
+        fields = ['id', 'book', 'title', 'content', 'order', 'audio_file']
 
 class BookSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -27,13 +27,14 @@ class BookSerializer(serializers.ModelSerializer):
     is_in_library = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     downloads_count = serializers.SerializerMethodField()
+    chapters_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
         fields = [
             'id', 'title', 'slug', 'author', 'author_name', 'author_is_verified', 'author_profile_id', 'is_author_following', 'cover', 'audio_file',
             'description', 'category', 'category_name', 'language', 'tags', 'price', 'region',
-            'is_published', 'created_at', 'updated_at', 'chapters',
+            'is_published', 'created_at', 'updated_at', 'chapters', 'chapters_count',
             'likes_count', 'comments_count', 'total_reads', 'is_in_library', 'is_liked',
             'downloads_count'
         ]
@@ -75,6 +76,9 @@ class BookSerializer(serializers.ModelSerializer):
 
     def get_downloads_count(self, obj):
         return obj.total_downloads
+
+    def get_chapters_count(self, obj):
+        return obj.chapters.count()
 
 class ReadStatsSerializer(serializers.ModelSerializer):
     class Meta:

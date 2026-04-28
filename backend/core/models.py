@@ -64,6 +64,7 @@ class Chapter(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField(null=True, blank=True) # Rich text content
     order = models.PositiveIntegerField(default=0)
+    audio_file = models.FileField(upload_to='chapter_audio/', null=True, blank=True)
 
     class Meta:
         ordering = ['order']
@@ -75,6 +76,11 @@ class Chapter(models.Model):
 
 class ReadStats(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='read_stats')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+class ChapterRead(models.Model):
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='reads')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 

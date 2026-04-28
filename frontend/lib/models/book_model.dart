@@ -137,18 +137,56 @@ class ChapterModel {
   final int id;
   final String title;
   final String content;
+  final String? audioUrl;
 
   ChapterModel({
     required this.id,
     required this.title,
     required this.content,
+    this.audioUrl,
   });
 
   factory ChapterModel.fromJson(Map<String, dynamic> json) {
+    String? audio = json['audio_file'];
+    if (audio != null && audio.isNotEmpty) {
+      if (!audio.startsWith('http')) {
+        audio = 'https://srishty-backend.onrender.com${audio.startsWith('/') ? '' : '/'}$audio';
+      } else if (audio.startsWith('http://srishty-backend.onrender.com')) {
+        audio = audio.replaceFirst('http://', 'https://');
+      }
+    }
+
     return ChapterModel(
       id: json['id'],
-      title: json['title'],
+      title: json['title'] ?? 'Untitled',
       content: json['content'] ?? '',
+      audioUrl: audio,
+    );
+  }
+}
+
+class BookCommentModel {
+  final int id;
+  final String username;
+  final String text;
+  final DateTime createdAt;
+  final int? chapterId;
+
+  BookCommentModel({
+    required this.id,
+    required this.username,
+    required this.text,
+    required this.createdAt,
+    this.chapterId,
+  });
+
+  factory BookCommentModel.fromJson(Map<String, dynamic> json) {
+    return BookCommentModel(
+      id: json['id'],
+      username: json['username'] ?? 'Anonymous',
+      text: json['text'] ?? '',
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      chapterId: json['chapter'],
     );
   }
 }

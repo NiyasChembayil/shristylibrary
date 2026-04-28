@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../providers/auth_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../../models/book_model.dart';
+import 'chapter_comments_screen.dart';
 
-class ReaderScreen extends StatefulWidget {
+class ReaderScreen extends ConsumerStatefulWidget {
   final int bookId;
   final String title;
   final List<ChapterModel> chapters;
@@ -21,7 +25,7 @@ class ReaderScreen extends StatefulWidget {
   State<ReaderScreen> createState() => _ReaderScreenState();
 }
 
-class _ReaderScreenState extends State<ReaderScreen> {
+class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   late PageController _pageController;
   int _currentChapterIndex = 0;
   double _fontSize = 18.0;
@@ -145,18 +149,49 @@ class _ReaderScreenState extends State<ReaderScreen> {
               onPageChanged: (index) {
                 setState(() => _currentChapterIndex = index);
                 _saveBookmark(index);
+                _markChapterRead(widget.chapters[index].id);
               },
               itemBuilder: (context, index) {
                 return SingleChildScrollView(
                   controller: index == _currentChapterIndex ? _scrollController : null,
                   padding: const EdgeInsets.all(25.0),
-                  child: Text(
-                    widget.chapters[index].content,
-                    style: GoogleFonts.inter(
-                      fontSize: _fontSize,
-                      color: _textColor,
-                      height: 1.8,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.chapters[index].content,
+                        style: GoogleFonts.inter(
+                          fontSize: _fontSize,
+                          color: _textColor,
+                          height: 1.8,
+                        ),
+                      ),
+                      const SizedBox(height: 50),
+                      const Divider(color: Colors.white12),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChapterCommentsScreen(
+                                  bookId: widget.bookId,
+                                  chapterId: widget.chapters[index].id,
+                                  title: widget.chapters[index].title,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.comment_rounded, color: Color(0xFF6C63FF)),
+                          label: const Text(
+                            'Discussion for this Chapter',
+                            style: TextStyle(color: Color(0xFF6C63FF), fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 100), // Extra space at bottom
+                    ],
                   ),
                 );
               },
@@ -243,4 +278,21 @@ class _ReaderScreenState extends State<ReaderScreen> {
       ),
     );
   }
-}
+
+  Future<void> _markChapterRead(int chapterId) async {
+    final dio = Dio(BaseOptions(baseUrl: 'https://srishty-backend.onrender.com/api'));
+    final token = ref.read(authProvider).token;
+    if (token == null) return;
+
+    try {
+      await dio.post(
+        '/core/books/${widget.bookId}/mark_read/',
+        data: {'chapter_id': chapterId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+    } catch (e) {
+      debugPrint('Error marking chapter read: $e');
+    }
+  }
+
+  String _timeAgo(DateTime dateTime) {

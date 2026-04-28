@@ -9,6 +9,7 @@ class MiniBookCard extends StatelessWidget {
   final String categoryName;
   final int views;
   final int? rank;
+  final double? readingProgress;
   final VoidCallback onTap;
   final VoidCallback onPlay;
 
@@ -19,6 +20,7 @@ class MiniBookCard extends StatelessWidget {
     required this.categoryName,
     required this.views,
     this.rank,
+    this.readingProgress,
     required this.onTap,
     required this.onPlay,
   });
@@ -150,6 +152,31 @@ class MiniBookCard extends StatelessWidget {
                           ..style = PaintingStyle.stroke
                           ..strokeWidth = 3
                           ..color = Colors.black,
+                      ),
+                    ),
+                  ),
+
+                // Reading Progress Bar
+                if (readingProgress != null && readingProgress! > 0)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: readingProgress!.clamp(0.0, 1.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6C63FF),
+                            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                          ),
+                        ),
                       ),
                     ),
                   ),

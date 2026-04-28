@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from core.models import Book
+from core.models import Book, Chapter
 
 class Post(models.Model):
     POST_TYPES = (
@@ -70,6 +70,7 @@ class Like(models.Model):
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='book_comments')
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='comments')
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, null=True, blank=True, related_name='comments')
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

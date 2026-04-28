@@ -28,12 +28,41 @@ class SrishtyApp {
         this.currentChapterId = null;
         this.allExploreBooks = [];
         this.currentExploreCategory = null;
+        this.initTheme();
 
         // Wait for DOM to be ready before init
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
         } else {
             this.init();
+        }
+    }
+
+    initTheme() {
+        const savedTheme = localStorage.getItem('srishty_theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            setTimeout(() => this.updateThemeIcons(true), 100);
+        }
+    }
+
+    toggleTheme() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('srishty_theme', isDark ? 'dark' : 'light');
+        this.updateThemeIcons(isDark);
+    }
+
+    updateThemeIcons(isDark) {
+        const sun = document.getElementById('theme-icon-sun');
+        const moon = document.getElementById('theme-icon-moon');
+        if (sun && moon) {
+            if (isDark) {
+                sun.classList.remove('hidden');
+                moon.classList.add('hidden');
+            } else {
+                sun.classList.add('hidden');
+                moon.classList.remove('hidden');
+            }
         }
     }
 
@@ -69,6 +98,9 @@ class SrishtyApp {
         } catch (e) { console.error('Cat Fetch Error:', e); }
     }
 
+        } catch (e) { console.error('Cat Fetch Error:', e); }
+    }
+
     setupQuill() {
         if (!document.getElementById('editor-container')) return;
 
@@ -92,12 +124,11 @@ class SrishtyApp {
             const wordCountEl = document.getElementById('word-count');
             if (wordCountEl) wordCountEl.textContent = `${count.toLocaleString()} words`;
 
-            // Subtle auto-save indicator
-            const statusText = document.getElementById('save-status');
-            if (statusText && statusText.textContent === 'Saved') {
-                statusText.textContent = 'Editing...';
-                statusText.style.color = 'var(--text-secondary)';
-            }
+            // Debounced Auto-save
+            if (this.autoSaveTimeout) clearTimeout(this.autoSaveTimeout);
+            this.autoSaveTimeout = setTimeout(() => {
+                this.saveCurrentChapter(true); // silent = true
+            }, 2000);
         });
     }
 
@@ -425,12 +456,64 @@ class SrishtyApp {
         this.currentChapters.forEach((ch, idx) => {
             const div = document.createElement('div');
             div.className = `chapter-item ${ch.id === this.currentChapterId ? 'active' : ''}`;
+            div.setAttribute('data-id', ch.id);
             div.innerHTML = `
-                <span>${escapeHTML(ch.title) || 'Chapter ' + (idx + 1)}</span>
-                <span style="font-size: 10px; opacity: 0.5;">${idx + 1}</span>
+                <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <svg style="cursor: grab; color: var(--text-secondary);" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 8h16M4 16h16"/></svg>
+                    <span style="flex: 1;">${escapeHTML(ch.title) || 'Chapter ' + (idx + 1)}</span>
+                </div>
             `;
-            div.onclick = () => this.loadSelectedChapter(ch.id);
+            div.onclick = (e) => {
+                // Don't switch if dragging handle
+                if (e.target.closest('svg')) return;
+                this.loadSelectedChapter(ch.id);
+            };
             list.appendChild(div);
+        });
+
+        this.initSortable();
+    }
+
+    initSortable() {
+        const list = document.getElementById('sidebar-chapter-list');
+        if (!list) return;
+
+        if (this.sortable) this.sortable.destroy();
+
+        this.sortable = new Sortable(list, {
+            animation: 150,
+            handle: 'svg', // Drag handle
+            ghostClass: 'sortable-ghost',
+            onEnd: async (evt) => {
+                const chapterIds = Array.from(list.querySelectorAll('.chapter-item')).map(el => parseInt(el.getAttribute('data-id')));
+                
+                // Update local state first for immediate feedback
+                const reordered = chapterIds.map(id => this.currentChapters.find(c => c.id === id));
+                this.currentChapters = reordered;
+
+                // Sync with backend
+                try {
+                    const statusText = document.getElementById('save-status');
+                    statusText.textContent = 'Updating Order...';
+                    
+                    // We send the new order to the backend. 
+                    // To be efficient, we can send a batch update or just iterate.
+                    // For now, let's iterate and update the 'order' field.
+                    for (let i = 0; i < this.currentChapters.length; i++) {
+                        const chapter = this.currentChapters[i];
+                        await this.fetchAPI(`/core/books/${this.currentStoryId}/chapters/${chapter.id}/`, {
+                            method: 'PATCH',
+                            body: JSON.stringify({ order: i })
+                        });
+                    }
+                    statusText.textContent = 'Order Saved';
+                    statusText.style.color = '#10B981';
+                } catch (err) {
+                    console.error('Failed to reorder:', err);
+                    alert('Failed to save new chapter order.');
+                    this.renderChapterList(); // Revert UI
+                }
+            }
         });
     }
 
@@ -482,9 +565,9 @@ class SrishtyApp {
         this.quill.focus();
     }
 
-    async saveCurrentChapter() {
-        const content = this.quill.getText();
-        const textContent = content.trim();
+    async saveCurrentChapter(silent = false) {
+        const content = this.quill.root.innerHTML;
+        const textContent = this.quill.getText().trim();
         if (!textContent) return; // Don't save empty
 
         const saveBtn = document.getElementById('save-indicator');
@@ -517,13 +600,16 @@ class SrishtyApp {
             }
 
             saveBtn.textContent = 'Save Draft';
-            statusText.textContent = 'Saved';
+            statusText.textContent = silent ? 'Saved Automatically' : 'Saved';
             statusText.style.color = '#10B981';
-            this.renderChapterList();
+            
+            // Only refresh sidebar if it's a manual save (for new chapter names)
+            if (!silent) this.renderChapterList();
         } catch (e) {
             console.error('Save Error:', e);
-            statusText.textContent = 'Save Error';
+            statusText.textContent = 'Save Failed';
             statusText.style.color = 'var(--danger)';
+            if (!silent) alert(`Failed to save: ${e.message}`);
         }
     }
 
@@ -542,6 +628,37 @@ class SrishtyApp {
             this.switchView('home');
         } catch (e) {
             alert(`Failed to publish: ${e.message}`);
+        }
+    }
+
+    async handleChapterAudioUpload(input) {
+        const file = input.files[0];
+        if (!file || !this.currentChapterId) return;
+
+        const statusText = document.getElementById('save-status');
+        statusText.textContent = 'Uploading audio...';
+
+        const formData = new FormData();
+        formData.append('audio_file', file);
+
+        // Find chapter number (1-indexed) based on order (0-indexed)
+        const chapter = this.currentChapters.find(c => c.id === this.currentChapterId);
+        if (!chapter) return;
+        formData.append('chapter_number', chapter.order + 1);
+
+        try {
+            const res = await this.fetchAPI(`/core/books/${this.currentStoryId}/upload_audio/`, {
+                method: 'POST',
+                body: formData
+            });
+            statusText.textContent = 'Audio Uploaded';
+            statusText.style.color = '#10B981';
+            alert('Chapter audio uploaded successfully!');
+        } catch (e) {
+            console.error('Audio Upload Error:', e);
+            statusText.textContent = 'Upload Failed';
+            statusText.style.color = 'var(--danger)';
+            alert(`Failed to upload audio: ${e.message}`);
         }
     }
 
@@ -698,7 +815,7 @@ class SrishtyApp {
                     </td>
                     <td style="padding: 16px 8px; font-weight: 700;">${book.total_reads || 0}</td>
                     <td style="padding: 16px 8px;">${book.likes_count || 0}</td>
-                    <td style="padding: 16px 8px;">${book.downloads_count || 0}</td>
+                    <td style="padding: 16px 8px; font-weight: 700; color: var(--accent-primary); cursor: pointer;" onclick="app.showBookRetention(${book.id}, '${escapeHTML(book.title)}')">View Retention</td>
                     <td style="padding: 16px 8px;">
                         <span style="padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; ${book.is_published ? 'background: #DCFCE7; color: #166534;' : 'background: #F3F4F6; color: #374151;'}">
                             ${book.is_published ? 'Published' : 'Draft'}
@@ -708,13 +825,70 @@ class SrishtyApp {
                 tableBody.appendChild(tr);
             });
 
-            document.getElementById('total-reads').textContent = totalReads;
-            document.getElementById('total-likes').textContent = totalLikes;
-            document.getElementById('total-downloads').textContent = totalDownloads;
+            document.getElementById('total-reads').textContent = totalReads.toLocaleString();
+            document.getElementById('total-likes').textContent = totalLikes.toLocaleString();
+            document.getElementById('total-downloads').textContent = totalDownloads.toLocaleString();
+
+            if (books.length > 0) {
+                this.showBookRetention(books[0].id, books[0].title);
+            }
 
         } catch (e) {
             console.error('Analytics Error:', e);
         }
+    }
+
+    async showBookRetention(bookId, title) {
+        try {
+            const stats = await this.fetchAPI(`/core/books/${bookId}/retention_stats/`);
+            if (!stats || !Array.isArray(stats)) return;
+
+            const labels = stats.map(s => s.title);
+            const data = stats.map(s => s.reads_count);
+
+            const ctx = document.getElementById('retentionChart').getContext('2d');
+            if (this.retentionChart) this.retentionChart.destroy();
+
+            const isDark = document.body.classList.contains('dark-mode');
+            const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+            const textColor = isDark ? '#94A3B8' : '#64748B';
+
+            this.retentionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Readers per Chapter',
+                        data: data,
+                        borderColor: '#6366F1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#6366F1',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: textColor }
+                        }
+                    }
+                }
+            });
+        } catch (e) { console.error('Retention Stats Error:', e); }
     }
 
     /* ======== EXPLORE VIEW ======== */
@@ -767,8 +941,8 @@ class SrishtyApp {
                         <img src="${coverUrl}" alt="cover">
                     </div>
                     <div class="story-info-meta">
-                        <div class="story-card-title">${book.title}</div>
-                        <div class="story-card-subtitle">by ${book.author_name}${book.author_is_verified ? ' <svg width="14" height="14" fill="#00D2FF" style="vertical-align: text-bottom; margin-left: 2px;" viewBox="0 0 24 24"><path d="M9 16.172l-4.172-4.172-1.414 1.414L9 19 21 7l-1.414-1.414L9 16.172z"/></svg>' : ''}</div>
+                        <div class="story-card-title">${escapeHTML(book.title)}</div>
+                        <div class="story-card-subtitle">by ${escapeHTML(book.author_name)}${book.author_is_verified ? ' <svg width="14" height="14" fill="#00D2FF" style="vertical-align: text-bottom; margin-left: 2px;" viewBox="0 0 24 24"><path d="M9 16.172l-4.172-4.172-1.414 1.414L9 19 21 7l-1.414-1.414L9 16.172z"/></svg>' : ''}</div>
                         <div style="margin-top: 8px; font-size: 11px; color: var(--text-secondary);">
                             ${book.total_reads} reads • ${book.likes_count} likes
                         </div>

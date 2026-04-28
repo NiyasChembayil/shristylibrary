@@ -1,5 +1,18 @@
 const API_BASE_URL = 'https://srishty-backend.onrender.com/api';
 
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, function (m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m];
+    });
+}
+
 class AdminApp {
     constructor() {
         this.token = localStorage.getItem('srishty_admin_token');
@@ -157,8 +170,8 @@ class AdminApp {
             const list = document.getElementById('recent-books-list');
             list.innerHTML = activity.books.map(book => `
                 <tr class="animate-slide-up">
-                    <td>${book.title}</td>
-                    <td>${book.author}</td>
+                    <td>${escapeHTML(book.title)}</td>
+                    <td>${escapeHTML(book.author)}</td>
                     <td>Fiction</td>
                     <td><span class="status-badge active">Published</span></td>
                     <td><button class="btn-action">Manage</button></td>
@@ -231,7 +244,7 @@ class AdminApp {
             target.innerHTML = profiles.map(profile => `
                 <tr>
                     <td>#${profile.id}</td>
-                    <td>${profile.username}</td>
+                    <td>${escapeHTML(profile.username)}</td>
                     <td>${profile.role}</td>
                     <td>
                         <button class="btn-action" onclick="adminApp.toggleVerify(${profile.id}, ${profile.is_verified})" style="background: ${profile.is_verified ? '#6C63FF' : '#444'}; margin-right: 5px;">${profile.is_verified ? 'Verified' : 'Verify'}</button>
@@ -294,8 +307,8 @@ class AdminApp {
             target.innerHTML = data.results.map(book => `
                 <tr>
                     <td>#${book.id}</td>
-                    <td>${book.title}</td>
-                    <td>${book.author_name}</td>
+                    <td>${escapeHTML(book.title)}</td>
+                    <td>${escapeHTML(book.author_name)}</td>
                     <td><span class="status-badge active">Live</span></td>
                     <td><button class="btn-action red">Remove</button></td>
                 </tr>
