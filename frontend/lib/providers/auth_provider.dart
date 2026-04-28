@@ -101,20 +101,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (e) {
       String message = 'Login failed. Please check your credentials.';
       
-      // Better error detection
       if (e is DioException) {
         if (e.type == DioExceptionType.connectionTimeout || 
-            e.type == DioExceptionType.sendTimeout ||
-            e.type == DioExceptionType.receiveTimeout ||
-            e.type == DioExceptionType.connectionError) {
-          message = 'Server unreachable. Check if current IP in api_client.dart matches your computer\'s IP.';
+            e.type == DioExceptionType.connectionError ||
+            e.type == DioExceptionType.receiveTimeout) {
+          message = 'Cannot connect to server. If testing locally, ensure your machine IP (192.168.1.23) is correct in api_client.dart and the server is running.';
         } else if (e.response?.statusCode == 401) {
-          message = 'Invalid username or password.';
-        } else if (e.response?.data is Map) {
-          final data = e.response?.data as Map;
-          if (data.containsKey('detail')) {
-            message = data['detail'];
-          }
+          message = 'Incorrect username or password. Please try again.';
+        } else if (e.response?.statusCode == 404) {
+          message = 'Server endpoint not found (404). Check your API URL.';
+        } else if (e.response?.data is Map && (e.response?.data as Map).containsKey('detail')) {
+          message = (e.response?.data as Map)['detail'];
         }
       }
       
