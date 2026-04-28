@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report, StoryBible
+from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead, Report, StoryBible, ChapterVersion
 from .serializers import CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer, StoryBibleSerializer
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -493,6 +493,30 @@ class ChapterViewSet(viewsets.ModelViewSet):
         
         return Response({'status': 'unlocked', 'remaining_coins': profile.coins})
 
+    @action(detail=True, methods=['get'])
+    def history(self, request, book_pk=None, pk=None):
+        chapter = self.get_object()
+        versions = chapter.versions.all()[:20]
+        data = [{
+            'id': v.id,
+            'word_count': v.word_count,
+            'created_at': v.created_at,
+            'content_preview': v.content[:200] + '...' if v.content else ''
+        } for v in versions]
+        return Response(data)
+
+    @action(detail=True, methods=['post'])
+    def restore_version(self, request, book_pk=None, pk=None):
+        chapter = self.get_object()
+        version_id = request.data.get('version_id')
+        try:
+            version = chapter.versions.get(id=version_id)
+            chapter.content = version.content
+            chapter.save()
+            return Response({'status': 'restored', 'content': chapter.content})
+        except ChapterVersion.DoesNotExist:
+            return Response({'error': 'Version not found'}, status=404)
+
     def perform_update(self, serializer):
         old_content = self.get_object().content
         instance = serializer.save()
@@ -531,6 +555,18 @@ class ChapterViewSet(viewsets.ModelViewSet):
                 profile.save()
             
             stats.save()
+
+        # Version History (Time Machine)
+        ChapterVersion.objects.create(
+            chapter=instance,
+            content=new_content,
+            word_count=new_words
+        )
+        
+        # Cleanup old versions (Keep last 20)
+        old_versions = ChapterVersion.objects.filter(chapter=instance).order_by('-created_at')[20:]
+        for v in old_versions:
+            v.delete()
 
     def perform_create(self, serializer):
         from django.core.exceptions import PermissionDenied

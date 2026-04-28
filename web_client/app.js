@@ -1480,6 +1480,77 @@ class SrishtyApp {
             btn.disabled = false;
         }
     }
+
+    async showHistory() {
+        if (!this.currentChapterId) {
+            alert("Please select a chapter first.");
+            return;
+        }
+
+        const panel = document.getElementById('history-panel');
+        const list = document.getElementById('history-list');
+        list.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Loading history...</p>';
+        panel.classList.remove('hidden');
+
+        try {
+            const versions = await this.fetchAPI(`/core/books/${this.currentStoryId}/chapters/${this.currentChapterId}/history/`);
+            
+            if (versions.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No versions found for this chapter.</p>';
+                return;
+            }
+
+            list.innerHTML = versions.map(v => {
+                const date = new Date(v.created_at).toLocaleString();
+                return `
+                    <div class="history-card" onclick="app.previewVersion(${v.id})">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <span style="font-weight: 700; font-size: 13px;">${date}</span>
+                            <span style="font-size: 11px; background: var(--bg-main); color: var(--accent-primary); padding: 2px 8px; border-radius: 4px; font-weight: 700;">${v.word_count} words</span>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; line-height: 1.5;">
+                            ${v.content_preview}
+                        </p>
+                        <button class="btn-primary" style="width: 100%; margin-top: 15px; height: 36px; font-size: 12px;" onclick="app.restoreVersion(event, ${v.id})">Restore This Version</button>
+                    </div>
+                `;
+            }).join('');
+        } catch (e) {
+            list.innerHTML = '<p style="text-align: center; color: var(--danger); padding: 40px;">Failed to load history.</p>';
+        }
+    }
+
+    hideHistory() {
+        document.getElementById('history-panel').classList.add('hidden');
+    }
+
+    async restoreVersion(event, versionId) {
+        event.stopPropagation();
+        if (!confirm("Are you sure you want to restore this version? Your current draft will be replaced.")) return;
+
+        try {
+            const res = await this.fetchAPI(`/core/books/${this.currentStoryId}/chapters/${this.currentChapterId}/restore_version/`, {
+                method: 'POST',
+                body: JSON.stringify({ version_id: versionId })
+            });
+            
+            if (res.status === 'restored') {
+                try {
+                    // Try parsing as Delta (Quill format)
+                    const delta = JSON.parse(res.content);
+                    this.quill.setContents(delta);
+                } catch (e) {
+                    // Fallback to HTML
+                    this.quill.root.innerHTML = res.content;
+                }
+                this.hideHistory();
+                this.showSuccessAnimation();
+                this.saveCurrentChapter(); // Auto-save the restoration as a new version
+            }
+        } catch (e) {
+            alert("Failed to restore version.");
+        }
+    }
 }
 
 // Global initialization
