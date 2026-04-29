@@ -67,14 +67,25 @@ async function autoSave() {
 
 // Initialize Page
 async function initEditor() {
+    console.log('Initializing Editor...');
     initQuill();
     
-    if (currentStoryId) {
-        await loadStoryDetails();
-        await loadChapters();
-    } else {
-        // Create new story first
-        await createNewStory();
+    // Unlock editor immediately for writing
+    saveStatus.textContent = 'Ready to write';
+
+    try {
+        if (currentStoryId) {
+            // Load these in parallel to prevent blocking
+            Promise.all([
+                loadStoryDetails(),
+                loadChapters()
+            ]).catch(err => console.error('Data sync issue:', err));
+        } else {
+            await createNewStory();
+        }
+    } catch (err) {
+        console.error('Editor Init Error:', err);
+        saveStatus.textContent = 'Offline Mode - Writing enabled';
     }
 }
 
