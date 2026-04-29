@@ -206,7 +206,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'frontend_static',
-    ('web_admin', BASE_DIR.parent / 'web_admin'),
 ]
 
 MEDIA_URL = '/media/'

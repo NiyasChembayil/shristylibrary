@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Srishty Admin Hub | Platform Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../web_client/css/style.css"> <!-- Reusing Studio variables -->
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div class="studio-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon small">🛡️</div>
+                <h2>SRISHTY</h2>
+                <p>ADMIN</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" id="nav-dash">📊 Overview</a>
+                <a href="#" class="nav-item" id="nav-users">👥 Users</a>
+                <a href="#" class="nav-item" id="nav-stories">📚 Moderation</a>
+                <a href="#" class="nav-item" id="nav-finances">💰 Finances</a>
+                <div class="nav-divider"></div>
+                <a href="../web_client/dashboard.html" class="nav-item">✍️ Author Studio</a>
+                <a href="#" id="logout-btn" class="nav-item logout">🚪 Logout</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="welcome-text">
+                    <h1>Admin Command Center</h1>
+                    <p>Managing the future of storytelling.</p>
+                </div>
+            </header>
+
+            <!-- Overview Section -->
+            <div id="section-overview" class="admin-section">
+                <section class="stats-grid">
+                    <div class="glass-card stat-card">
+                        <span class="stat-icon">👤</span>
+                        <div class="stat-data">
+                            <h3 id="stat-total-users">0</h3>
+                            <p>Total Users</p>
+                        </div>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <span class="stat-icon">📕</span>
+                        <div class="stat-data">
+                            <h3 id="stat-total-books">0</h3>
+                            <p>Total Stories</p>
+                        </div>
+                    </div>
+                    <div class="glass-card stat-card">
+                        <span class="stat-icon">🪙</span>
+                        <div class="stat-data">
+                            <h3 id="stat-total-coins">0</h3>
+                            <p>Coins Circulating</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section">
+                    <div class="section-header">
+                        <h2>Pending Approval</h2>
+                    </div>
+                    <div id="pending-grid" class="stories-grid">
+                        <div class="loading-placeholder">No stories pending moderation.</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Users Section (Hidden) -->
+            <div id="section-users" class="admin-section hidden">
+                <div class="section-header">
+                    <h2>Platform Users</h2>
+                </div>
+                <div class="glass-card table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
