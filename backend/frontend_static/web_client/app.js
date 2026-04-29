@@ -244,15 +244,17 @@ class SrishtyApp {
     }
 
     checkAuth() {
-        const gw = document.getElementById('auth-gateway');
-        const shell = document.getElementById('app-shell');
+        const gw = document.getElementById('auth-section') || document.getElementById('auth-gateway');
+        const shell = document.getElementById('app-section') || document.getElementById('app-shell');
+
+        console.log('App: Checking auth status...', this.token ? 'Logged In' : 'Logged Out');
 
         if (!this.token) {
-            gw.classList.remove('hidden');
-            shell.classList.add('hidden');
+            if (gw) gw.classList.remove('hidden');
+            if (shell) shell.classList.add('hidden');
         } else {
-            gw.classList.add('hidden');
-            shell.classList.remove('hidden');
+            if (gw) gw.classList.add('hidden');
+            if (shell) shell.classList.remove('hidden');
 
             // Update Navbar Profile
             const usernameEl = document.getElementById('nav-username');
@@ -380,16 +382,34 @@ class SrishtyApp {
     }
 
     /* ======== VIEW ROUTING ======== */
+    showTab(tabName) {
+        console.log('App: Switching to tab', tabName);
+        const viewName = tabName === 'my-stories' ? 'home' : tabName;
+        this.switchView(viewName);
+    }
+
     switchView(viewName) {
-        document.querySelectorAll('.view-content').forEach(el => {
-            el.classList.add('hidden');
-            el.style.opacity = '0';
+        console.log('App: Switching view to', viewName);
+        
+        // Handle both 'view-*' (old) and 'tab-*' (new) IDs
+        const possibleIds = [`view-${viewName}`, `tab-${viewName}`];
+        if (viewName === 'home') possibleIds.push('tab-my-stories');
+
+        document.querySelectorAll('.view-content, [id^="tab-"], [id^="view-"]').forEach(el => {
+            if (el.id && (el.id.startsWith('tab-') || el.id.startsWith('view-'))) {
+                el.classList.add('hidden');
+                el.style.opacity = '0';
+            }
         });
 
-        const activeView = document.getElementById(`view-${viewName}`);
+        let activeView = null;
+        for (const id of possibleIds) {
+            activeView = document.getElementById(id);
+            if (activeView) break;
+        }
+
         if (activeView) {
             activeView.classList.remove('hidden');
-            // Trigger smooth fade-in
             setTimeout(() => {
                 activeView.style.opacity = '1';
             }, 50);
@@ -402,19 +422,19 @@ class SrishtyApp {
             link.classList.remove('active');
         });
 
-        if (viewName === 'home') document.getElementById('nav-home').classList.add('active');
-        if (viewName === 'analytics') document.getElementById('nav-analytics').classList.add('active');
-        if (viewName === 'comments') document.getElementById('nav-comments').classList.add('active');
-        if (viewName === 'bible') document.getElementById('nav-bible').classList.add('active');
-        if (viewName === 'achievements') document.getElementById('nav-achievements').classList.add('active');
+        if (viewName === 'home') document.getElementById('nav-home')?.classList.add('active');
+        if (viewName === 'analytics') document.getElementById('nav-analytics')?.classList.add('active');
+        if (viewName === 'comments') document.getElementById('nav-comments')?.classList.add('active');
+        if (viewName === 'bible') document.getElementById('nav-bible')?.classList.add('active');
+        if (viewName === 'achievements') document.getElementById('nav-achievements')?.classList.add('active');
 
         if (viewName === 'home') {
             this.loadDashboard();
-            document.getElementById('nav-bible').classList.add('hidden');
+            document.getElementById('nav-bible')?.classList.add('hidden');
         }
         if (viewName === 'explore') {
             this.loadExploreData();
-            document.getElementById('nav-bible').classList.add('hidden');
+            document.getElementById('nav-bible')?.classList.add('hidden');
         }
         if (viewName === 'create') this.resetCreateForm();
         if (viewName === 'analytics') this.loadAnalyticsData();
@@ -526,7 +546,7 @@ class SrishtyApp {
     getMediaUrl(path) {
         if (!path) return 'https://placehold.co/400x600/E2E8F0/64748B?text=Cover+Not+Found';
         if (path.startsWith('http')) return path;
-        const backendOrigin = API_BASE_URL.replace('/api', '').replace(/\/$/, '');
+        const backendOrigin = API_URL.replace('/api', '').replace(/\/$/, '');
         const cleanPath = path.startsWith('/') ? path : `/${path}`;
         return `${backendOrigin}${cleanPath}`;
     }
