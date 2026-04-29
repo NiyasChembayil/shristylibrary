@@ -45,7 +45,8 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
     '127.0.0.1', 
     'srishty-backend.onrender.com', 
     'shristylibrary.onrender.com',
-    'srishty-studio.onrender.com'
+    'srishty-studio.onrender.com',
+    'srishty-admin.onrender.com'
 ])
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
@@ -231,6 +232,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://srishty-studio.onrender.com",
     "https://srishty-web.onrender.com",
     "https://srishty-backend.onrender.com",
+    "https://srishty-admin.onrender.com",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:8000",
@@ -244,6 +246,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://srishty-studio.onrender.com",
     "https://srishty-web.onrender.com",
     "https://srishty-backend.onrender.com",
+    "https://srishty-admin.onrender.com",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:8000",

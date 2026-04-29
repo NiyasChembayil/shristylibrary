@@ -211,7 +211,7 @@ class AdminProfileViewSet(viewsets.ModelViewSet):
         profile = self.get_object()
         achievement_id = request.data.get('achievement_id')
         if not achievement_id:
-            return response.Response({"error": "Achievement ID is required"}, status=400)
+            return Response({"error": "Achievement ID is required"}, status=400)
 
         try:
             from core.models import Achievement, UserAchievement
@@ -219,7 +219,7 @@ class AdminProfileViewSet(viewsets.ModelViewSet):
             user_ach, created = UserAchievement.objects.get_or_create(user=profile.user, achievement=achievement)
             
             if not created:
-                return response.Response({"status": "already_has_it", "message": "User already has this badge."})
+                return Response({"status": "already_has_it", "message": "User already has this badge."})
 
             # Award XP for new achievements
             profile.xp += 50
@@ -244,20 +244,20 @@ class AdminProfileViewSet(viewsets.ModelViewSet):
                 details=f"Awarded badge: {achievement.title}. New Level: {profile.level}",
                 request=request
             )
-            return response.Response({
+            return Response({
                 'status': 'success', 
                 'message': f"Awarded {achievement.title}",
                 'leveled_up': leveled_up
             })
         except Achievement.DoesNotExist:
-            return response.Response({'error': 'Achievement not found'}, status=404)
+            return Response({'error': 'Achievement not found'}, status=404)
 
     @action(detail=True, methods=['post'])
     def grant_xp(self, request, pk=None):
         profile = self.get_object()
         amount = int(request.data.get('amount', 0))
         if amount <= 0:
-            return response.Response({'error': 'Invalid amount'}, status=400)
+            return Response({'error': 'Invalid amount'}, status=400)
             
         profile.xp += amount
         leveled_up = False
@@ -275,7 +275,7 @@ class AdminProfileViewSet(viewsets.ModelViewSet):
             details=f"Granted {amount} XP. New Level: {profile.level}",
             request=request
         )
-        return response.Response({
+        return Response({
             'status': 'xp granted',
             'new_xp': profile.xp,
             'new_level': profile.level,
