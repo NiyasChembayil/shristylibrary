@@ -1568,144 +1568,10 @@ class SrishtyApp {
                 this.saveCurrentChapter(); // Auto-save the restoration as a new version
             }
         } catch (e) {
-            alert("Failed to restore version.");
-        }
-    openCoverDesigner(context) {
-        this.coverDesignerContext = context; // 'create' or 'settings'
-        const title = context === 'create' ? document.getElementById('create-title').value : document.getElementById('settings-title').value;
-        const author = document.getElementById('nav-username').textContent;
-        
-        document.getElementById('cover-title-input').value = title;
-        document.getElementById('cover-author-input').value = author;
-        
-        document.getElementById('designer-modal').classList.remove('hidden');
-        this.updateCoverDesigner();
-    }
-
-    setCoverColor(color) {
-        document.getElementById('cover-color-input').value = color;
-        this.updateCoverDesigner();
-    }
-
-    updateCoverDesigner() {
-        const canvas = document.getElementById('cover-canvas');
-        const ctx = canvas.getContext('2d');
-        const template = document.getElementById('cover-template').value;
-        const title = document.getElementById('cover-title-input').value || "Your Story Title";
-        const author = document.getElementById('cover-author-input').value || "Author Name";
-        const color = document.getElementById('cover-color-input').value;
-
-        // Clear
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        if (template === 'minimal') {
-            ctx.fillStyle = color;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.font = "bold 60px sans-serif";
-            this.wrapText(ctx, title.toUpperCase(), canvas.width/2, 400, 500, 70);
-            
-            ctx.font = "30px sans-serif";
-            ctx.fillText(author, canvas.width/2, 800);
-            
-        } else if (template === 'vibrant') {
-            const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            grad.addColorStop(0, color);
-            grad.addColorStop(1, "#0F172A");
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.font = "bold 70px sans-serif";
-            this.wrapText(ctx, title, canvas.width/2, 350, 500, 80);
-
-            ctx.fillStyle = color;
-            ctx.fillRect(canvas.width/2 - 50, 600, 100, 4);
-
-            ctx.fillStyle = "white";
-            ctx.font = "italic 30px sans-serif";
-            ctx.fillText(`by ${author}`, canvas.width/2, 700);
-
-        } else if (template === 'noir') {
-            ctx.fillStyle = "#111827";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 20;
-            ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
-
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.font = "900 65px serif";
-            this.wrapText(ctx, title, canvas.width/2, 400, 500, 80);
-
-            ctx.font = "bold 25px sans-serif";
-            ctx.fillText(author.toUpperCase(), canvas.width/2, 850);
-        } else if (template === 'fantasy') {
-            ctx.fillStyle = "#0F172A";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const radGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, 600);
-            radGrad.addColorStop(0, color + "44");
-            radGrad.addColorStop(1, "transparent");
-            ctx.fillStyle = radGrad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.font = "bold 80px serif";
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 20;
-            this.wrapText(ctx, title, canvas.width/2, 450, 600, 90);
-            
-            ctx.shadowBlur = 0;
-            ctx.font = "30px sans-serif";
-            ctx.fillText(author, canvas.width/2, 950);
         }
     }
 
-    wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-        const words = text.split(' ');
-        let line = '';
-        for (let n = 0; n < words.length; n++) {
-            let testLine = line + words[n] + ' ';
-            let metrics = ctx.measureText(testLine);
-            let testWidth = metrics.width;
-            if (testWidth > maxWidth && n > 0) {
-                ctx.fillText(line, x, y);
-                line = words[n] + ' ';
-                y += lineHeight;
-            } else {
-                line = testLine;
-            }
-        }
-        ctx.fillText(line, x, y);
-    }
 
-    applyDesignedCover() {
-        const canvas = document.getElementById('cover-canvas');
-        canvas.toBlob((blob) => {
-            const file = new File([blob], "designed_cover.png", { type: "image/png" });
-            
-            const previewId = this.coverDesignerContext === 'create' ? 'create-cover-preview' : 'settings-cover-preview';
-            
-            if (this.coverDesignerContext === 'create') {
-                this.designedCoverFileCreate = file;
-            } else {
-                this.designedCoverFileSettings = file;
-            }
-
-            const preview = document.getElementById(previewId);
-            preview.src = canvas.toDataURL();
-            preview.classList.remove('hidden');
-            
-            document.getElementById('designer-modal').classList.add('hidden');
-        }, 'image/png');
-    }
 
     openCoverDesigner(context) {
         this.coverDesignerContext = context; // 'create' or 'settings'
@@ -1823,6 +1689,8 @@ class SrishtyApp {
             }
         }
         ctx.fillText(line, x, y);
+    }
+
     applyDesignedCover() {
         const canvas = document.getElementById('cover-canvas');
         canvas.toBlob((blob) => {
