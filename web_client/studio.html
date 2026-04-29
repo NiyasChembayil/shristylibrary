@@ -11,23 +11,50 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Premium Styles -->
-    <link rel="stylesheet" href="css/style_v5.css">
-    
+    <link rel="stylesheet" href="https://shristylibrary.onrender.com/css/style_v5.css">
+    <link rel="icon" href="https://shristylibrary.onrender.com/assets/logo.png" type="image/x-icon">
+
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
     <script>
-        // SMART PATH LOGIC for Backend
-        (function() {
-            var isBackend = window.location.pathname.includes('/studio/');
-            if (isBackend) {
-                var prefix = '/static/web_client/';
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.querySelectorAll('link[href^="css/"]').forEach(l => l.href = prefix + l.getAttribute('href'));
-                    document.querySelectorAll('script[src^="js/"]').forEach(s => s.src = prefix + s.getAttribute('src'));
-                });
+        // ULTIMATE AUTH PROTECTION (Inlined for reliability)
+        const API_URL = 'https://srishty-backend.onrender.com/api';
+        
+        async function handleAuth(type) {
+            const user = document.getElementById(type === 'login' ? 'login-username' : 'reg-username').value;
+            const pass = document.getElementById(type === 'login' ? 'login-password' : 'reg-password').value;
+            if (!user || !pass) { alert('Please fill in all fields'); return; }
+
+            try {
+                if (type === 'register') {
+                    const email = document.getElementById('reg-email').value;
+                    await axios.post(`${API_URL}/accounts/auth/register/`, { 
+                        username: user, email, password: pass, role: 'author' 
+                    });
+                }
+                const res = await axios.post(`${API_URL}/token/`, { username: user, password: pass });
+                localStorage.setItem('studio_access', res.data.access);
+                localStorage.setItem('username', user);
+                window.location.reload(); // Reload to trigger full app load
+            } catch (err) {
+                alert('Auth Failed: ' + (err.response?.data?.detail || err.message));
             }
-        })();
+        }
+
+        function toggleAuth() {
+            document.getElementById('login-form').classList.toggle('hidden');
+            document.getElementById('register-form').classList.toggle('hidden');
+        }
+
+        // Check if we are already logged in to hide auth screen
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('studio_access')) {
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('app-section').classList.remove('hidden');
+            }
+        });
     </script>
 </head>
 <body>
@@ -50,9 +77,9 @@
                     <label class="form-label">Password</label>
                     <input type="password" id="login-password" class="form-input" placeholder="••••••••">
                 </div>
-                <button class="btn-primary" onclick="app.handleAuth('login')">Sign In</button>
+                <button class="btn-primary" onclick="handleAuth('login')">Sign In</button>
                 <p style="text-align: center; margin-top: 24px; color: var(--text-secondary); font-size: 14px;">
-                    New to Srishty? <a href="#" onclick="app.toggleAuth()" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">Create Account</a>
+                    New to Srishty? <a href="#" onclick="toggleAuth()" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">Create Account</a>
                 </p>
             </div>
 
@@ -70,9 +97,9 @@
                     <label class="form-label">Password</label>
                     <input type="password" id="reg-password" class="form-input" placeholder="Minimum 8 characters">
                 </div>
-                <button class="btn-primary" onclick="app.handleAuth('register')">Create Account</button>
+                <button class="btn-primary" onclick="handleAuth('register')">Create Account</button>
                 <p style="text-align: center; margin-top: 24px; color: var(--text-secondary); font-size: 14px;">
-                    Already have an account? <a href="#" onclick="app.toggleAuth()" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">Sign In</a>
+                    Already have an account? <a href="#" onclick="toggleAuth()" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">Sign In</a>
                 </p>
             </div>
         </div>
