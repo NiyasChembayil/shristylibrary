@@ -202,6 +202,10 @@ class AdminApp {
                 title.textContent = 'Email Communications';
                 this.loadEmailsView();
                 break;
+            case 'app_controller':
+                title.textContent = 'Mobile App Experience Controller';
+                this.loadAppControllerView();
+                break;
             default:
                 container.innerHTML = '<div class="glass section-card"><h3>Coming Soon</h3><p>This module is currently in development.</p></div>';
         }
@@ -1372,6 +1376,91 @@ class AdminApp {
             this.showSuccess('AI Scan Completed');
             this.loadModerationView();
         } catch (e) { alert('Scan failed'); }
+    }
+
+    async loadAppControllerView() {
+        const container = document.getElementById('view-container');
+        container.innerHTML = `
+            <div class="stats-grid">
+                <div class="glass section-card animate-slide-up">
+                    <h3>🎨 Remote App Theming</h3>
+                    <p style="opacity: 0.7; font-size: 14px; margin-bottom: 20px;">Push seasonal UI changes instantly to all mobile devices.</p>
+                    <div class="form-group">
+                        <label>ACTIVE SEASONAL THEME</label>
+                        <select id="app-theme-selector" class="glass" style="padding: 12px; width: 100%; color: white;">
+                            <option value="default">Srishty Classic</option>
+                            <option value="halloween">Dark Halloween 🎃</option>
+                            <option value="winter">Festive Winter ❄️</option>
+                            <option value="sakura">Spring Sakura 🌸</option>
+                            <option value="midnight">Midnight OLED</option>
+                        </select>
+                    </div>
+                    <button class="btn-action purple" style="width: 100%; margin-top: 10px;" onclick="adminApp.updateAppSettings()">🚀 Push Theme to All Users</button>
+                </div>
+                
+                <div class="glass section-card animate-slide-up" style="animation-delay: 0.1s">
+                    <h3>📢 Global Announcement</h3>
+                    <div class="form-group">
+                        <label>BANNER TEXT (HOME SCREEN)</label>
+                        <textarea id="global-ann-text" class="glass" style="width: 100%; height: 80px; padding: 12px; color: white;" placeholder="e.g. 50% extra coins this weekend!"></textarea>
+                    </div>
+                    <button class="btn-action green" style="width: 100%;" onclick="adminApp.updateAppSettings()">Update Banner</button>
+                </div>
+            </div>
+
+            <div class="glass section-card animate-slide-up" style="margin-top: 30px; animation-delay: 0.2s">
+                <h3>🚀 Category Booster</h3>
+                <p style="opacity: 0.7; font-size: 14px; margin-bottom: 25px;">Boost specific genres to the top of the mobile discovery feed.</p>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead><tr><th>Genre</th><th>Priority</th><th>Boost Status</th><th>Action</th></tr></thead>
+                        <tbody id="boost-category-target"></tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        try {
+            const settings = await this.fetchWithAuth(`${API_BASE_URL}/core/settings/current/`);
+            document.getElementById('app-theme-selector').value = settings.app_theme;
+            document.getElementById('global-ann-text').value = settings.global_announcement || '';
+
+            const categories = await this.fetchWithAuth(`${API_BASE_URL}/core/categories/`);
+            const target = document.getElementById('boost-category-target');
+            target.innerHTML = categories.map(cat => `
+                <tr>
+                    <td><strong>${cat.name}</strong></td>
+                    <td>${cat.priority}</td>
+                    <td><span class="status-badge ${cat.is_boosted ? 'active' : ''}">${cat.is_boosted ? '🚀 BOOSTED' : 'Normal'}</span></td>
+                    <td>
+                        <button class="btn-action ${cat.is_boosted ? 'red' : 'green'}" onclick="adminApp.toggleCategoryBoost('${cat.slug}')">
+                            ${cat.is_boosted ? 'Remove Boost' : 'Boost to Top'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (e) { console.error(e); }
+    }
+
+    async updateAppSettings() {
+        const app_theme = document.getElementById('app-theme-selector').value;
+        const global_announcement = document.getElementById('global-ann-text').value;
+
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/core/settings/1/`, {
+                method: 'PATCH',
+                body: JSON.stringify({ app_theme, global_announcement })
+            });
+            this.showSuccess('App Settings Pushed!');
+        } catch (e) { alert('Update failed'); }
+    }
+
+    async toggleCategoryBoost(slug) {
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/core/categories/${slug}/toggle_boost/`, { method: 'POST' });
+            this.showSuccess('Category Boost Updated');
+            this.loadAppControllerView();
+        } catch (e) { alert('Action failed'); }
     }
 
     async loadTeamActivity() {

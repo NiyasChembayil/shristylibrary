@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, Book, Chapter, ReadStats, Report, StoryBible, ChapterChoice, StoryCharacter, CharacterRelationship, WritingSprint, SprintParticipant, Achievement, UserAchievement, PayoutRequest, SavedResponse
+from .models import Category, Book, Chapter, ReadStats, Report, StoryBible, ChapterChoice, StoryCharacter, CharacterRelationship, WritingSprint, SprintParticipant, Achievement, UserAchievement, PayoutRequest, SavedResponse, PlatformSettings
+
+class PlatformSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlatformSettings
+        fields = '__all__'
 
 class SavedResponseSerializer(serializers.ModelSerializer):
     class Meta:

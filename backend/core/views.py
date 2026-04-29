@@ -8,27 +8,44 @@ from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead
 from .serializers import (
     CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer, 
     StoryBibleSerializer, ChapterChoiceSerializer, StoryCharacterSerializer, 
-    CharacterRelationshipSerializer, WritingSprintSerializer, SprintParticipantSerializer, SavedResponseSerializer
+    CharacterRelationshipSerializer, WritingSprintSerializer, SprintParticipantSerializer, SavedResponseSerializer,
+    PlatformSettingsSerializer
 )
-from .models import SavedResponse
+from .models import SavedResponse, PlatformSettings
 
 class SavedResponseViewSet(viewsets.ModelViewSet):
     queryset = SavedResponse.objects.all()
     serializer_class = SavedResponseSerializer
     permission_classes = [permissions.IsAdminUser]
     filterset_fields = ['category']
-from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.cache import cache_page
-from django.utils.decorators import method_decorator
-from accounts.audit import log_admin_action
-import bleach
+
+class PlatformSettingsViewSet(viewsets.ModelViewSet):
+    queryset = PlatformSettings.objects.all()
+    serializer_class = PlatformSettingsSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def get_queryset(self):
+        # Always return the first (and usually only) settings object
+        return PlatformSettings.objects.all()
+
+    @action(detail=False, methods=['get'])
+    def current(self, request):
+        settings, created = PlatformSettings.objects.get_or_create(id=1)
+        serializer = self.get_serializer(settings)
+        return Response(serializer.data)
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     lookup_field = 'slug'
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def toggle_boost(self, request, slug=None):
+        category = self.get_object()
+        category.is_boosted = not category.is_boosted
+        category.save()
+        return Response({'status': 'success', 'is_boosted': category.is_boosted})
 
 from .permissions import IsOwnerOrReadOnly
 from .notifications import notify_followers_new_chapter

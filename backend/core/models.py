@@ -5,9 +5,35 @@ from django.utils.text import slugify
 class Category(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
+    priority = models.PositiveIntegerField(default=0, help_text="Higher priority categories appear first")
+    is_boosted = models.BooleanField(default=False, help_text="Boosted categories are highlighted on mobile")
+
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['-is_boosted', '-priority', 'name']
 
     def __str__(self):
         return self.name
+
+class PlatformSettings(models.Model):
+    THEME_CHOICES = (
+        ('default', 'Srishty Classic'),
+        ('halloween', 'Dark Halloween 🎃'),
+        ('winter', 'Festive Winter ❄️'),
+        ('sakura', 'Spring Sakura 🌸'),
+        ('midnight', 'Midnight OLED'),
+    )
+    app_theme = models.CharField(max_length=20, choices=THEME_CHOICES, default='default')
+    maintenance_mode = models.BooleanField(default=False)
+    global_announcement = models.TextField(blank=True, null=True)
+    author_commission_rate = models.FloatField(default=70.0) # Percentage
+
+    class Meta:
+        verbose_name = "Platform Settings"
+        verbose_name_plural = "Platform Settings"
+
+    def __str__(self):
+        return "Global Platform Settings"
 
 class BookQuerySet(models.QuerySet):
     def approved(self):
