@@ -1,4 +1,4 @@
-const API_BASE_URL = window.location.origin.includes('localhost') ? 'http://127.0.0.1:8000/api' : 'https://srishty-backend.onrender.com/api';
+const API_BASE_URL = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:') ? 'http://127.0.0.1:8000/api' : 'https://srishty-backend.onrender.com/api';
 // Standardize: Ensure API_BASE_URL does not have a trailing slash for consistency
 const API_URL = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
 
