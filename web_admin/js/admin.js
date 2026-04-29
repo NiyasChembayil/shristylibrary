@@ -3,7 +3,7 @@ const token = localStorage.getItem('studio_access');
 
 // Auth Check
 if (!token) {
-    window.location.href = '../web_client/index.html';
+    window.location.href = 'https://shristylibrary.onrender.com/';
 }
 
 const adminApi = axios.create({

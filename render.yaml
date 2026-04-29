@@ -43,3 +43,8 @@ services:
     name: srishty-studio
     env: static
     publishDir: web_client
+
+  - type: static
+    name: srishty-admin
+    env: static
+    publishDir: web_admin
