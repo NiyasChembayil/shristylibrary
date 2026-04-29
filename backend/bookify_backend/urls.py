@@ -39,6 +39,7 @@ router = routers.DefaultRouter()
 router.register(r'admin-stats', AdminDashboardViewSet, basename='admin-stats')
 
 urlpatterns = [
+    path('', TemplateView.as_view(template_name='landing.html'), name='home'),
     # Backend services
     path('portal/', TemplateView.as_view(template_name='web_admin/index.html'), name='admin-ui'),
     path('debug-files/', list_files),
