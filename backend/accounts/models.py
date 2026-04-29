@@ -34,6 +34,7 @@ class Profile(models.Model):
     
     # Verification
     is_verified = models.BooleanField(default=False)
+    is_partner = models.BooleanField(default=False)
     verification_id_image = models.ImageField(upload_to='verification_ids/', null=True, blank=True)
     verification_links = models.TextField(blank=True, help_text="Social media or portfolio links")
     verification_status = models.CharField(max_length=20, default='none', choices=(

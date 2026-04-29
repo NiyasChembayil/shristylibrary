@@ -252,6 +252,100 @@ class AdminProfileViewSet(viewsets.ModelViewSet):
         )
         return Response({"status": "rejected"})
 
+    @action(detail=True, methods=['post'])
+    def toggle_partner(self, request, pk=None):
+        profile = self.get_object()
+        profile.is_partner = not profile.is_partner
+        profile.save()
+        
+        log_admin_action(
+            admin=request.user,
+            action="PARTNER_STATUS_TOGGLE",
+            target=profile.user.username,
+            details=f"Set partner status to {profile.is_partner} for {profile.user.username}",
+            request=request
+        )
+
+        if profile.is_partner:
+            Notification.objects.create(
+                recipient=profile.user,
+                actor=request.user,
+                action_type='SYSTEM',
+                message="Welcome to the Srishty Partner Program! 🌟 You now have access to exclusive features and better revenue sharing."
+            )
+
+        return Response({"status": "success", "is_partner": profile.is_partner})
+
+    @action(detail=True, methods=['get'])
+    def revenue_projection(self, request, pk=None):
+        profile = self.get_object()
+        from core.models import ReadStats
+        
+        # Calculate trailing 30-day read velocity
+        last_30_days = timezone.now() - timezone.timedelta(days=30)
+        total_reads = ReadStats.objects.filter(
+            book__author=profile.user,
+            timestamp__gte=last_30_days
+        ).count()
+        
+        # Projection Logic: Assume $5.00 per 1000 reads for partners, $3.00 for others
+        rate = 0.005 if profile.is_partner else 0.003
+        current_earnings = total_reads * rate
+        
+        # Generate daily data for a 30-day projection graph
+        daily_reads_avg = total_reads / 30 if total_reads > 0 else 0
+        projection_data = []
+        for i in range(30):
+            day = timezone.now() + timezone.timedelta(days=i)
+            projected_cumulative = current_earnings + (daily_reads_avg * rate * (i + 1))
+            projection_data.append({
+                "date": day.date().isoformat(),
+                "projected_earnings": round(projected_cumulative, 2)
+            })
+            
+        return Response({
+            "total_reads_last_30_days": total_reads,
+            "current_monthly_rate": round(current_earnings, 2),
+            "estimated_30_day_revenue": round(daily_reads_avg * rate * 30, 2),
+            "projection": projection_data
+        })
+
+    @action(detail=True, methods=['post'])
+    def grant_achievement(self, request, pk=None):
+        profile = self.get_object()
+        achievement_id = request.data.get('achievement_id')
+        
+        if not achievement_id:
+            return Response({"error": "Achievement ID is required"}, status=400)
+            
+        from core.models import Achievement, UserAchievement
+        try:
+            achievement = Achievement.objects.get(id=achievement_id)
+            user_ach, created = UserAchievement.objects.get_or_create(
+                user=profile.user,
+                achievement=achievement
+            )
+            
+            if not created:
+                return Response({"status": "already_has_it", "message": "User already has this badge."})
+            
+            Notification.objects.create(
+                recipient=profile.user,
+                actor=request.user,
+                action_type='SYSTEM',
+                message=f"You've been awarded a special badge: {achievement.name}! 🏆"
+            )
+            
+            return Response({"status": "success", "message": f"Awarded {achievement.name}"})
+        except Achievement.DoesNotExist:
+            return Response({"error": "Achievement not found"}, status=404)
+
+    @action(detail=False, methods=['get'])
+    def all_achievements(self, request):
+        from core.models import Achievement
+        achievements = Achievement.objects.all().values('id', 'name', 'icon', 'category')
+        return Response(achievements)
+
     @action(detail=False, methods=['post'])
     def bulk_verify(self, request):
         user_ids = request.data.get('user_ids', [])

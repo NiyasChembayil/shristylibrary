@@ -811,7 +811,8 @@ class AdminApp {
                             <p style="color: var(--text-secondary); margin: 0 0 15px 0;">${user.email}</p>
                             <div style="display: flex; gap: 10px;">
                                 <span class="status-badge active">${user.role.toUpperCase()}</span>
-                                <button class="btn-action" style="padding: 2px 10px; font-size: 11px;" onclick="adminApp.messageUser(${user.id}, '${escapeHTML(user.username)}')">Direct Message</button>
+                                ${user.is_partner ? '<span class="status-badge" style="background: rgba(255,215,0,0.1); color: gold; border: 1px solid gold;">🌟 PARTNER</span>' : ''}
+                                <button class="btn-action" style="padding: 2px 10px; font-size: 11px;" onclick="adminApp.messageUser(user.id, '${escapeHTML(user.username)}')">Direct Message</button>
                             </div>
                         </div>
                         <div style="text-align: right;">
@@ -834,10 +835,33 @@ class AdminApp {
                         </div>
                     </div>
 
-                    <div class="glass" style="padding: 20px; border-radius: 15px; margin-bottom: 30px; display: flex; gap: 10px;">
+                    <div class="glass" style="padding: 20px; border-radius: 15px; margin-bottom: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="btn-action red" onclick="adminApp.suspendUser(${user.id}, '${escapeHTML(user.username)}')">🚫 Suspend User</button>
                         <button class="btn-action blue" onclick="adminApp.resetPassword(${user.id}, '${escapeHTML(user.username)}')">🔑 Reset Password</button>
                         <button class="btn-action purple" onclick="adminApp.messageUser(${user.id}, '${escapeHTML(user.username)}')">💬 Send Message</button>
+                        <button class="btn-action" style="background: ${user.is_partner ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.1)'}; color: ${user.is_partner ? 'gold' : 'white'};" 
+                            onclick="adminApp.togglePartner(${user.id})">
+                            ${user.is_partner ? '🌟 Revoke Partner' : '⭐ Grant Partner'}
+                        </button>
+                        <button class="btn-action green" onclick="adminApp.showBadgeAwardModal(${user.id})">🏆 Award Badge</button>
+                    </div>
+
+                    <div class="glass" style="padding: 25px; border-radius: 20px; margin-bottom: 30px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h4 style="margin: 0;">💰 30-Day Revenue Projection</h4>
+                            <span style="font-size: 12px; opacity: 0.6;">Based on current 30-day velocity</span>
+                        </div>
+                        <div style="height: 250px;"><canvas id="revenueProjectionChart"></canvas></div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;">
+                                <div style="font-size: 11px; opacity: 0.5;">LAST 30 DAYS REVENUE</div>
+                                <div style="font-size: 20px; font-weight: bold; color: var(--accent-green);" id="proj-current-rev">$0.00</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;">
+                                <div style="font-size: 11px; opacity: 0.5;">EST. NEXT 30 DAYS</div>
+                                <div style="font-size: 20px; font-weight: bold; color: #00D2FF;" id="proj-estimated-rev">$0.00</div>
+                            </div>
+                        </div>
                     </div>
 
                     ${user.verification_status === 'pending' ? `
@@ -899,6 +923,37 @@ class AdminApp {
                     </div>
                 </div>
             `;
+
+            // Load Revenue Projection Chart
+            const proj = await this.fetchWithAuth(`${API_BASE_URL}/accounts/admin-profiles/${id}/revenue_projection/`);
+            document.getElementById('proj-current-rev').textContent = `$${proj.current_monthly_rate.toFixed(2)}`;
+            document.getElementById('proj-estimated-rev').textContent = `$${proj.estimated_30_day_revenue.toFixed(2)}`;
+
+            new Chart(document.getElementById('revenueProjectionChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: proj.projection.map(p => new Date(p.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})),
+                    datasets: [{
+                        label: 'Projected Cumulative Revenue ($)',
+                        data: proj.projection.map(p => p.projected_earnings),
+                        borderColor: '#00D2FF',
+                        backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { color: 'rgba(255,255,255,0.5)', callback: v => '$' + v } },
+                        x: { ticks: { color: 'rgba(255,255,255,0.5)', maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } }
+                    }
+                }
+            });
+
         } catch (e) {
             console.error(e);
             content.innerHTML = '<p style="padding: 40px; text-align: center; color: #FF6584;">Error loading user profile.</p>';
@@ -1280,6 +1335,33 @@ class AdminApp {
             this.showSuccess('AI Scan Completed');
             this.loadModerationView();
         } catch (e) { alert('Scan failed'); }
+    }
+
+    async togglePartner(id) {
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/accounts/admin-profiles/${id}/toggle_partner/`, { method: 'POST' });
+            this.showSuccess('Partner Status Updated');
+            this.showUserProfile(id);
+        } catch (e) { alert('Action failed'); }
+    }
+
+    async showBadgeAwardModal(userId) {
+        try {
+            const achievements = await this.fetchWithAuth(`${API_BASE_URL}/accounts/admin-profiles/all_achievements/`);
+            const achievement_id = prompt(
+                "Select a Badge to Award:\n\n" + 
+                achievements.map(a => `${a.id}: ${a.icon} ${a.name}`).join("\n") + 
+                "\n\nEnter ID Number:"
+            );
+            
+            if (!achievement_id) return;
+            
+            await this.fetchWithAuth(`${API_BASE_URL}/accounts/admin-profiles/${userId}/grant_achievement/`, {
+                method: 'POST',
+                body: JSON.stringify({ achievement_id })
+            });
+            this.showSuccess('Badge Awarded! 🏆');
+        } catch (e) { alert('Failed to award badge'); }
     }
 }
 

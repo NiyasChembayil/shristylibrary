@@ -168,7 +168,7 @@ class AdminUserHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = [
-            'id', 'username', 'email', 'role', 'bio', 'avatar', 'is_verified', 
+            'id', 'username', 'email', 'role', 'bio', 'avatar', 'is_verified', 'is_partner',
             'verification_id_image', 'verification_links', 'verification_status',
             'total_reads', 'published_books', 'reports_received', 'created_at'
         ]
