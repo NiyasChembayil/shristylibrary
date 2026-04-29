@@ -128,10 +128,19 @@
     background: #151525;
     border-radius: 16px;
     border: 1px solid var(--glass-border);
-    color: white;
+    color: #ffffff !important;
     font-family: 'Lora', serif;
     font-size: 18px;
     line-height: 1.8;
+}
+
+.ql-editor {
+    color: #ffffff !important;
+    min-height: 400px;
+}
+
+.ql-editor.ql-blank::before {
+    color: rgba(255, 255, 255, 0.4) !important;
 }
 
 .ql-toolbar.ql-snow {

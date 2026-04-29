@@ -41,6 +41,8 @@ function initQuill() {
         placeholder: 'Start writing your story...'
     });
 
+    quill.focus();
+
     quill.on('text-change', () => {
         if (!currentChapterId) return;
         saveStatus.textContent = 'Unsaved changes...';
