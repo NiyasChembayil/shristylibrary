@@ -8,8 +8,15 @@ from .models import Category, Book, Chapter, ReadStats, UserLibrary, ChapterRead
 from .serializers import (
     CategorySerializer, BookSerializer, ChapterSerializer, ReportSerializer, 
     StoryBibleSerializer, ChapterChoiceSerializer, StoryCharacterSerializer, 
-    CharacterRelationshipSerializer, WritingSprintSerializer, SprintParticipantSerializer
+    CharacterRelationshipSerializer, WritingSprintSerializer, SprintParticipantSerializer, SavedResponseSerializer
 )
+from .models import SavedResponse
+
+class SavedResponseViewSet(viewsets.ModelViewSet):
+    queryset = SavedResponse.objects.all()
+    serializer_class = SavedResponseSerializer
+    permission_classes = [permissions.IsAdminUser]
+    filterset_fields = ['category']
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_page

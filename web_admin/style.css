@@ -559,3 +559,39 @@ input:checked + .slider:before {
 [data-theme="light"] .sidebar {
     background: rgba(255, 255, 255, 0.8);
 }
+
+/* Activity Feed Items */
+.activity-item {
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    margin-bottom: 12px;
+    border-left: 3px solid var(--accent-purple);
+    transition: var(--transition);
+}
+
+.activity-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.activity-admin { font-weight: bold; color: var(--accent-blue); }
+.activity-time { opacity: 0.5; }
+.activity-action { font-size: 13px; line-height: 1.4; }
+
+.quick-reply-select {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: white;
+    margin-bottom: 15px;
+    cursor: pointer;
+}

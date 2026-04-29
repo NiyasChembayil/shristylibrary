@@ -340,3 +340,16 @@ class PayoutRequest(models.Model):
     class Meta:
         ordering = ['-timestamp']
 
+class SavedResponse(models.Model):
+    CATEGORY_CHOICES = (
+        ('moderation', 'Moderation'),
+        ('support', 'User Support'),
+        ('finance', 'Financial / Payouts'),
+        ('general', 'General'),
+    )
+    title = models.CharField(max_length=100)
+    text = models.TextField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='general')
+
+    def __str__(self):
+        return f"[{self.get_category_display()}] {self.title}"

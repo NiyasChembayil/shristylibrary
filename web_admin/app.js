@@ -211,6 +211,7 @@ class AdminApp {
         try {
             const stats = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/stats/`);
             const activity = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/recent_activity/`);
+            this.loadTeamActivity();
 
             // Update stats cards
             document.getElementById('count-users').textContent = stats.users.total.toLocaleString();
@@ -667,15 +668,16 @@ class AdminApp {
         } catch (e) { alert('Action failed'); }
     }
 
-    async rejectBook(id) {
-        const notes = prompt('Enter reason for rejection:');
-        if (notes === null) return;
+    async rejectBook(id, providedNotes = null) {
+        const notes = providedNotes || prompt('Enter reason for rejection:');
+        if (notes === null || notes === "") return;
         try {
             await this.fetchWithAuth(`${API_BASE_URL}/core/books/${id}/reject/`, { 
                 method: 'POST',
                 body: JSON.stringify({ notes })
             });
             this.showSuccess('Book Rejected');
+            document.getElementById('user-modal').style.display = 'none';
             this.loadModerationView();
         } catch (e) { alert('Action failed'); }
     }
@@ -712,6 +714,24 @@ class AdminApp {
                         <h4>Sample Content (Chapter 1)</h4>
                         <div id="sample-content">Loading...</div>
                     </div>
+                    
+                    <div class="glass" style="margin-top: 20px; padding: 15px; border-radius: 12px;">
+                        <label style="font-size: 11px; opacity: 0.6; display: block; margin-bottom: 8px;">QUICK RESPONSE TEMPLATE</label>
+                        <select class="quick-reply-select" onchange="document.getElementById('mod-quick-notes').value = this.value">
+                            <option value="">-- Custom Response --</option>
+                            <option value="Content matches existing copyrighted material. Please ensure you own all rights.">Copyright Violation</option>
+                            <option value="Content contains inappropriate language or themes not allowed on Srishty.">Policy Violation</option>
+                            <option value="The story description is too short or missing key details.">Insufficient Detail</option>
+                            <option value="Formatting issues detected. Please clean up the text and resubmit.">Formatting Issues</option>
+                        </select>
+                        <textarea id="mod-quick-notes" class="glass" style="width: 100%; height: 80px; padding: 12px; color: white; font-size: 13px;" placeholder="Enter custom rejection notes..."></textarea>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button class="btn-action green" style="flex: 1;" onclick="adminApp.approveBook(${id})">Approve & Publish</button>
+                            <button class="btn-action red" style="flex: 1;" onclick="adminApp.rejectBook(${id}, document.getElementById('mod-quick-notes').value)">Reject with Notes</button>
+                        </div>
+                    </div>
+
                     <div style="margin-top: 20px; text-align: right;">
                         <button class="btn-action" onclick="document.getElementById('user-modal').style.display='none'">Close Preview</button>
                     </div>
@@ -1195,12 +1215,29 @@ class AdminApp {
         } catch (e) { console.error(e); }
     }
 
-    viewTicket(id, user, msg) {
-        const response = prompt(`Ticket from ${user}:\n\n"${msg}"\n\nEnter your response:`);
+    async viewTicket(id, user, msg) {
+        const templates = [
+            { t: "Hello! We've received your request and our team is looking into it.", n: "Acknowledged" },
+            { t: "Thank you for the report. We have taken action against the reported content.", n: "Report Resolved" },
+            { t: "Your account verification has been completed. Enjoy your new badge!", n: "Verification Success" }
+        ];
+
+        const response = prompt(
+            `Ticket from ${user}:\n\n"${msg}"\n\n` + 
+            `Quick Templates:\n` + templates.map((t, i) => `${i+1}. ${t.n}`).join("\n") + 
+            `\n\nEnter template number or your custom response:`
+        );
+        
         if (!response) return;
+        
+        let finalMsg = response;
+        if (!isNaN(response) && templates[response-1]) {
+            finalMsg = templates[response-1].t;
+        }
+
         this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/respond_ticket/`, {
             method: 'POST',
-            body: JSON.stringify({ ticket_id: id, response })
+            body: JSON.stringify({ ticket_id: id, response: finalMsg })
         }).then(() => {
             this.showSuccess('Response Sent');
             this.loadSupportView();
@@ -1335,6 +1372,26 @@ class AdminApp {
             this.showSuccess('AI Scan Completed');
             this.loadModerationView();
         } catch (e) { alert('Scan failed'); }
+    }
+
+    async loadTeamActivity() {
+        try {
+            const logs = await this.fetchWithAuth(`${API_BASE_URL}/admin/admin-stats/audit_logs/`);
+            const container = document.getElementById('team-activity-feed');
+            if (!container) return;
+
+            container.innerHTML = logs.slice(0, 10).map(l => `
+                <div class="activity-item">
+                    <div class="activity-header">
+                        <span class="activity-admin">${l.admin}</span>
+                        <span class="activity-time">${new Date(l.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <div class="activity-action">
+                        ${l.action.replace(/_/g, ' ')} ${l.target ? `on <strong>${escapeHTML(l.target)}</strong>` : ''}
+                    </div>
+                </div>
+            `).join('') || '<p style="text-align: center; opacity: 0.5;">No recent activity.</p>';
+        } catch (e) { console.error('Activity load failed', e); }
     }
 
     async togglePartner(id) {

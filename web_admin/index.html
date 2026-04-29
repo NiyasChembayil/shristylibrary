@@ -148,23 +148,36 @@
 
                 <!-- Main Content Sections -->
                 <section class="dashboard-sections">
-                    <div class="section-card glass animate-slide-up" style="animation-delay: 0.4s">
-                        <h3>Recent Publications</h3>
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Book Title</th>
-                                        <th>Author</th>
-                                        <th>Category</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="recent-books-list">
-                                    <!-- Dynamic content -->
-                                </tbody>
-                            </table>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+                        <div class="section-card glass animate-slide-up" style="animation-delay: 0.4s">
+                            <h3>Recent Publications</h3>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Book Title</th>
+                                            <th>Author</th>
+                                            <th>Category</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-books-list">
+                                        <!-- Dynamic content -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Team Activity Sidebar -->
+                        <div class="section-card glass animate-slide-up" style="animation-delay: 0.5s">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="margin: 0;">⚡ Team Activity</h3>
+                                <span class="status-badge active" style="font-size: 10px;">LIVE</span>
+                            </div>
+                            <div id="team-activity-feed" style="max-height: 500px; overflow-y: auto;">
+                                <p style="text-align: center; opacity: 0.5; padding: 20px;">Loading live feed...</p>
+                            </div>
                         </div>
                     </div>
                 </section>

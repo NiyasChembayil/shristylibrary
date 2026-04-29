@@ -3,7 +3,7 @@ from rest_framework_nested import routers
 from .views import (
     CategoryViewSet, BookViewSet, ChapterViewSet, ReportViewSet, 
     StoryBibleViewSet, StoryCharacterViewSet, CharacterRelationshipViewSet,
-    WritingSprintViewSet, AchievementViewSet
+    WritingSprintViewSet, AchievementViewSet, SavedResponseViewSet
 )
 
 router = routers.DefaultRouter()
@@ -15,6 +15,7 @@ router.register(r'characters', StoryCharacterViewSet, basename='character')
 router.register(r'relationships', CharacterRelationshipViewSet, basename='relationship')
 router.register(r'sprints', WritingSprintViewSet, basename='sprint')
 router.register(r'achievements', AchievementViewSet, basename='achievement')
+router.register(r'saved-responses', SavedResponseViewSet, basename='saved-response')
 
 books_router = routers.NestedDefaultRouter(router, r'books', lookup='book')
 books_router.register(r'chapters', ChapterViewSet, basename='book-chapters')
