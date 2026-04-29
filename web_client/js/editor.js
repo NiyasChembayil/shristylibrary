@@ -102,17 +102,68 @@ async function createNewStory() {
 
 async function loadStoryDetails() {
     try {
+        // Load Categories first
+        const catRes = await studioApi.get('core/categories/');
+        const categories = catRes.data.results || catRes.data;
+        categorySelect.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
         const res = await studioApi.get(`core/books/${currentStoryId}/`);
         const story = res.data;
-        document.getElementById('story-title-input').value = story.title;
-        document.getElementById('story-desc-input').value = story.description || '';
+        
+        storyTitleInput.value = story.title;
+        storyDescInput.value = story.description || '';
+        categorySelect.value = story.category;
+        
         if (story.cover) {
-            document.getElementById('story-cover-display').innerHTML = `<img src="${story.cover}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
+            coverPreview.style.backgroundImage = `url(${story.cover})`;
+            coverPreview.innerHTML = '';
         }
     } catch (err) {
-        console.error('Failed to load story meta:', err);
+        console.error('Error loading story details:', err);
     }
 }
+
+// Cover Upload Logic
+coverPreview.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('cover', file);
+
+        saveStatus.textContent = 'Uploading cover...';
+        try {
+            await studioApi.patch(`core/books/${currentStoryId}/`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            saveStatus.textContent = 'Cover updated';
+            loadStoryDetails();
+        } catch (err) {
+            saveStatus.textContent = 'Upload failed';
+        }
+    };
+    input.click();
+});
+
+updateDetailsBtn.addEventListener('click', async () => {
+    const data = {
+        title: storyTitleInput.value,
+        description: storyDescInput.value,
+        category: categorySelect.value
+    };
+
+    saveStatus.textContent = 'Updating...';
+    try {
+        await studioApi.patch(`core/books/${currentStoryId}/`, data);
+        saveStatus.textContent = 'Details saved';
+    } catch (err) {
+        saveStatus.textContent = 'Update failed';
+    }
+});
 
 async function loadChapters() {
     try {
