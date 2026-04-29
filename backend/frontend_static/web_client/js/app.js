@@ -2192,8 +2192,7 @@ class SrishtyApp {
             }
         }, 5000);
     }
-    }
 }
 
-// Global initialization
-const app = new SrishtyApp();
+// Global initialization - explicitly attach to window for reliable access
+window.app = new SrishtyApp();
