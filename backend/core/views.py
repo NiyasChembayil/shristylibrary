@@ -88,6 +88,12 @@ class BookViewSet(viewsets.ModelViewSet):
         return Response({'status': 'approved'})
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def evaluate_ai(self, request, pk=None):
+        from .moderation import AIModerationService
+        result = AIModerationService.evaluate_book(pk)
+        return Response(result)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
     def reject(self, request, pk=None):
         book = self.get_object()
         book.moderation_status = 'rejected'

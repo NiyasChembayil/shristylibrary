@@ -609,6 +609,7 @@ class AdminApp {
                             <th>ID</th>
                             <th>Book Title</th>
                             <th>Author</th>
+                            <th>AI Insight</th>
                             <th>Submitted</th>
                             <th>Actions</th>
                         </tr>
@@ -635,6 +636,15 @@ class AdminApp {
                     <td>#${book.id}</td>
                     <td><strong>${escapeHTML(book.title)}</strong></td>
                     <td>${escapeHTML(book.author_name)}</td>
+                    <td>
+                        ${book.ai_evaluation_status === 'completed' ? `
+                            <span class="status-badge ${book.ai_flagged ? 'red' : 'active'}" title="${escapeHTML(book.ai_flag_reason || 'Safe content')}">
+                                ${book.ai_flagged ? '⚠️ FLAG' : '✅ SAFE'} (${(book.ai_moderation_score * 100).toFixed(0)}%)
+                            </span>
+                        ` : `
+                            <button class="btn-action" onclick="adminApp.runAIEval(${book.id})">🔍 Scan AI</button>
+                        `}
+                    </td>
                     <td>${new Date(book.created_at).toLocaleDateString()}</td>
                     <td>
                         <button class="btn-action blue" onclick="adminApp.previewBook(${book.id})">Preview</button>
@@ -686,6 +696,16 @@ class AdminApp {
                             <h2>${escapeHTML(book.title)}</h2>
                             <p><strong>Category:</strong> ${book.category_name}</p>
                             <p><strong>Description:</strong> ${escapeHTML(book.description)}</p>
+                            
+                            <div class="glass" style="margin-top: 15px; padding: 10px; border-radius: 10px; border: 1px solid ${book.ai_flagged ? 'rgba(255,101,132,0.3)' : 'rgba(108,99,255,0.3)'}">
+                                <h4 style="margin: 0 0 10px 0;">🤖 AI Content Scan</h4>
+                                <div style="display: flex; gap: 15px; font-size: 13px;">
+                                    <div><strong>Toxicity:</strong> ${(book.ai_moderation_score * 100).toFixed(1)}%</div>
+                                    <div><strong>Plagiarism:</strong> ${(book.plagiarism_score * 100).toFixed(1)}%</div>
+                                    <div><strong>Status:</strong> ${book.ai_flagged ? '🚩 Flagged' : '✅ Clear'}</div>
+                                </div>
+                                ${book.ai_flag_reason ? `<p style="margin: 10px 0 0 0; font-size: 11px; color: #FF6584;"><strong>Reason:</strong> ${escapeHTML(book.ai_flag_reason)}</p>` : ''}
+                            </div>
                         </div>
                     </div>
                     <div style="max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px;">
@@ -1252,6 +1272,14 @@ class AdminApp {
                 }
             });
         } catch (e) { console.error(e); }
+    }
+
+    async runAIEval(id) {
+        try {
+            await this.fetchWithAuth(`${API_BASE_URL}/core/books/${id}/evaluate_ai/`, { method: 'POST' });
+            this.showSuccess('AI Scan Completed');
+            this.loadModerationView();
+        } catch (e) { alert('Scan failed'); }
     }
 }
 

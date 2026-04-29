@@ -39,6 +39,13 @@ class Book(models.Model):
     audio_file = models.FileField(upload_to='book_audio/', null=True, blank=True)
     moderation_status = models.CharField(max_length=20, choices=MODERATION_STATUS, default='pending', db_index=True)
     moderation_notes = models.TextField(blank=True, null=True)
+    
+    # AI Moderation Fields
+    ai_moderation_score = models.FloatField(default=0.0, help_text="Toxicity/NSFW score (0 to 1)")
+    ai_flagged = models.BooleanField(default=False)
+    ai_flag_reason = models.TextField(blank=True, null=True)
+    plagiarism_score = models.FloatField(default=0.0, help_text="Percentage of content found elsewhere")
+    ai_evaluation_status = models.CharField(max_length=20, default='not_started') # not_started, processing, completed
 
     class Meta:
         indexes = [

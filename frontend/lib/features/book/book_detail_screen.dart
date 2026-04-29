@@ -56,7 +56,7 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
               Text('Could not load book', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => ref.invalidate(currentBookProvider(id)),
+                onPressed: () => ref.invalidate(currentBookProvider(widget.id)),
                 child: const Text('Retry', style: TextStyle(color: Color(0xFF6C63FF))),
               ),
             ],
@@ -270,13 +270,13 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     // Record a read event for the stats
-                    ref.read(bookProvider.notifier).recordRead(id);
+                    ref.read(bookProvider.notifier).recordRead(widget.id);
                     
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => ReaderScreen(
-                          bookId: id,
+                          bookId: widget.id,
                           title: book.title,
                           chapters: book.chapters,
                         ),
@@ -355,7 +355,7 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
                 ]),
                 child: IconButton(
                   onPressed: () async {
-                    await ref.read(bookProvider.notifier).toggleLibrary(id, ref);
+                    await ref.read(bookProvider.notifier).toggleLibrary(widget.id, ref);
                     if (context.mounted) {
                       final message = book.isInLibrary 
                         ? 'Story removed from Library' 
@@ -409,7 +409,7 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => AudioPlayerScreen(
-                          bookId: id,
+                          bookId: widget.id,
                           title: book.title,
                           author: book.authorName,
                           coverUrl: book.coverUrl,

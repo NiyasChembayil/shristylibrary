@@ -68,7 +68,8 @@ class BookSerializer(serializers.ModelSerializer):
             'description', 'category', 'category_name', 'language', 'tags', 'price', 'region',
             'is_published', 'moderation_status', 'moderation_notes', 'created_at', 'updated_at', 'chapters', 'chapters_count',
             'likes_count', 'comments_count', 'total_reads', 'is_in_library', 'is_liked',
-            'downloads_count', 'characters'
+            'downloads_count', 'characters',
+            'ai_moderation_score', 'ai_flagged', 'ai_flag_reason', 'plagiarism_score', 'ai_evaluation_status'
         ]
 
     def get_author_profile_id(self, obj):

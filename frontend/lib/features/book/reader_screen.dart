@@ -207,7 +207,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (context, _) {
             return Container(
               padding: const EdgeInsets.all(30),
               height: 350,
@@ -294,13 +294,5 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     } catch (e) {
       debugPrint('Error marking chapter read: $e');
     }
-  }
-
-  String _timeAgo(DateTime dateTime) {
-    final duration = DateTime.now().difference(dateTime);
-    if (duration.inDays >= 1) return '${duration.inDays}d ago';
-    if (duration.inHours >= 1) return '${duration.inHours}h ago';
-    if (duration.inMinutes >= 1) return '${duration.inMinutes}m ago';
-    return 'Just now';
   }
 }
