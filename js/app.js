@@ -76,14 +76,14 @@ class SrishtyApp {
 
     async init() {
         console.log('App: Initializing Srishty Studio PRO...');
-        this.checkAuth();
-
         try {
+            this.checkAuth();
             this.setupQuill();
             this.fetchCategories();
             this.initDropZones();
         } catch (e) {
-            console.warn('Init delayed/failed:', e);
+            console.error('CRITICAL INIT ERROR:', e);
+            alert('Studio Init Error: ' + e.message);
         }
     }
 
@@ -282,8 +282,10 @@ class SrishtyApp {
         errorEl.style.display = 'none';
 
         try {
+            console.log('Auth: Starting authentication for', user, 'Mode:', this.isSignUpMode ? 'Registration' : 'Login');
             if (this.isSignUpMode) {
                 const email = document.getElementById('auth-email').value;
+                console.log('Auth: Registering email', email);
                 await this.fetchAPI('/accounts/auth/register/', {
                     method: 'POST',
                     body: JSON.stringify({ 
@@ -293,10 +295,13 @@ class SrishtyApp {
                         role: 'author'
                     })
                 });
+                console.log('Auth: Registration successful!');
             }
 
+            console.log('Auth: Fetching JWT token...');
             const res = await axios.post(`${API_URL}/token/`, { username: user, password: pass });
             const data = res.data;
+            console.log('Auth: Token received!');
 
             this.token = data.access;
             this.currentUser = user;
@@ -306,9 +311,11 @@ class SrishtyApp {
 
             this.checkAuth();
         } catch (err) {
-            console.error('Auth error:', err);
+            console.error('Auth failure:', err);
             errorEl.style.display = 'block';
-            errorEl.textContent = err.message || (this.isSignUpMode ? 'Registration failed. Please check your details.' : 'Incorrect username or password.');
+            const errorMsg = err.response?.data?.detail || err.message || 'Unknown error';
+            errorEl.textContent = errorMsg;
+            alert('Authentication Failed: ' + errorMsg);
         } finally {
             btn.textContent = this.isSignUpMode ? 'Register' : 'Sign In';
             btn.disabled = false;
