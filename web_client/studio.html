@@ -15,6 +15,20 @@
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            var message = [
+                'Message: ' + msg,
+                'URL: ' + url,
+                'Line: ' + lineNo,
+                'Column: ' + columnNo,
+                'Error object: ' + JSON.stringify(error)
+            ].join('\n');
+            console.error("GLOBAL ERROR CAUGHT:", message);
+            alert("A website error occurred:\n" + msg + "\n\nPlease refresh or contact support.");
+            return false;
+        };
+    </script>
 </head>
 <body>
 
@@ -637,7 +651,7 @@
 
     <script src="js/app.js"></script>
     <div style="position: fixed; bottom: 16px; left: 16px; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); color: white; padding: 6px 12px; border-radius: 100px; font-size: 10px; font-weight: 700; pointer-events: none; border: 1px solid rgba(255,255,255,0.1);">
-        STUDIO v4.0 PRO
+        STUDIO v4.1 PRO (Debug Enabled)
     </div>
 
     <!-- SUCCESS ANIMATION OVERLAY -->
