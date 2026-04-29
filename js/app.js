@@ -1,6 +1,4 @@
-const API_BASE_URL = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:') ? 'http://127.0.0.1:8000/api' : 'https://srishty-backend.onrender.com/api';
-// Standardize: Ensure API_BASE_URL does not have a trailing slash for consistency
-const API_URL = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+const API_URL = (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:') ? 'http://127.0.0.1:8000/api' : 'https://srishty-backend.onrender.com/api';
 
 // Security: XSS Prevention Utility
 function escapeHTML(str) {
@@ -18,7 +16,7 @@ function escapeHTML(str) {
 
 class SrishtyApp {
     constructor() {
-        this.token = localStorage.getItem('access_token');
+        this.token = localStorage.getItem('studio_access');
         this.currentUser = localStorage.getItem('username');
         this.currentView = 'home';
         this.isSignUpMode = false;
@@ -223,42 +221,26 @@ class SrishtyApp {
 
     /* ======== API & AUTH ======== */
     async fetchAPI(endpoint, options = {}) {
+        const url = endpoint.startsWith('http') ? endpoint : `${API_URL}${endpoint}`;
         const headers = { ...options.headers };
-        if (!(options.body instanceof FormData)) {
-            headers['Content-Type'] = 'application/json';
-        }
-        if (this.token) Object.assign(headers, { 'Authorization': `Bearer ${this.token}` });
+        if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
 
-        let response;
         try {
-            response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-        } catch (fetchErr) {
-            console.error('Network/CORS Error:', fetchErr);
-            throw new Error(`Connection failed. The backend may be sleeping or unreachable: ${fetchErr.message}`);
-        }
-
-        // If 401, the token might be expired. Logout to clear it and try one last time as a guest.
-        if (response.status === 401 && this.token) {
-            this.logout();
-            const guestHeaders = { ...options.headers };
-            if (!(options.body instanceof FormData)) {
-                guestHeaders['Content-Type'] = 'application/json';
+            const response = await axios({
+                url,
+                method: options.method || 'GET',
+                data: options.body instanceof FormData ? options.body : (options.body ? JSON.parse(options.body) : null),
+                headers
+            });
+            return response.data;
+        } catch (err) {
+            console.error('API Error:', err);
+            if (err.response?.status === 401 && this.token) {
+                this.logout();
             }
-            response = await fetch(`${API_URL}${endpoint}`, { ...options, headers: guestHeaders });
+            const msg = err.response?.data?.detail || err.response?.data?.error || err.message;
+            throw new Error(msg);
         }
-
-        if (!response.ok) {
-            const bodyText = await response.text();
-            let errorMessage = `API Error ${response.status}`;
-            try {
-                const errorData = JSON.parse(bodyText);
-                errorMessage += `: ${JSON.stringify(errorData)}`;
-            } catch (e) {
-                errorMessage += `: ${bodyText || 'No response body'}`;
-            }
-            throw new Error(errorMessage);
-        }
-        return await response.json();
     }
 
     checkAuth() {
@@ -306,27 +288,20 @@ class SrishtyApp {
                     method: 'POST',
                     body: JSON.stringify({ 
                         username: user, 
-                        email: email || `${user}@srishty.internal`, // Fallback for blank email if backend requires it
+                        email: email, 
                         password: pass,
-                        role: 'author' // Default to author when signing up via Studio
+                        role: 'author'
                     })
                 });
             }
-            const res = await fetch(`${API_URL}/token/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: user, password: pass })
-            });
 
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.detail || 'Incorrect username or password.');
-            }
-            const data = await res.json();
+            const res = await axios.post(`${API_URL}/token/`, { username: user, password: pass });
+            const data = res.data;
 
             this.token = data.access;
             this.currentUser = user;
-            localStorage.setItem('access_token', this.token);
+            localStorage.setItem('studio_access', data.access);
+            localStorage.setItem('studio_refresh', data.refresh);
             localStorage.setItem('username', user);
 
             this.checkAuth();
@@ -352,7 +327,8 @@ class SrishtyApp {
     logout() {
         this.token = null;
         this.currentUser = null;
-        localStorage.removeItem('access_token');
+        localStorage.removeItem('studio_access');
+        localStorage.removeItem('studio_refresh');
         localStorage.removeItem('username');
         this.checkAuth();
     }
