@@ -80,17 +80,23 @@ async function initEditor() {
 
 async function createNewStory() {
     try {
+        // 1. Get a valid category first
+        const catRes = await studioApi.get('core/categories/');
+        const categories = catRes.data.results || catRes.data;
+        const categoryId = categories.length > 0 ? categories[0].id : 1;
+
+        // 2. Create the story
         const res = await studioApi.post('core/books/', {
             title: 'Untitled Story',
-            category: 1 // Default category
+            category: categoryId
         });
         currentStoryId = res.data.id;
-        // Update URL without refresh
         window.history.pushState({}, '', `editor.html?id=${currentStoryId}`);
         await loadStoryDetails();
         await addChapter();
     } catch (err) {
         console.error('Failed to create story:', err);
+        saveStatus.textContent = 'Failed to initialize editor. Please try again.';
     }
 }
 
