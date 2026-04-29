@@ -10,6 +10,8 @@ import '../notifications/notification_screen.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/navigation_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/platform_settings_provider.dart';
+import '../../providers/category_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -148,6 +150,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
       case BookFeedStatus.loaded:
         final allBooks = List.of(feedState.books);
+        final platformSettings = ref.watch(platformSettingsProvider);
+        final boostedCategories = ref.watch(categoryProvider).where((c) => c.isBoosted).toList();
         
         // Prepare sub-lists
         final topPicks = allBooks.take(10).toList();
@@ -175,6 +179,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (platformSettings?.globalAnnouncement != null && platformSettings!.globalAnnouncement!.isNotEmpty)
+                  _buildAnnouncementBanner(platformSettings.globalAnnouncement!),
+                if (boostedCategories.isNotEmpty)
+                  _buildBoostedCategories(boostedCategories),
                 if (continueReading.isNotEmpty)
                   _buildHorizontalSection(
                     context,
@@ -377,6 +385,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
+    );
+  Widget _buildAnnouncementBanner(String message) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).primaryColor,
+            Theme.of(context).primaryColor.withValues(alpha: 0.7),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.campaign_rounded, color: Colors.white, size: 28),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBoostedCategories(List<CategoryModel> categories) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Text(
+            'Explore Seasonal Genres 🚀',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
+        SizedBox(
+          height: 50,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            itemCount: categories.length,
+            itemBuilder: (context, index) {
+              final cat = categories[index];
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 5),
+                child: FilterChip(
+                  label: Text(cat.name),
+                  labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  onSelected: (_) {
+                    // Logic to filter books by category could go here
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
     );
   }
 }

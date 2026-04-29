@@ -13,6 +13,8 @@ import 'core/push_notification_service.dart';
 import 'core/api_client.dart';
 import 'package:uni_links/uni_links.dart';
 import 'dart:async';
+import 'providers/platform_settings_provider.dart';
+import 'features/book/book_detail_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -127,6 +129,7 @@ class _SrishtyAppState extends ConsumerState<SrishtyApp> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final platformSettings = ref.watch(platformSettingsProvider);
     
     if (authState.status == AuthStatus.authenticated) {
       ref.watch(purchaseProvider);
@@ -140,12 +143,17 @@ class _SrishtyAppState extends ConsumerState<SrishtyApp> {
       navigatorKey: navigatorKey,
       title: 'Srishty',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.getTheme(platformSettings?.appTheme ?? 'default'),
       home: _getHome(authState.status),
     );
   }
 
   Widget _getHome(AuthStatus status) {
+    final settings = ref.read(platformSettingsProvider);
+    if (settings?.maintenanceMode == true) {
+      return _buildMaintenanceScreen();
+    }
+
     switch (status) {
       case AuthStatus.initial:
       case AuthStatus.loading:
@@ -157,6 +165,33 @@ class _SrishtyAppState extends ConsumerState<SrishtyApp> {
         return const LoginScreen();
     }
   }
+
+  Widget _buildMaintenanceScreen() {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.build_circle_rounded, size: 80, color: Colors.orangeAccent),
+              const SizedBox(height: 24),
+              const Text(
+                'Under Maintenance',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'We are performing some scheduled updates to improve your experience. Please check back soon!',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class SplashScreen extends StatelessWidget {
@@ -165,7 +200,7 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.darkTheme.scaffoldBackgroundColor,
+      backgroundColor: AppTheme.getTheme('default').scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
