@@ -207,6 +207,82 @@ class AdminProfileViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
+    def grant_achievement(self, request, pk=None):
+        profile = self.get_object()
+        achievement_id = request.data.get('achievement_id')
+        if not achievement_id:
+            return response.Response({"error": "Achievement ID is required"}, status=400)
+
+        try:
+            from core.models import Achievement, UserAchievement
+            achievement = Achievement.objects.get(id=achievement_id)
+            user_ach, created = UserAchievement.objects.get_or_create(user=profile.user, achievement=achievement)
+            
+            if not created:
+                return response.Response({"status": "already_has_it", "message": "User already has this badge."})
+
+            # Award XP for new achievements
+            profile.xp += 50
+            leveled_up = False
+            while profile.xp >= profile.level * 100:
+                profile.xp -= profile.level * 100
+                profile.level += 1
+                leveled_up = True
+            profile.save()
+
+            Notification.objects.create(
+                recipient=profile.user,
+                actor=request.user,
+                action_type='SYSTEM',
+                message=f"You've been awarded a special badge: {achievement.icon} {achievement.title}! 🏆"
+            )
+
+            log_admin_action(
+                admin=request.user,
+                action="GRANT_ACHIEVEMENT",
+                target=profile.user.username,
+                details=f"Awarded badge: {achievement.title}. New Level: {profile.level}",
+                request=request
+            )
+            return response.Response({
+                'status': 'success', 
+                'message': f"Awarded {achievement.title}",
+                'leveled_up': leveled_up
+            })
+        except Achievement.DoesNotExist:
+            return response.Response({'error': 'Achievement not found'}, status=404)
+
+    @action(detail=True, methods=['post'])
+    def grant_xp(self, request, pk=None):
+        profile = self.get_object()
+        amount = int(request.data.get('amount', 0))
+        if amount <= 0:
+            return response.Response({'error': 'Invalid amount'}, status=400)
+            
+        profile.xp += amount
+        leveled_up = False
+        while profile.xp >= profile.level * 100:
+            profile.xp -= profile.level * 100
+            profile.level += 1
+            leveled_up = True
+            
+        profile.save()
+        
+        log_admin_action(
+            admin=request.user,
+            action="GRANT_XP",
+            target=profile.user.username,
+            details=f"Granted {amount} XP. New Level: {profile.level}",
+            request=request
+        )
+        return response.Response({
+            'status': 'xp granted',
+            'new_xp': profile.xp,
+            'new_level': profile.level,
+            'leveled_up': leveled_up
+        })
+
+    @action(detail=True, methods=['post'])
     def verify_approve(self, request, pk=None):
         profile = self.get_object()
         profile.is_verified = True
@@ -310,40 +386,10 @@ class AdminProfileViewSet(viewsets.ModelViewSet):
             "projection": projection_data
         })
 
-    @action(detail=True, methods=['post'])
-    def grant_achievement(self, request, pk=None):
-        profile = self.get_object()
-        achievement_id = request.data.get('achievement_id')
-        
-        if not achievement_id:
-            return Response({"error": "Achievement ID is required"}, status=400)
-            
-        from core.models import Achievement, UserAchievement
-        try:
-            achievement = Achievement.objects.get(id=achievement_id)
-            user_ach, created = UserAchievement.objects.get_or_create(
-                user=profile.user,
-                achievement=achievement
-            )
-            
-            if not created:
-                return Response({"status": "already_has_it", "message": "User already has this badge."})
-            
-            Notification.objects.create(
-                recipient=profile.user,
-                actor=request.user,
-                action_type='SYSTEM',
-                message=f"You've been awarded a special badge: {achievement.name}! 🏆"
-            )
-            
-            return Response({"status": "success", "message": f"Awarded {achievement.name}"})
-        except Achievement.DoesNotExist:
-            return Response({"error": "Achievement not found"}, status=404)
-
     @action(detail=False, methods=['get'])
     def all_achievements(self, request):
         from core.models import Achievement
-        achievements = Achievement.objects.all().values('id', 'name', 'icon', 'category')
+        achievements = Achievement.objects.all().values('id', 'title', 'icon', 'category')
         return Response(achievements)
 
     @action(detail=False, methods=['post'])

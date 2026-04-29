@@ -845,29 +845,32 @@ class AdminApp {
                     </div>
 
                     <div class="stats-mini-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
-                        <div class="glass" style="padding: 15px; border-radius: 15px; text-align: center;">
-                            <div style="font-size: 24px; font-weight: bold; color: var(--accent-primary);">${user.total_reads}</div>
-                            <div style="font-size: 12px; opacity: 0.7;">Books Read</div>
+                        <div class="glass" style="padding: 15px; border-radius: 15px; text-align: center; border-bottom: 3px solid var(--accent-purple);">
+                            <div style="font-size: 10px; opacity: 0.6; margin-bottom: 5px;">CURRENT LEVEL</div>
+                            <div style="font-size: 28px; font-weight: bold; color: var(--accent-purple);">Lvl ${user.level}</div>
+                            <div style="font-size: 11px; opacity: 0.7; margin-top: 5px;">${user.xp} / ${user.level * 100} XP</div>
                         </div>
-                        <div class="glass" style="padding: 15px; border-radius: 15px; text-align: center;">
-                            <div style="font-size: 24px; font-weight: bold; color: var(--accent-secondary);">${user.published_books.length}</div>
-                            <div style="font-size: 12px; opacity: 0.7;">Stories Published</div>
+                        <div class="glass" style="padding: 15px; border-radius: 15px; text-align: center; border-bottom: 3px solid var(--accent-gold);">
+                            <div style="font-size: 10px; opacity: 0.6; margin-bottom: 5px;">DAILY STREAK</div>
+                            <div style="font-size: 28px; font-weight: bold; color: var(--accent-gold);">${user.current_streak} 🔥</div>
+                            <div style="font-size: 11px; opacity: 0.7; margin-top: 5px;">Day Streak</div>
                         </div>
-                        <div class="glass" style="padding: 15px; border-radius: 15px; text-align: center;">
-                            <div style="font-size: 24px; font-weight: bold; color: #FF6584;">${user.reports_received.length}</div>
-                            <div style="font-size: 12px; opacity: 0.7;">Safety Flags</div>
+                        <div class="glass" style="padding: 15px; border-radius: 15px; text-align: center; border-bottom: 3px solid #FF6584;">
+                            <div style="font-size: 10px; opacity: 0.6; margin-bottom: 5px;">SAFETY FLAGS</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #FF6584;">${user.reports_received.length}</div>
+                            <div style="font-size: 11px; opacity: 0.7; margin-top: 5px;">Reports</div>
                         </div>
                     </div>
 
-                    <div class="glass" style="padding: 20px; border-radius: 15px; margin-bottom: 30px; display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn-action red" onclick="adminApp.suspendUser(${user.id}, '${escapeHTML(user.username)}')">🚫 Suspend User</button>
-                        <button class="btn-action blue" onclick="adminApp.resetPassword(${user.id}, '${escapeHTML(user.username)}')">🔑 Reset Password</button>
-                        <button class="btn-action purple" onclick="adminApp.messageUser(${user.id}, '${escapeHTML(user.username)}')">💬 Send Message</button>
-                        <button class="btn-action" style="background: ${user.is_partner ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.1)'}; color: ${user.is_partner ? 'gold' : 'white'};" 
-                            onclick="adminApp.togglePartner(${user.id})">
-                            ${user.is_partner ? '🌟 Revoke Partner' : '⭐ Grant Partner'}
-                        </button>
-                        <button class="btn-action green" onclick="adminApp.showBadgeAwardModal(${user.id})">🏆 Award Badge</button>
+                    <div class="glass" style="padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                        <h4 style="margin: 0 0 15px 0;">⚡ Gamification Power-ups</h4>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn-action purple" onclick="adminApp.grantXP(${user.id})">⚡ Grant 100 XP</button>
+                            <button class="btn-action green" onclick="adminApp.showBadgeAwardModal(${user.id})">🏆 Award Badge</button>
+                            <button class="btn-action blue" onclick="adminApp.togglePartner(${user.id})">${user.is_partner ? '🌟 Revoke Partner' : '⭐ Grant Partner'}</button>
+                            <button class="btn-action red" onclick="adminApp.suspendUser(${user.id}, '${escapeHTML(user.username)}')">🚫 Suspend User</button>
+                            <button class="btn-action" onclick="adminApp.resetPassword(${user.id}, '${escapeHTML(user.username)}')">🔑 Reset Password</button>
+                        </div>
                     </div>
 
                     <div class="glass" style="padding: 25px; border-radius: 20px; margin-bottom: 30px;">
@@ -1461,6 +1464,19 @@ class AdminApp {
             this.showSuccess('Category Boost Updated');
             this.loadAppControllerView();
         } catch (e) { alert('Action failed'); }
+    }
+
+    async grantXP(userId) {
+        const amount = prompt("Enter XP amount to grant:", "100");
+        if (!amount) return;
+        try {
+            const res = await this.fetchWithAuth(`${API_BASE_URL}/accounts/admin-profiles/${userId}/grant_xp/`, {
+                method: 'POST',
+                body: JSON.stringify({ amount: parseInt(amount) })
+            });
+            this.showSuccess(`Granted ${amount} XP! ${res.leveled_up ? '🚀 LEVELED UP!' : ''}`);
+            this.showUserProfile(userId);
+        } catch (e) { alert('Failed to grant XP'); }
     }
 
     async loadTeamActivity() {

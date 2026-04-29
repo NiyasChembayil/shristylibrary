@@ -12,6 +12,8 @@ class Profile(models.Model):
     bio = models.TextField(blank=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     coins = models.PositiveIntegerField(default=100) # Give new users 100 coins to start
+    xp = models.PositiveIntegerField(default=0)
+    level = models.PositiveIntegerField(default=1)
     
     # Writing Goals & Streaks
     daily_word_goal = models.PositiveIntegerField(default=500)

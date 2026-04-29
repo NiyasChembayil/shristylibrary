@@ -169,8 +169,9 @@ class AdminUserHistorySerializer(serializers.ModelSerializer):
         model = Profile
         fields = [
             'id', 'username', 'email', 'role', 'bio', 'avatar', 'is_verified', 'is_partner',
-            'verification_id_image', 'verification_links', 'verification_status',
-            'total_reads', 'published_books', 'reports_received', 'created_at'
+            'verification_id_image', 'verification_status', 'is_suspended', 
+            'current_streak', 'xp', 'level', 'total_reads', 'published_books', 
+            'reports_received', 'created_at'
         ]
 
     def get_total_reads(self, obj):
