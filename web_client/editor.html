@@ -132,6 +132,201 @@
         </div>
     </div>
 
-    <script src="js/editor.js"></script>
+    <script>
+        const API_BASE = 'https://srishty-backend.onrender.com/api/';
+        const token = localStorage.getItem('studio_access');
+
+        if (!token) window.location.href = 'index.html';
+
+        const studioApi = axios.create({
+            baseURL: API_BASE,
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        let currentStoryId = new URLSearchParams(window.location.search).get('id');
+        let currentChapterId = null;
+        let chapters = [];
+        let quill = null;
+        let saveTimeout = null;
+
+        const chaptersList = document.getElementById('chapters-list');
+        const addChapterBtn = document.getElementById('add-chapter-btn');
+        const chapterTitleInput = document.getElementById('chapter-title-input');
+        const saveStatus = document.getElementById('save-status');
+        const publishBtn = document.getElementById('publish-btn');
+        const bibleBtn = document.getElementById('story-bible-btn');
+        const bibleOverlay = document.getElementById('bible-overlay');
+        const closeBible = document.getElementById('close-bible');
+        const coverPreview = document.getElementById('story-cover-display');
+        const storyTitleInput = document.getElementById('story-title-input');
+        const storyDescInput = document.getElementById('story-desc-input');
+        const categorySelect = document.getElementById('story-category-select');
+        const updateDetailsBtn = document.getElementById('update-details-btn');
+
+        function initQuill() {
+            quill = new Quill('#editor-container', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'header': 1 }, { 'header': 2 }],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['clean']
+                    ]
+                },
+                placeholder: 'Start writing your story...'
+            });
+
+            quill.focus();
+
+            quill.on('text-change', () => {
+                if (!currentChapterId) return;
+                saveStatus.textContent = 'Unsaved changes...';
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(autoSave, 2000);
+            });
+        }
+
+        async function autoSave() {
+            if (!currentChapterId) return;
+            saveStatus.textContent = 'Saving...';
+            try {
+                await studioApi.patch(`core/chapters/${currentChapterId}/`, {
+                    title: chapterTitleInput.value,
+                    content: quill.root.innerHTML
+                });
+                saveStatus.textContent = 'Saved';
+            } catch (err) {
+                console.error('Save failed:', err);
+                saveStatus.textContent = 'Save failed!';
+            }
+        }
+
+        async function initEditor() {
+            console.log('Initializing Editor...');
+            initQuill();
+            saveStatus.textContent = 'Ready to write';
+            try {
+                if (currentStoryId) {
+                    Promise.all([loadStoryDetails(), loadChapters()]);
+                } else {
+                    await createNewStory();
+                }
+            } catch (err) {
+                saveStatus.textContent = 'Offline Mode';
+            }
+        }
+
+        async function createNewStory() {
+            try {
+                const catRes = await studioApi.get('core/categories/');
+                const categories = catRes.data.results || catRes.data;
+                const categoryId = categories.length > 0 ? categories[0].id : 1;
+                const res = await studioApi.post('core/books/', { title: 'Untitled Story', category: categoryId });
+                currentStoryId = res.data.id;
+                window.history.pushState({}, '', `editor.html?id=${currentStoryId}`);
+                await loadStoryDetails();
+                await addChapter();
+            } catch (err) {
+                saveStatus.textContent = 'Init Failed';
+            }
+        }
+
+        async function loadStoryDetails() {
+            try {
+                const catRes = await studioApi.get('core/categories/');
+                const categories = catRes.data.results || catRes.data;
+                categorySelect.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                const res = await studioApi.get(`core/books/${currentStoryId}/`);
+                const story = res.data;
+                storyTitleInput.value = story.title;
+                storyDescInput.value = story.description || '';
+                categorySelect.value = story.category;
+                if (story.cover) {
+                    coverPreview.style.backgroundImage = `url(${story.cover})`;
+                    coverPreview.innerHTML = '';
+                }
+            } catch (err) {}
+        }
+
+        coverPreview.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('cover', file);
+                saveStatus.textContent = 'Uploading...';
+                try {
+                    await studioApi.patch(`core/books/${currentStoryId}/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                    saveStatus.textContent = 'Cover updated';
+                    loadStoryDetails();
+                } catch (err) {}
+            };
+            input.click();
+        });
+
+        updateDetailsBtn.addEventListener('click', async () => {
+            const data = { title: storyTitleInput.value, description: storyDescInput.value, category: categorySelect.value };
+            saveStatus.textContent = 'Updating...';
+            try {
+                await studioApi.patch(`core/books/${currentStoryId}/`, data);
+                saveStatus.textContent = 'Details saved';
+            } catch (err) {}
+        });
+
+        async function loadChapters() {
+            try {
+                const res = await studioApi.get(`core/chapters/?book=${currentStoryId}`);
+                chapters = res.data;
+                renderChapters();
+                if (chapters.length > 0 && !currentChapterId) selectChapter(chapters[0].id);
+            } catch (err) {}
+        }
+
+        function renderChapters() {
+            chaptersList.innerHTML = chapters.map((ch, idx) => `
+                <div class="chapter-item ${currentChapterId == ch.id ? 'active' : ''}" onclick="selectChapter(${ch.id})">
+                    <span>Ch ${idx + 1}: ${ch.title || 'Untitled'}</span>
+                </div>
+            `).join('');
+        }
+
+        async function selectChapter(id) {
+            currentChapterId = id;
+            const chapter = chapters.find(ch => ch.id == id);
+            chapterTitleInput.value = chapter.title || 'Untitled';
+            quill.root.innerHTML = chapter.content || '';
+            renderChapters();
+        }
+
+        async function addChapter() {
+            try {
+                const res = await studioApi.post('core/chapters/', { book: currentStoryId, title: 'New Chapter', content: '', order: chapters.length + 1 });
+                await loadChapters();
+                selectChapter(res.data.id);
+            } catch (err) {}
+        }
+
+        addChapterBtn.addEventListener('click', addChapter);
+        chapterTitleInput.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(autoSave, 2000);
+        });
+
+        bibleBtn.addEventListener('click', () => bibleOverlay.classList.remove('hidden'));
+        closeBible.addEventListener('click', () => bibleOverlay.classList.add('hidden'));
+
+        publishBtn.addEventListener('click', async () => {
+            try {
+                await studioApi.patch(`core/books/${currentStoryId}/`, { moderation_status: 'published' });
+                alert('Congratulations! Published!');
+            } catch (err) {}
+        });
+
+        window.onload = initEditor;
+    </script>
 </body>
 </html>
