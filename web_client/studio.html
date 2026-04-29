@@ -16,22 +16,20 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <script>
-        // SMART PATH LOGIC: Fix relative paths for Django backend (/studio/) vs Static site (/)
+        // ROBUST SMART PATH: Adjust paths before page rendering completes
         (function() {
             var isBackend = window.location.pathname.includes('/studio/');
             if (isBackend) {
-                console.log("SMART PATH: Backend detected. Adjusting relative paths...");
-                // Prepend /static/ to relative links and scripts
-                document.addEventListener('DOMContentLoaded', function() {
-                    var links = document.querySelectorAll('link[href^="css/"], link[href^="assets/"]');
-                    links.forEach(l => l.href = '/static/web_client/' + l.getAttribute('href'));
-                    
-                    var scripts = document.querySelectorAll('script[src^="js/"]');
-                    scripts.forEach(s => s.src = '/static/web_client/' + s.getAttribute('src'));
-                    
-                    var imgs = document.querySelectorAll('img[src^="assets/"]');
-                    imgs.forEach(i => i.src = '/static/web_client/' + i.getAttribute('src'));
+                var prefix = '/static/web_client/';
+                // Fix CSS instantly
+                document.querySelectorAll('link[href^="css/"]').forEach(l => {
+                    l.href = prefix + l.getAttribute('href');
                 });
+                // Fix Images instantly
+                document.querySelectorAll('img[src^="assets/"]').forEach(i => {
+                    i.src = prefix + i.getAttribute('src');
+                });
+                // Note: JS is fixed in the script tag itself via base path logic if needed
             }
         })();
 
@@ -84,7 +82,7 @@
     </div>
 
     <!-- MAIN APP SHELL -->
-    <div id="app-shell" class="hidden">
+    <div id="app-shell" class="hidden" style="display: none;">
         
         <!-- TOP NAVBAR -->
         <nav class="top-nav" id="top-navbar">
@@ -105,7 +103,7 @@
             </div>
 
             <div class="nav-right">
-                <div id="streak-indicator" class="hidden" style="display: flex; align-items: center; gap: 6px; background: rgba(255, 107, 0, 0.1); padding: 4px 12px; border-radius: 100px; color: #FF6B00; font-weight: 700; font-size: 13px; border: 1px solid rgba(255, 107, 0, 0.2);">
+                <div id="streak-indicator" class="hidden" style="display: none;" style="display: flex; align-items: center; gap: 6px; background: rgba(255, 107, 0, 0.1); padding: 4px 12px; border-radius: 100px; color: #FF6B00; font-weight: 700; font-size: 13px; border: 1px solid rgba(255, 107, 0, 0.2);">
                     <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 18s-4.5-1.92-4.5-6.5c0-5.25 4.5-9.5 4.5-9.5s4.5 4.25 4.5 9.5c0 4.58-4.5 6.5-4.5 6.5z"/></svg>
                     <span id="streak-count">0</span> Day Streak
                 </div>
@@ -200,7 +198,7 @@
                                 </label>
                                 <div class="drop-zone" id="create-drop-zone" onclick="document.getElementById('create-cover').click()">
                                     <span class="drop-zone-text">Drag cover here or click to upload</span>
-                                    <input type="file" id="create-cover" class="hidden" accept="image/*">
+                                    <input type="file" id="create-cover" class="hidden" style="display: none;" accept="image/*">
                                     <img id="create-cover-preview" class="drop-zone-preview hidden">
                                 </div>
                             </div>
@@ -252,7 +250,7 @@
                                 </label>
                                 <div class="drop-zone" id="settings-drop-zone" onclick="document.getElementById('settings-cover').click()">
                                     <span class="drop-zone-text">Drag new cover here or click to change</span>
-                                    <input type="file" id="settings-cover" class="hidden" accept="image/*">
+                                    <input type="file" id="settings-cover" class="hidden" style="display: none;" accept="image/*">
                                     <img id="settings-cover-preview" class="drop-zone-preview">
                                 </div>
                             </div>
@@ -260,7 +258,7 @@
                                 <label>Full Story Audiobook</label>
                                 <div style="display: flex; flex-direction: column; gap: 10px;">
                                     <input type="file" id="settings-audio" class="form-input" accept="audio/*">
-                                    <audio id="settings-audio-player" controls class="hidden" style="width: 100%; height: 35px;"></audio>
+                                    <audio id="settings-audio-player" controls class="hidden" style="display: none;" style="width: 100%; height: 35px;"></audio>
                                     <span id="settings-audio-label" style="font-size: 11px; color: var(--text-secondary);">No audio uploaded</span>
                                 </div>
                             </div>
@@ -369,7 +367,7 @@
                                 <span id="save-status" style="color: #10B981">Auto-saved</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 16px;">
-                                <div id="chapter-audio-container" class="hidden" style="display: flex; align-items: center; gap: 10px;">
+                                <div id="chapter-audio-container" class="hidden" style="display: none;" style="display: flex; align-items: center; gap: 10px;">
                                     <audio id="chapter-audio-player" controls style="height: 30px;"></audio>
                                 </div>
                                 
@@ -386,7 +384,7 @@
                                         <input type="checkbox" id="chapter-is-premium" style="accent-color: var(--accent-primary);" onchange="app.togglePremiumInput(this.checked)">
                                         Premium Chapter
                                     </label>
-                                    <input type="number" id="chapter-coins" class="hidden" placeholder="Coins" style="width: 60px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 11px;">
+                                    <input type="number" id="chapter-coins" class="hidden" style="display: none;" placeholder="Coins" style="width: 60px; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color); font-size: 11px;">
                                 </div>
                                 <button class="btn-quiet" onclick="app.openSettings()">Settings</button>
                                 <label for="chapter-audio-upload" class="btn-quiet" style="cursor: pointer;">
@@ -397,7 +395,7 @@
                         </div>
 
                         <!-- BRANCHING PANEL -->
-                        <div id="branching-panel" class="hidden" style="background: var(--bg-surface); border-top: 1px solid var(--border-color); padding: 30px; box-shadow: 0 -10px 20px rgba(0,0,0,0.02);">
+                        <div id="branching-panel" class="hidden" style="display: none;" style="background: var(--bg-surface); border-top: 1px solid var(--border-color); padding: 30px; box-shadow: 0 -10px 20px rgba(0,0,0,0.02);">
                             <div style="max-width: 800px; margin: 0 auto;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                     <h4 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 18px;">
@@ -555,7 +553,7 @@
                     </div>
 
                     <!-- TAB CONTENT: CHARACTERS -->
-                    <div id="bible-content-characters" class="hidden" style="display: grid; grid-template-columns: 320px 1fr; gap: 24px; height: calc(100vh - 350px);">
+                    <div id="bible-content-characters" class="hidden" style="display: none;" style="display: grid; grid-template-columns: 320px 1fr; gap: 24px; height: calc(100vh - 350px);">
                         <!-- SIDEBAR: CHARACTERS -->
                         <div style="background: white; border-radius: 20px; padding: 20px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 20px; overflow-y: auto;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -596,7 +594,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- MODAL: SOCIAL TOOLKIT -->
-    <div id="toolkit-modal" class="modal-overlay hidden">
+    <div id="toolkit-modal" class="modal-overlay hidden" style="display: none;">
         <div class="modal-content" style="max-width: 900px; display: grid; grid-template-columns: 1fr 350px; gap: 30px; padding: 30px; background: #0F172A; border: 1px solid rgba(255,255,255,0.1);">
             
             <!-- LEFT: PREVIEW AREA -->
@@ -681,7 +679,7 @@
     </div>
 
     <!-- MODAL: LIVE PREVIEW QR -->
-    <div id="qr-modal" class="modal-overlay hidden">
+    <div id="qr-modal" class="modal-overlay hidden" style="display: none;">
         <div class="modal-content" style="max-width: 400px; text-align: center; padding: 40px;">
             <h3 style="margin-bottom: 10px;">📱 Live App Preview</h3>
             <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 25px;">Scan this QR code with your phone to open this draft in the Srishty mobile app.</p>
@@ -697,7 +695,7 @@
     </div>
 
     <!-- SIDE PANEL: VERSION HISTORY -->
-    <div id="history-panel" class="hidden" style="position: fixed; top: 0; right: 0; width: 400px; height: 100%; background: white; z-index: 1000; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; animation: slideInRight 0.3s ease-out; border-left: 1px solid var(--border-color);">
+    <div id="history-panel" class="hidden" style="display: none;" style="position: fixed; top: 0; right: 0; width: 400px; height: 100%; background: white; z-index: 1000; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; animation: slideInRight 0.3s ease-out; border-left: 1px solid var(--border-color);">
         <div style="padding: 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0;">🕰️ Version History</h3>
             <button class="btn-quiet" onclick="app.hideHistory()" style="padding: 5px;">
@@ -713,7 +711,7 @@
         </div>
     </div>
     <!-- MODAL: COVER DESIGNER -->
-    <div id="designer-modal" class="modal-overlay hidden">
+    <div id="designer-modal" class="modal-overlay hidden" style="display: none;">
         <div class="modal-content" style="max-width: 1000px; display: grid; grid-template-columns: 1fr 380px; gap: 40px; padding: 40px; background: white;">
             
             <!-- LEFT: CANVAS AREA -->
@@ -771,7 +769,7 @@
         </div>
     </div>
     <!-- MODAL: ADD CHARACTER -->
-    <div id="character-modal" class="modal-overlay hidden">
+    <div id="character-modal" class="modal-overlay hidden" style="display: none;">
         <div class="modal-content" style="max-width: 400px; padding: 32px; background: white;">
             <h3 style="margin-bottom: 24px;">🎭 Add Character</h3>
             <div class="form-group">
@@ -794,7 +792,7 @@
     </div>
 
     <!-- MODAL: ADD RELATIONSHIP -->
-    <div id="rel-modal" class="modal-overlay hidden">
+    <div id="rel-modal" class="modal-overlay hidden" style="display: none;">
         <div class="modal-content" style="max-width: 440px; padding: 32px; background: white;">
             <h3 style="margin-bottom: 24px;">🔗 Define Relationship</h3>
             <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin-bottom: 20px;">
@@ -824,7 +822,7 @@
         </div>
     </div>
     <!-- MODAL: WRITING SPRINT -->
-    <div id="sprint-modal" class="modal-overlay hidden">
+    <div id="sprint-modal" class="modal-overlay hidden" style="display: none;">
         <div class="modal-content" style="max-width: 600px; padding: 40px; background: white; text-align: center;">
             <div style="font-size: 48px; margin-bottom: 20px;">🏆</div>
             <h2 id="sprint-title">Writing Sprint</h2>
@@ -832,7 +830,7 @@
             
             <div style="margin-bottom: 32px;">
                 <p id="sprint-status-msg" style="color: var(--text-secondary); margin-bottom: 12px;">Waiting for next sprint...</p>
-                <div id="sprint-progress-container" class="hidden">
+                <div id="sprint-progress-container" class="hidden" style="display: none;">
                     <p style="font-size: 14px; font-weight: 700;">Your Words: <span id="sprint-user-words" style="color: #10B981;">0</span></p>
                 </div>
             </div>
@@ -852,7 +850,7 @@
     </div>
 
     <!-- MODAL: ACHIEVEMENT UNLOCKED -->
-    <div id="achievement-modal" class="modal-overlay hidden" style="z-index: 2000;">
+    <div id="achievement-modal" class="modal-overlay hidden" style="display: none;" style="z-index: 2000;">
         <div class="modal-content" style="max-width: 400px; padding: 40px; background: white; text-align: center; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
             <div id="achievement-icon" style="font-size: 80px; margin-bottom: 10px; animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);">🏆</div>
             <h3 style="color: var(--accent-primary); font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">Achievement Unlocked!</h3>
