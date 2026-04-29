@@ -16,6 +16,19 @@
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script>
+        // SMART PATH LOGIC for Backend
+        (function() {
+            var isBackend = window.location.pathname.includes('/studio/');
+            if (isBackend) {
+                var prefix = '/static/web_client/';
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.querySelectorAll('link[href^="css/"]').forEach(l => l.href = prefix + l.getAttribute('href'));
+                    document.querySelectorAll('script[src^="js/"]').forEach(s => s.src = prefix + s.getAttribute('src'));
+                });
+            }
+        })();
+    </script>
 </head>
 <body>
 
