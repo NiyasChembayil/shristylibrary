@@ -144,9 +144,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def validate_email(self, value):
-        if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError("This email is already registered.")
-        return value
+        if value and value.strip():
+            if User.objects.filter(email__iexact=value.strip()).exists():
+                raise serializers.ValidationError("This email is already registered.")
+        return value.strip() if value else ""
 
     def create(self, validated_data):
         # Allow specifying role during registration, but default to 'reader'

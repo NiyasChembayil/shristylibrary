@@ -267,24 +267,41 @@ class SrishtyApp {
         }
     }
 
-    async handleAuth(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
+    async handleAuth(typeOrEvent) {
+        let type = this.isSignUpMode ? 'register' : 'login';
+        if (typeof typeOrEvent === 'string') {
+            type = typeOrEvent;
+            this.isSignUpMode = (type === 'register');
+        } else if (typeOrEvent && typeOrEvent.preventDefault) {
+            typeOrEvent.preventDefault();
+            typeOrEvent.stopPropagation();
         }
-        const user = document.getElementById('auth-user').value;
-        const pass = document.getElementById('auth-pass').value;
-        const errorEl = document.getElementById('auth-error');
-        const btn = document.getElementById('auth-btn');
 
-        btn.textContent = 'Authenticating...';
-        btn.disabled = true;
-        errorEl.style.display = 'none';
+        const userField = document.getElementById(type === 'login' ? 'login-username' : 'reg-username') || document.getElementById('auth-user');
+        const passField = document.getElementById(type === 'login' ? 'login-password' : 'reg-password') || document.getElementById('auth-pass');
+        const emailField = document.getElementById('reg-email') || document.getElementById('auth-email');
+        const errorEl = document.getElementById('auth-error');
+        const btn = document.getElementById(type === 'login' ? 'auth-btn-login' : 'auth-btn-reg') || document.getElementById('auth-btn');
+
+        if (!userField || !passField) {
+            console.error('Auth fields missing in DOM');
+            return;
+        }
+
+        const user = userField.value;
+        const pass = passField.value;
+
+        if (btn) {
+            btn.dataset.originalText = btn.textContent;
+            btn.textContent = 'Authenticating...';
+            btn.disabled = true;
+        }
+        if (errorEl) errorEl.style.display = 'none';
 
         try {
-            console.log('Auth: Starting authentication for', user, 'Mode:', this.isSignUpMode ? 'Registration' : 'Login');
-            if (this.isSignUpMode) {
-                const email = document.getElementById('auth-email').value;
+            console.log('Auth: Starting authentication for', user, 'Mode:', type);
+            if (type === 'register') {
+                const email = emailField ? emailField.value : '';
                 console.log('Auth: Registering email', email);
                 await this.fetchAPI('/accounts/auth/register/', {
                     method: 'POST',
@@ -312,23 +329,45 @@ class SrishtyApp {
             this.checkAuth();
         } catch (err) {
             console.error('Auth failure:', err);
-            errorEl.style.display = 'block';
-            const errorMsg = err.response?.data?.detail || err.message || 'Unknown error';
-            errorEl.textContent = errorMsg;
-            alert('Authentication Failed: ' + errorMsg);
+            let errorMsg = 'Unknown error';
+            if (err.response?.data) {
+                if (typeof err.response.data === 'string') {
+                    errorMsg = err.response.data;
+                } else if (err.response.data.detail) {
+                    errorMsg = err.response.data.detail;
+                } else {
+                    errorMsg = Object.entries(err.response.data)
+                        .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(' ') : msgs}`)
+                        .join('\n');
+                }
+            } else {
+                errorMsg = err.message;
+            }
+
+            if (errorEl) {
+                errorEl.style.display = 'block';
+                errorEl.textContent = errorMsg;
+            }
+            alert('Authentication Failed:\n' + errorMsg);
         } finally {
-            btn.textContent = this.isSignUpMode ? 'Register' : 'Sign In';
-            btn.disabled = false;
+            if (btn) {
+                btn.textContent = btn.dataset.originalText || (this.isSignUpMode ? 'Register' : 'Sign In');
+                btn.disabled = false;
+            }
         }
     }
 
-    toggleAuthMode(e) {
-        e.preventDefault();
+    toggleAuth(e) {
+        if (e && e.preventDefault) e.preventDefault();
         this.isSignUpMode = !this.isSignUpMode;
-        document.getElementById('signup-extra').classList.toggle('hidden');
-        document.getElementById('auth-toggle-text').textContent = this.isSignUpMode ? 'Already have an account?' : 'New to Srishty?';
-        e.target.textContent = this.isSignUpMode ? 'Sign In' : 'Create Account';
-        document.getElementById('auth-btn').textContent = this.isSignUpMode ? 'Register' : 'Sign In';
+        
+        const loginForm = document.getElementById('login-form');
+        const regForm = document.getElementById('register-form');
+        
+        if (loginForm && regForm) {
+            loginForm.classList.toggle('hidden', this.isSignUpMode);
+            regForm.classList.toggle('hidden', !this.isSignUpMode);
+        }
     }
 
     logout() {

@@ -22,24 +22,55 @@
         // ULTIMATE AUTH PROTECTION (Inlined for reliability)
         const API_URL = 'https://srishty-backend.onrender.com/api';
         
+        // Configure Axios for Django CSRF
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+        axios.defaults.withCredentials = true;
+        
         async function handleAuth(type) {
-            const user = document.getElementById(type === 'login' ? 'login-username' : 'reg-username').value;
-            const pass = document.getElementById(type === 'login' ? 'login-password' : 'reg-password').value;
+            const userField = document.getElementById(type === 'login' ? 'login-username' : 'reg-username');
+            const passField = document.getElementById(type === 'login' ? 'login-password' : 'reg-password');
+            const user = userField.value;
+            const pass = passField.value;
+
             if (!user || !pass) { alert('Please fill in all fields'); return; }
+
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Authenticating...';
+            btn.disabled = true;
 
             try {
                 if (type === 'register') {
                     const email = document.getElementById('reg-email').value;
                     await axios.post(`${API_URL}/accounts/auth/register/`, { 
-                        username: user, email, password: pass, role: 'author' 
+                        username: user, email: email, password: pass, role: 'author' 
                     });
                 }
                 const res = await axios.post(`${API_URL}/token/`, { username: user, password: pass });
                 localStorage.setItem('studio_access', res.data.access);
                 localStorage.setItem('username', user);
-                window.location.reload(); // Reload to trigger full app load
+                window.location.reload(); 
             } catch (err) {
-                alert('Auth Failed: ' + (err.response?.data?.detail || err.message));
+                console.error('Auth detailed error:', err.response?.data);
+                let errorMsg = 'Unknown error';
+                if (err.response?.data) {
+                    if (typeof err.response.data === 'string') {
+                        errorMsg = err.response.data;
+                    } else if (err.response.data.detail) {
+                        errorMsg = err.response.data.detail;
+                    } else {
+                        errorMsg = Object.entries(err.response.data)
+                            .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(' ') : msgs}`)
+                            .join('\n');
+                    }
+                } else {
+                    errorMsg = err.message;
+                }
+                alert('Auth Failed:\n' + errorMsg);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
             }
         }
 
