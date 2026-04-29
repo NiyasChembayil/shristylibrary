@@ -57,7 +57,7 @@ urlpatterns = [
     path('api/admin/', include(router.urls)),
 
     # Serve Web Client via Django (Fallback/Reliability)
-    path('studio/', TemplateView.as_view(template_name='web_client/studio.html'), name='studio'),
+    path('studio/', TemplateView.as_view(template_name='web_client/studio_v5.html'), name='studio'),
     path('write/', TemplateView.as_view(template_name='web_client/index.html'), name='web-client'),
 ]
 
