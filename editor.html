@@ -163,7 +163,7 @@
         const storyTitleInput = document.getElementById('story-title-input');
         const storyDescInput = document.getElementById('story-desc-input');
         const categorySelect = document.getElementById('story-category-select');
-        const updateDetailsBtn = document.getElementById('update-details-btn');
+        const updateDetailsBtn = document.getElementById('save-meta-btn');
 
         function initQuill() {
             if (typeof Quill === 'undefined') {
@@ -288,7 +288,7 @@
         async function loadChapters() {
             try {
                 const res = await studioApi.get(`core/chapters/?book=${currentStoryId}`);
-                chapters = res.data;
+                chapters = res.data.results || res.data;
                 renderChapters();
                 if (chapters.length > 0 && !currentChapterId) selectChapter(chapters[0].id);
             } catch (err) {}
@@ -332,6 +332,14 @@
                 await studioApi.patch(`core/books/${currentStoryId}/`, { moderation_status: 'published' });
                 alert('Congratulations! Published!');
             } catch (err) {}
+        });
+
+        // Branching logic
+        document.getElementById('branching-btn').addEventListener('click', () => {
+            document.getElementById('branching-overlay').classList.remove('hidden');
+        });
+        document.getElementById('close-branching').addEventListener('click', () => {
+            document.getElementById('branching-overlay').classList.add('hidden');
         });
 
         window.onload = initEditor;
