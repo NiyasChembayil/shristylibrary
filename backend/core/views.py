@@ -149,17 +149,29 @@ class BookViewSet(viewsets.ModelViewSet):
             already_read = ReadStats.objects.filter(book=book, user=user, timestamp__gt=grace_period).exists()
         else:
             # IP-based throttling for guests
-            ip = request.META.get('REMOTE_ADDR')
-            # For simplicity, we use the IP in a hidden field if available or just the IP
-            already_read = ReadStats.objects.filter(book=book, user__isnull=True, timestamp__gt=grace_period).exists()
-            # Note: A better guest tracking would use a cache or session ID, 
-            # but this at least prevents simple script spam from one source.
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(',')[0].strip()
+            else:
+                ip = request.META.get('REMOTE_ADDR')
+            
+            # Since we don't have an IP field in ReadStats right now, we use a basic session cache check
+            # For robust tracking, an IP field would be added. For now, we rate-limit by checking anonymous reads closely
+            already_read = ReadStats.objects.filter(book=book, user__isnull=True, timestamp__gt=grace_period).count() > 100 # Rough global limit to prevent massive immediate spam if IP isn't stored.
+            
+            # To actually store and check IP securely without schema change, we can use cache:
+            from django.core.cache import cache
+            cache_key = f"read_spam_{book.id}_{ip}"
+            if cache.get(cache_key):
+                already_read = True
+            else:
+                cache.set(cache_key, True, 3600) # Lock out this IP for 1 hour for this book
 
         if not already_read:
             ReadStats.objects.create(book=book, user=user)
             return Response({'status': 'read recorded'})
         
-        return Response({'status': 'read skipped (grace period)'})
+        return Response({'status': 'read skipped (grace period or rate limit)'})
 
     @action(detail=False, methods=['get'])
     def my_books(self, request):
@@ -319,7 +331,7 @@ class BookViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(books, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['post'], url_path='convert_docx')
+    @action(detail=False, methods=['post'], url_path='convert_docx', permission_classes=[permissions.IsAuthenticated])
     def convert_docx(self, request):
         import mammoth
         file = request.FILES.get('file')
@@ -339,7 +351,7 @@ class BookViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @action(detail=False, methods=['post'], url_path='convert_pdf')
+    @action(detail=False, methods=['post'], url_path='convert_pdf', permission_classes=[permissions.IsAuthenticated])
     def convert_pdf(self, request):
         import pdfplumber
         file = request.FILES.get('file')
@@ -460,6 +472,17 @@ class BookViewSet(viewsets.ModelViewSet):
         if not chapter_number or not audio_file:
             return Response({'error': 'chapter_number and audio_file are required'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # Security: Validate file type
+        allowed_extensions = ['.mp3', '.wav', '.ogg', '.m4a']
+        import os
+        ext = os.path.splitext(audio_file.name)[1].lower()
+        if ext not in allowed_extensions:
+            return Response({'error': 'Invalid file type. Only audio files are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Basic MIME validation
+        if not audio_file.content_type.startswith('audio/'):
+            return Response({'error': 'Invalid content type.'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             # chapter_number from frontend is 1-indexed, match it with 0-indexed 'order'
             chapter = book.chapters.get(order=int(chapter_number) - 1)
@@ -724,9 +747,11 @@ class StoryBibleViewSet(viewsets.ModelViewSet):
         if not book_id:
             return Response({'error': 'book_id required'}, status=400)
         
+        from django.db import transaction
         try:
             book = Book.objects.get(id=book_id, author=request.user)
-            bible, created = StoryBible.objects.get_or_create(book=book)
+            with transaction.atomic():
+                bible, created = StoryBible.objects.select_for_update().get_or_create(book=book)
             serializer = self.get_serializer(bible)
             return Response(serializer.data)
         except Book.DoesNotExist:
