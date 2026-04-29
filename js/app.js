@@ -2192,6 +2192,7 @@ class SrishtyApp {
             }
         }, 5000);
     }
+    }
 }
 
 // Global initialization
