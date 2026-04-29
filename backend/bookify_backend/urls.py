@@ -56,9 +56,7 @@ urlpatterns = [
     path('api/social/', include('social.urls')),
     path('api/admin/', include(router.urls)),
 
-    # Serve Web Client via Django (Fallback/Reliability)
-    path('studio/', TemplateView.as_view(template_name='web_client/studio_v5.html'), name='studio'),
-    path('write/', TemplateView.as_view(template_name='web_client/index.html'), name='web-client'),
+    # (Author Studio has been removed)
 ]
 
 from django.urls import re_path

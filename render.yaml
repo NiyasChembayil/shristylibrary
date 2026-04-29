@@ -38,13 +38,3 @@ services:
       # You can get this from your Cloudinary Console (Settings -> Access Keys).
       - key: CLOUDINARY_URL
         value: "" # Fill this in the Render Dashboard for permanent storage
-
-  - type: static
-    name: srishty-studio
-    env: static
-    publishDir: web_client
-
-  - type: static
-    name: srishty-admin
-    env: static
-    publishDir: web_admin

@@ -44,7 +44,6 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
     'localhost', 
     '127.0.0.1', 
     'srishty-backend.onrender.com', 
-    'shristylibrary.onrender.com',
     'srishty-studio.onrender.com',
     'srishty-admin.onrender.com'
 ])
@@ -227,7 +226,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "https://shristylibrary.onrender.com",
     "https://srishty-studio.onrender.com",
     "https://srishty-web.onrender.com",
     "https://srishty-backend.onrender.com",
@@ -241,7 +239,6 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://shristylibrary.onrender.com",
     "https://srishty-studio.onrender.com",
     "https://srishty-web.onrender.com",
     "https://srishty-backend.onrender.com",
