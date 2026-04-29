@@ -7,6 +7,8 @@ import '../features/feed/feed_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/feed/create_post_screen.dart';
 import '../providers/navigation_provider.dart';
+import '../features/author_studio/studio_dashboard.dart';
+import '../providers/auth_provider.dart';
 
 class BottomNavShell extends StatefulWidget {
   const BottomNavShell({super.key});
@@ -20,6 +22,7 @@ class _BottomNavShellState extends State<BottomNavShell> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const AudioLibraryScreen(),
+    const StudioDashboard(),
     const FeedScreen(),
     const ProfileScreen(),
   ];
@@ -69,8 +72,8 @@ class _BottomNavShellState extends State<BottomNavShell> {
                         _buildNavItem(ref, selectedIndex, 1, Icons.headphones_rounded, 'Audio'),
                         // Centre ➕ Post button
                         _buildPostButton(context, ref),
-                        _buildNavItem(ref, selectedIndex, 2, Icons.dynamic_feed_rounded, 'Feed'),
-                        _buildNavItem(ref, selectedIndex, 3, Icons.person_rounded, 'Profile'),
+                        _buildNavItem(ref, selectedIndex, 2, Icons.create_rounded, 'Studio'),
+                        _buildNavItem(ref, selectedIndex, 4, Icons.person_rounded, 'Profile'),
                       ],
                     ),
                   ),
