@@ -25,3 +25,4 @@ firebase-admin
 bleach
 xhtml2pdf
 EbookLib
+python-bidi==0.4.2
