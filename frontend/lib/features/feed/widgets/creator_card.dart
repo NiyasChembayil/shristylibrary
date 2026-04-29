@@ -20,10 +20,10 @@ class CreatorCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E2E),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -36,7 +36,7 @@ class CreatorCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 30,
-                backgroundColor: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+                backgroundColor: const Color(0xFF6C63FF).withOpacity(0.1),
                 backgroundImage: profile.avatar != null 
                   ? NetworkImage(profile.avatar!) 
                   : null,
@@ -96,7 +96,7 @@ class CreatorCard extends StatelessWidget {
               onPressed: onFollow,
               style: ElevatedButton.styleFrom(
                 backgroundColor: profile.isFollowing 
-                  ? Colors.white.withValues(alpha: 0.1) 
+                  ? Colors.white.withOpacity(0.1) 
                   : const Color(0xFF6C63FF),
                 foregroundColor: profile.isFollowing ? Colors.white70 : Colors.white,
                 padding: EdgeInsets.zero,

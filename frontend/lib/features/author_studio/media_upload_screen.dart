@@ -44,13 +44,9 @@ class _MediaUploadScreenState extends ConsumerState<MediaUploadScreen> {
   }
 
   Future<void> _handleUpdate() async {
-    // This would call the authorStudioProvider to update metadata and files
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Updating story assets...')),
     );
-    
-    // Logic for actual multipart upload...
-    
     if (mounted) Navigator.pop(context);
   }
 
@@ -72,7 +68,6 @@ class _MediaUploadScreenState extends ConsumerState<MediaUploadScreen> {
             _buildTextField('Title', _titleController),
             const SizedBox(height: 15),
             _buildTextField('Description', _descController, maxLines: 4),
-            
             const SizedBox(height: 40),
             const Text('Visuals', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
@@ -85,7 +80,6 @@ class _MediaUploadScreenState extends ConsumerState<MediaUploadScreen> {
                   ? Image.file(_selectedCover!, width: 50, height: 75, fit: BoxFit.cover)
                   : Image.network(widget.book.coverUrl, width: 50, height: 75, fit: BoxFit.cover),
             ),
-
             const SizedBox(height: 40),
             const Text('Audio', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
@@ -96,7 +90,6 @@ class _MediaUploadScreenState extends ConsumerState<MediaUploadScreen> {
               onTap: _pickAudio,
               preview: const Icon(Icons.music_note, color: Color(0xFF6C63FF)),
             ),
-
             const SizedBox(height: 60),
             SizedBox(
               width: double.infinity,
@@ -128,7 +121,7 @@ class _MediaUploadScreenState extends ConsumerState<MediaUploadScreen> {
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.05),
+            fillColor: Colors.white.withAlpha(13),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
           ),
         ),
@@ -142,15 +135,15 @@ class _MediaUploadScreenState extends ConsumerState<MediaUploadScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: Colors.white.withAlpha(13),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: Colors.white.withAlpha(25)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: const Color(0xFF6C63FF).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: const Color(0xFF6C63FF).withAlpha(25), borderRadius: BorderRadius.circular(12)),
               child: Icon(icon, color: const Color(0xFF6C63FF)),
             ),
             const SizedBox(width: 20),

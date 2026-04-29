@@ -48,7 +48,7 @@ class BookCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
+              color: Colors.black.withOpacity(0.3),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -88,7 +88,7 @@ class BookCard extends ConsumerWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withValues(alpha: 0.8),
+                      Colors.black.withOpacity(0.8),
                     ],
                   ),
                 ),
@@ -181,14 +181,14 @@ class BookCard extends ConsumerWidget {
                           border: 1,
                           linearGradient: LinearGradient(
                             colors: [
-                              Colors.white.withValues(alpha: 0.1),
-                              Colors.white.withValues(alpha: 0.05),
+                              Colors.white.withOpacity(0.1),
+                              Colors.white.withOpacity(0.05),
                             ],
                           ),
                           borderGradient: LinearGradient(
                             colors: [
-                              const Color(0xFF6C63FF).withValues(alpha: 0.5),
-                              const Color(0xFF00D2FF).withValues(alpha: 0.5),
+                              const Color(0xFF6C63FF).withOpacity(0.5),
+                              const Color(0xFF00D2FF).withOpacity(0.5),
                             ],
                           ),
                           child: InkWell(
@@ -223,7 +223,7 @@ class BookCard extends ConsumerWidget {
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.3),
+                          color: Colors.black.withOpacity(0.3),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.more_vert, color: Colors.white70, size: 20),

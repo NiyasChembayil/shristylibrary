@@ -72,10 +72,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         linearGradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.white.withValues(alpha: 0.1), Colors.white.withValues(alpha: 0.05)]
+          colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)]
         ),
         borderGradient: LinearGradient(
-          colors: [Colors.white.withValues(alpha: 0.2), Colors.white.withValues(alpha: 0.05)]
+          colors: [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0.05)]
         ),
         child: TextField(
           controller: _searchController,
@@ -213,18 +213,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
                       height: 150,
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: Colors.white.withOpacity(0.05),
                       child: const Center(child: Icon(Icons.book, color: Colors.white12)),
                     ),
                     errorWidget: (context, url, error) => Container(
                       height: 150,
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: Colors.white.withOpacity(0.05),
                       child: const Center(child: Icon(Icons.error_outline, color: Colors.white24)),
                     ),
                   )
                 : Container(
                     height: 150,
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: Colors.white.withOpacity(0.05),
                     child: const Center(child: Icon(Icons.book, color: Colors.white24, size: 40)),
                   ),
             // Gradient Overlay
@@ -235,8 +235,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.1),
-                      Colors.black.withValues(alpha: 0.6),
+                      Colors.black.withOpacity(0.1),
+                      Colors.black.withOpacity(0.6),
                     ],
                   ),
                 ),
@@ -249,7 +249,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
-                  color: data.color.withValues(alpha: 0.8),
+                  color: data.color.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -380,8 +380,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withValues(alpha: 0.1),
-      highlightColor: Colors.white.withValues(alpha: 0.2),
+      baseColor: Colors.white.withOpacity(0.1),
+      highlightColor: Colors.white.withOpacity(0.2),
       child: MasonryGridView.count(
         padding: const EdgeInsets.all(10),
         crossAxisCount: 3,

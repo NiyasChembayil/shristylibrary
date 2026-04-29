@@ -270,7 +270,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             decoration: BoxDecoration(
               color: bg,
               shape: BoxShape.circle,
-              border: Border.all(color: isSelected ? const Color(0xFF6C63FF) : Colors.grey.withValues(alpha: 0.3), width: 3),
+              border: Border.all(color: isSelected ? const Color(0xFF6C63FF) : Colors.grey.withOpacity(0.3), width: 3),
             ),
           ),
           const SizedBox(height: 5),

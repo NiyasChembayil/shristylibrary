@@ -197,7 +197,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                     children: [
                       CircleAvatar(
                         radius: 22,
-                        backgroundColor: const Color(0xFF6C63FF).withValues(alpha: 0.3),
+                        backgroundColor: const Color(0xFF6C63FF).withOpacity(0.3),
                         child: Text(
                           username.isNotEmpty ? username[0].toUpperCase() : '?',
                           style: const TextStyle(
@@ -246,7 +246,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                   // Divider
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Divider(color: Colors.white.withValues(alpha: 0.08)),
+                    child: Divider(color: Colors.white.withOpacity(0.08)),
                   ),
                 ],
               ),

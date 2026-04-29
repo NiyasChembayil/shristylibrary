@@ -242,8 +242,8 @@ class SettingsScreen extends ConsumerWidget {
                   'Delete account', 
                   subtitle: 'Coming soon', 
                   icon: Icons.delete_forever, 
-                  textColor: Colors.redAccent.withValues(alpha: 0.5),
-                  iconColor: Colors.redAccent.withValues(alpha: 0.5),
+                  textColor: Colors.redAccent.withOpacity(0.5),
+                  iconColor: Colors.redAccent.withOpacity(0.5),
                   enabled: false,
                 ),
               ],
@@ -281,9 +281,9 @@ class SettingsScreen extends ConsumerWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -301,9 +301,9 @@ class SettingsScreen extends ConsumerWidget {
   Widget _buildListTile(String title, {String? subtitle, required IconData icon, Color? textColor, Color? iconColor, VoidCallback? onTap, bool enabled = true}) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-      leading: Icon(icon, color: (iconColor ?? Colors.white70).withValues(alpha: enabled ? 1.0 : 0.3), size: 22),
-      title: Text(title, style: TextStyle(color: (textColor ?? Colors.white).withValues(alpha: enabled ? 1.0 : 0.3), fontSize: 15)),
-      subtitle: subtitle != null ? Text(subtitle, style: TextStyle(color: Colors.white38.withValues(alpha: enabled ? 1.0 : 0.3), fontSize: 11)) : null,
+      leading: Icon(icon, color: (iconColor ?? Colors.white70).withOpacity(enabled ? 1.0 : 0.3), size: 22),
+      title: Text(title, style: TextStyle(color: (textColor ?? Colors.white).withOpacity(enabled ? 1.0 : 0.3), fontSize: 15)),
+      subtitle: subtitle != null ? Text(subtitle, style: TextStyle(color: Colors.white38.withOpacity(enabled ? 1.0 : 0.3), fontSize: 11)) : null,
       trailing: enabled ? const Icon(Icons.chevron_right, color: Colors.white24, size: 18) : null,
       onTap: enabled ? onTap : null,
     );
@@ -333,8 +333,8 @@ class SettingsScreen extends ConsumerWidget {
             blur: 20,
             alignment: Alignment.center,
             border: 1,
-            linearGradient: LinearGradient(colors: [Colors.white.withValues(alpha: 0.1), Colors.white.withValues(alpha: 0.05)]),
-            borderGradient: LinearGradient(colors: [Colors.white.withValues(alpha: 0.2), Colors.white.withValues(alpha: 0)]),
+            linearGradient: LinearGradient(colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)]),
+            borderGradient: LinearGradient(colors: [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0)]),
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
@@ -406,8 +406,8 @@ class SettingsScreen extends ConsumerWidget {
             blur: 20,
             alignment: Alignment.center,
             border: 1,
-            linearGradient: LinearGradient(colors: [Colors.white.withValues(alpha: 0.1), Colors.white.withValues(alpha: 0.05)]),
-            borderGradient: LinearGradient(colors: [Colors.white.withValues(alpha: 0.2), Colors.white.withValues(alpha: 0)]),
+            linearGradient: LinearGradient(colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)]),
+            borderGradient: LinearGradient(colors: [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0)]),
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(

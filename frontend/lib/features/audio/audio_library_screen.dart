@@ -67,9 +67,9 @@ class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
               child: Container(
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
                 ),
                 child: TextField(
                   controller: _searchController,
@@ -81,7 +81,7 @@ class _AudioLibraryScreenState extends ConsumerState<AudioLibraryScreen> {
                   style: const TextStyle(color: Colors.white, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: 'Search by title or author...',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
                     prefixIcon: const Icon(Icons.search_rounded, color: Colors.white54),
                     suffixIcon: _searchQuery.isNotEmpty 
                       ? IconButton(

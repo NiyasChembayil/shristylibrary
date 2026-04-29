@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_delta_from_html/flutter_quill_delta_from_html.dart';
 import 'dart:async';
 import '../../providers/author_provider.dart';
@@ -16,7 +16,7 @@ class StoryBibleScreen extends ConsumerStatefulWidget {
 }
 
 class _StoryBibleScreenState extends ConsumerState<StoryBibleScreen> {
-  quill.QuillController? _controller;
+  QuillController? _controller;
   bool _isLoading = true;
   bool _isSaving = false;
   Timer? _debounceTimer;
@@ -31,15 +31,22 @@ class _StoryBibleScreenState extends ConsumerState<StoryBibleScreen> {
     final content = await ref.read(authorStudioProvider.notifier).fetchStoryBible(widget.bookId);
     if (mounted) {
       if (content != null) {
-        final delta = HtmlToDelta().convert(content);
-        setState(() {
-          _controller = quill.QuillController(
-            document: quill.Document.fromDelta(delta),
-            selection: const TextSelection.collapsed(offset: 0),
-          );
-          _isLoading = false;
-        });
-        _controller!.addListener(_onTextChanged);
+        try {
+          final deltaJson = HtmlToDelta().convert(content).toJson();
+          setState(() {
+            _controller = QuillController(
+              document: Document.fromJson(deltaJson),
+              selection: const TextSelection.collapsed(offset: 0),
+            );
+            _isLoading = false;
+          });
+          _controller!.addListener(_onTextChanged);
+        } catch (e) {
+          setState(() {
+            _controller = QuillController.basic();
+            _isLoading = false;
+          });
+        }
       } else {
         setState(() => _isLoading = false);
       }
@@ -101,31 +108,34 @@ class _StoryBibleScreenState extends ConsumerState<StoryBibleScreen> {
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6C63FF)))
           : _controller == null
               ? const Center(child: Text('Could not load Story Bible', style: TextStyle(color: Colors.white54)))
-              : Column(
-                  children: [
-                    quill.QuillToolbar.simple(
-                      configurations: quill.QuillSimpleToolbarConfigurations(
-                        controller: _controller!,
-                        sharedConfigurations: const quill.QuillSharedConfigurations(locale: Locale('en')),
-                        showSearchButton: false,
-                        showLink: false,
-                        multiRowsDisplay: false,
+              : QuillProvider(
+                  configurations: QuillConfigurations(
+                    controller: _controller!,
+                    sharedConfigurations: const QuillSharedConfigurations(locale: Locale('en')),
+                  ),
+                  child: Column(
+                    children: [
+                      QuillToolbar(
+                        configurations: const QuillToolbarConfigurations(
+                          showSearchButton: false,
+                          showLink: false,
+                          multiRowsDisplay: false,
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        child: quill.QuillEditor.basic(
-                          configurations: quill.QuillEditorConfigurations(
-                            controller: _controller!,
-                            readOnly: false,
-                            placeholder: 'Characters, World History, Plot Notes...',
-                            autoFocus: true,
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          child: QuillEditor.basic(
+                            configurations: const QuillEditorConfigurations(
+                              readOnly: false,
+                              placeholder: 'Characters, World History, Plot Notes...',
+                              autoFocus: true,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
     );
   }

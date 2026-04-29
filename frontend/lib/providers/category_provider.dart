@@ -25,18 +25,21 @@ class CategoryModel {
 }
 
 final categoryProvider = StateNotifierProvider<CategoryNotifier, List<CategoryModel>>((ref) {
-  return CategoryNotifier();
+  return CategoryNotifier(ref.read(apiClientProvider));
 });
 
 class CategoryNotifier extends StateNotifier<List<CategoryModel>> {
-  CategoryNotifier() : super([]) {
+  final ApiClient _apiClient;
+
+  CategoryNotifier(this._apiClient) : super([]) {
     fetchCategories();
   }
 
   Future<void> fetchCategories() async {
     try {
-      final List response = await ApiClient.get('/core/categories/');
-      final categories = response.map((j) => CategoryModel.fromJson(j)).toList();
+      final response = await _apiClient.dio.get('core/categories/');
+      final List rawList = response.data;
+      final categories = rawList.map((j) => CategoryModel.fromJson(j)).toList();
       
       // Sort by boosted then priority
       categories.sort((a, b) {

@@ -61,11 +61,11 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.people_outline, size: 64, color: Colors.white.withValues(alpha: 0.2)),
+                          Icon(Icons.people_outline, size: 64, color: Colors.white.withOpacity(0.2)),
                           const SizedBox(height: 16),
                           Text(
                             'No ${widget.title.toLowerCase()} yet.',
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 16),
+                            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 16),
                           ),
                         ],
                       ),
@@ -81,9 +81,9 @@ class _UserListScreenState extends ConsumerState<UserListScreen> {
 
                         return Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.05),
+                            color: Colors.white.withOpacity(0.05),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                            border: Border.all(color: Colors.white.withOpacity(0.08)),
                           ),
                           child: ListTile(
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

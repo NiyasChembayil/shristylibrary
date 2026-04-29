@@ -69,7 +69,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
     return OutlinedButton(
       onPressed: _isLoading ? null : _toggleFollow,
       style: OutlinedButton.styleFrom(
-        backgroundColor: isFollowing ? Colors.white.withValues(alpha: 0.05) : Colors.transparent,
+        backgroundColor: isFollowing ? Colors.white.withOpacity(0.05) : Colors.transparent,
         foregroundColor: isFollowing ? Colors.white70 : const Color(0xFF6C63FF),
         side: BorderSide(
           color: isFollowing ? Colors.white24 : const Color(0xFF6C63FF),

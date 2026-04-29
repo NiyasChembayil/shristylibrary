@@ -169,7 +169,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFF14141E),
               border: Border(
-                  top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+                  top: BorderSide(color: Colors.white.withOpacity(0.08))),
             ),
             child: Row(
               children: [
@@ -296,7 +296,7 @@ class _CommentTile extends StatelessWidget {
                 color: const Color(0xFF14141E),
                 borderRadius: BorderRadius.circular(12),
                 border:
-                    Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                    Border.all(color: Colors.white.withOpacity(0.06)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

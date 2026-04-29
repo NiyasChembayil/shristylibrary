@@ -205,7 +205,7 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: Colors.white.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(color: Colors.white10),
                         ),
@@ -249,6 +249,8 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
                 ),
               ),
             ),
+          ],
+        ),
             if (_showLikeAnimation)
               Center(
                 child: Lottie.network(
@@ -263,7 +265,7 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
         bottomSheet: Container(
           height: 100,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          color: Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.9),
+          color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.9),
           child: Row(
             children: [
               Expanded(
@@ -304,14 +306,14 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
                 alignment: Alignment.center,
                 border: 1,
                 linearGradient: LinearGradient(colors: [
-                  Colors.white.withValues(alpha: 0.1),
-                  Colors.white.withValues(alpha: 0.05)
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.05)
                 ]),
                 borderGradient: LinearGradient(colors: [
                   book.isLiked
-                      ? Colors.redAccent.withValues(alpha: 0.5)
-                      : Colors.white.withValues(alpha: 0.5),
-                  Colors.white.withValues(alpha: 0.2)
+                      ? Colors.redAccent.withOpacity(0.5)
+                      : Colors.white.withOpacity(0.5),
+                  Colors.white.withOpacity(0.2)
                 ]),
                 child: IconButton(
                   onPressed: () {
@@ -344,14 +346,14 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
                 alignment: Alignment.center,
                 border: 1,
                 linearGradient: LinearGradient(colors: [
-                  Colors.white.withValues(alpha: 0.1),
-                  Colors.white.withValues(alpha: 0.05)
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.05)
                 ]),
                 borderGradient: LinearGradient(colors: [
                   book.isInLibrary
-                      ? Colors.greenAccent.withValues(alpha: 0.5)
-                      : const Color(0xFF6C63FF).withValues(alpha: 0.5),
-                  Colors.white.withValues(alpha: 0.2)
+                      ? Colors.greenAccent.withOpacity(0.5)
+                      : const Color(0xFF6C63FF).withOpacity(0.5),
+                  Colors.white.withOpacity(0.2)
                 ]),
                 child: IconButton(
                   onPressed: () async {
@@ -389,12 +391,12 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
                 alignment: Alignment.center,
                 border: 1,
                 linearGradient: LinearGradient(colors: [
-                  Colors.white.withValues(alpha: 0.1),
-                  Colors.white.withValues(alpha: 0.05)
+                  Colors.white.withOpacity(0.1),
+                  Colors.white.withOpacity(0.05)
                 ]),
                 borderGradient: LinearGradient(colors: [
-                  Colors.white.withValues(alpha: 0.5),
-                  Colors.white.withValues(alpha: 0.2)
+                  Colors.white.withOpacity(0.5),
+                  Colors.white.withOpacity(0.2)
                 ]),
                 child: IconButton(
                   onPressed: () {
@@ -452,7 +454,7 @@ class _BookDetailScreenState extends ConsumerState<BookDetailScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+            color: const Color(0xFF6C63FF).withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(

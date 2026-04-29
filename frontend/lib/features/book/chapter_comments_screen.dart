@@ -115,7 +115,7 @@ class _ChapterCommentsScreenState extends ConsumerState<ChapterCommentsScreen> {
                             margin: const EdgeInsets.only(bottom: 20),
                             padding: const EdgeInsets.all(15),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.05),
+                              color: Colors.white.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(15),
                             ),
                             child: Column(
@@ -156,7 +156,7 @@ class _ChapterCommentsScreenState extends ConsumerState<ChapterCommentsScreen> {
               color: const Color(0xFF1E1E2E),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, -5)),
+                BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, -5)),
               ],
             ),
             child: Row(
@@ -173,7 +173,7 @@ class _ChapterCommentsScreenState extends ConsumerState<ChapterCommentsScreen> {
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Colors.white.withValues(alpha: 0.05),
+                      fillColor: Colors.white.withOpacity(0.05),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     ),
                   ),

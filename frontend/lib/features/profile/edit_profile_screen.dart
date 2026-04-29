@@ -168,8 +168,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           blur: 10,
           alignment: Alignment.centerLeft,
           border: 1,
-          linearGradient: LinearGradient(colors: [Colors.white.withValues(alpha: 0.05), Colors.white.withValues(alpha: 0.02)]),
-          borderGradient: LinearGradient(colors: [Colors.white.withValues(alpha: 0.1), Colors.white.withValues(alpha: 0.05)]),
+          linearGradient: LinearGradient(colors: [Colors.white.withOpacity(0.05), Colors.white.withOpacity(0.02)]),
+          borderGradient: LinearGradient(colors: [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)]),
           child: TextFormField(
             controller: controller,
             initialValue: initialValue,

@@ -238,11 +238,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
                                   side: isFollowing 
-                                    ? BorderSide(color: Colors.white.withValues(alpha: 0.2), width: 1.5)
+                                    ? BorderSide(color: Colors.white.withOpacity(0.2), width: 1.5)
                                     : BorderSide.none,
                                 ),
                               ).copyWith(
-                                overlayColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.05)),
+                                overlayColor: WidgetStateProperty.all(Colors.white.withOpacity(0.05)),
                               ),
                               child: Text(
                                 isFollowing ? 'Following' : 'Follow',
@@ -262,9 +262,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.03),
+                      color: Colors.white.withOpacity(0.03),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                      border: Border.all(color: Colors.white.withOpacity(0.06)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -532,9 +532,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E2E).withValues(alpha: 0.5),
+        color: const Color(0xFF1E1E2E).withOpacity(0.5),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,7 +545,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               const Text('Reading Activity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(color: const Color(0xFF6C63FF).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: const Color(0xFF6C63FF).withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
                 child: const Text('Last 7 days', style: TextStyle(fontSize: 10, color: Color(0xFF6C63FF), fontWeight: FontWeight.bold)),
               ),
             ],
@@ -595,7 +595,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                         dotData: const FlDotData(show: false),
                         belowBarData: BarAreaData(
                           show: true,
-                          color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+                          color: const Color(0xFF6C63FF).withOpacity(0.1),
                         ),
                       ),
                     ],
@@ -631,9 +631,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
       margin: const EdgeInsets.only(top: 15),
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        color: Colors.grey[900]?.withValues(alpha: 0.5),
+        color: Colors.grey[900]?.withOpacity(0.5),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
       ),
       child: const Column(
         children: [

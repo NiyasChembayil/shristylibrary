@@ -22,18 +22,20 @@ class PlatformSettings {
 }
 
 final platformSettingsProvider = StateNotifierProvider<PlatformSettingsNotifier, PlatformSettings?>((ref) {
-  return PlatformSettingsNotifier();
+  return PlatformSettingsNotifier(ref.read(apiClientProvider));
 });
 
 class PlatformSettingsNotifier extends StateNotifier<PlatformSettings?> {
-  PlatformSettingsNotifier() : super(null) {
+  final ApiClient _apiClient;
+
+  PlatformSettingsNotifier(this._apiClient) : super(null) {
     fetchSettings();
   }
 
   Future<void> fetchSettings() async {
     try {
-      final response = await ApiClient.get('/core/settings/current/');
-      state = PlatformSettings.fromJson(response);
+      final response = await _apiClient.dio.get('core/settings/current/');
+      state = PlatformSettings.fromJson(response.data);
     } catch (e) {
       print('Error fetching settings: $e');
     }

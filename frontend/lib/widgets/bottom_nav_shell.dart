@@ -51,16 +51,16 @@ class _BottomNavShellState extends State<BottomNavShell> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.white.withValues(alpha: 0.1),
-                      Colors.white.withValues(alpha: 0.05),
+                      Colors.white.withOpacity(0.1),
+                      Colors.white.withOpacity(0.05),
                     ],
                   ),
                   borderGradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.white.withValues(alpha: 0.5),
-                      Colors.white.withValues(alpha: 0.2),
+                      Colors.white.withOpacity(0.5),
+                      Colors.white.withOpacity(0.2),
                     ],
                   ),
                   child: Padding(

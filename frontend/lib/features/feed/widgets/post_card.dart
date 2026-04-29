@@ -65,7 +65,7 @@ class _PostCardState extends ConsumerState<PostCard>
         decoration: BoxDecoration(
           color: const Color(0xFF14141E),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
         ),
         child: Stack(
           children: [
@@ -183,10 +183,10 @@ class _PostCardState extends ConsumerState<PostCard>
                       padding: const EdgeInsets.all(10),
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: Colors.white.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: const Color(0xFF6C63FF).withValues(alpha: 0.3)),
+                            color: const Color(0xFF6C63FF).withOpacity(0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,7 +252,7 @@ class _PostCardState extends ConsumerState<PostCard>
                         color: const Color(0xFF1E1E2E),
                         borderRadius: BorderRadius.circular(12),
                         border:
-                            Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                            Border.all(color: Colors.white.withOpacity(0.08)),
                       ),
                       child: Row(
                         children: [

@@ -72,7 +72,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         icon: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.05),
+                            color: Colors.white.withOpacity(0.05),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.search_rounded, size: 24, color: Colors.white70),
@@ -87,7 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             icon: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.05),
+                                color: Colors.white.withOpacity(0.05),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.notifications_none_rounded, size: 24),
@@ -386,6 +386,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
+  }
   Widget _buildAnnouncementBanner(String message) {
     return Container(
       width: double.infinity,
@@ -395,13 +396,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         gradient: LinearGradient(
           colors: [
             Theme.of(context).primaryColor,
-            Theme.of(context).primaryColor.withValues(alpha: 0.7),
+            Theme.of(context).primaryColor.withOpacity(0.7),
           ],
         ),
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+            color: Theme.of(context).primaryColor.withOpacity(0.3),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -446,8 +447,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: FilterChip(
                   label: Text(cat.name),
                   labelStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  side: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
+                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                  side: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.3)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   onSelected: (_) {
                     // Logic to filter books by category could go here

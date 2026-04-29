@@ -23,10 +23,10 @@ class MentionOverlay extends ConsumerWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF6C63FF).withValues(alpha: 0.4)),
+        border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.4)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
+            color: const Color(0xFF6C63FF).withOpacity(0.15),
             blurRadius: 20,
             spreadRadius: 2,
           ),
@@ -156,14 +156,14 @@ class _UserRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      splashColor: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+      splashColor: const Color(0xFF6C63FF).withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         child: Row(
           children: [
             CircleAvatar(
               radius: 16,
-              backgroundColor: const Color(0xFF6C63FF).withValues(alpha: 0.25),
+              backgroundColor: const Color(0xFF6C63FF).withOpacity(0.25),
               backgroundImage: user.avatar != null
                   ? NetworkImage(user.avatar!)
                   : null,
@@ -194,7 +194,7 @@ class _UserRow extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
+                color: const Color(0xFF6C63FF).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: const Text(
@@ -223,7 +223,7 @@ class _BookRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      splashColor: const Color(0xFFFFD700).withValues(alpha: 0.1),
+      splashColor: const Color(0xFFFFD700).withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         child: Row(
@@ -255,7 +255,7 @@ class _BookRow extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                color: const Color(0xFFFFD700).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: const Text(
@@ -276,7 +276,7 @@ class _BookRow extends StatelessWidget {
         width: 28,
         height: 38,
         decoration: BoxDecoration(
-          color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+          color: const Color(0xFFFFD700).withOpacity(0.15),
           borderRadius: BorderRadius.circular(4),
         ),
         child: const Icon(Icons.book_rounded,

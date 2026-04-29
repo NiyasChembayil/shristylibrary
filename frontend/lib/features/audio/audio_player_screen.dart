@@ -110,7 +110,7 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
             blur: 40,
             alignment: Alignment.center,
             border: 0,
-            linearGradient: LinearGradient(colors: [Colors.black.withValues(alpha: 0.55), Colors.black.withValues(alpha: 0.75)]),
+            linearGradient: LinearGradient(colors: [Colors.black.withOpacity(0.55), Colors.black.withOpacity(0.75)]),
             borderGradient: const LinearGradient(colors: [Colors.transparent, Colors.transparent]),
           ),
           SafeArea(
@@ -184,7 +184,7 @@ class _AudioPlayerScreenState extends ConsumerState<AudioPlayerScreen> {
                     height: MediaQuery.of(context).size.width * 0.7,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 30, offset: const Offset(0, 15))],
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 30, offset: const Offset(0, 15))],
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(30),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill_delta_from_html/flutter_quill_delta_from_html.dart';
 import 'dart:async';
 import '../../providers/author_provider.dart';
@@ -18,7 +18,7 @@ class WriteScreen extends ConsumerStatefulWidget {
 }
 
 class _WriteScreenState extends ConsumerState<WriteScreen> {
-  quill.QuillController? _controller;
+  QuillController? _controller;
   Timer? _autoSaveTimer;
   bool _isSaving = false;
   ChapterModel? _currentChapter;
@@ -36,15 +36,20 @@ class _WriteScreenState extends ConsumerState<WriteScreen> {
           ? book.chapters.firstWhere((c) => c.id == widget.chapterId)
           : book.chapters.first;
       
-      final delta = HtmlToDelta().convert(_currentChapter!.content);
-      setState(() {
-        _controller = quill.QuillController(
-          document: quill.Document.fromDelta(delta),
-          selection: const TextSelection.collapsed(offset: 0),
-        );
-      });
-
-      _controller!.addListener(_onTextChanged);
+      try {
+        final deltaJson = HtmlToDelta().convert(_currentChapter!.content).toJson();
+        setState(() {
+          _controller = QuillController(
+            document: Document.fromJson(deltaJson),
+            selection: const TextSelection.collapsed(offset: 0),
+          );
+        });
+        _controller!.addListener(_onTextChanged);
+      } catch (e) {
+        setState(() {
+          _controller = QuillController.basic();
+        });
+      }
     }
   }
 
@@ -59,7 +64,7 @@ class _WriteScreenState extends ConsumerState<WriteScreen> {
     if (_controller == null || _currentChapter == null || _isSaving) return;
 
     setState(() => _isSaving = true);
-    final content = _controller!.document.toDelta().toJson().toString(); // Simplified for now
+    final content = _controller!.document.toDelta().toJson().toString(); 
     
     final success = await ref.read(authorStudioProvider.notifier).updateChapter(
       _currentChapter!.id, 
@@ -111,42 +116,42 @@ class _WriteScreenState extends ConsumerState<WriteScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          quill.QuillToolbar.simple(
-            configurations: quill.QuillSimpleToolbarConfigurations(
-              controller: _controller!,
-              sharedConfigurations: const quill.QuillSharedConfigurations(
-                locale: Locale('en'),
-              ),
-              showSearchButton: false,
-              showLink: false,
-              showCodeBlock: false,
-              showQuote: false,
-              showIndent: false,
-              showListCheck: false,
-              multiRowsDisplay: false,
-            ),
+      body: QuillProvider(
+        configurations: QuillConfigurations(
+          controller: _controller!,
+          sharedConfigurations: const QuillSharedConfigurations(
+            locale: Locale('en'),
           ),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              color: const Color(0xFF0F0F1E),
-              child: quill.QuillEditor.basic(
-                configurations: quill.QuillEditorConfigurations(
-                  controller: _controller!,
-                  readOnly: false,
-                  sharedConfigurations: const quill.QuillSharedConfigurations(
-                    locale: Locale('en'),
+        ),
+        child: Column(
+          children: [
+            QuillToolbar(
+              configurations: const QuillToolbarConfigurations(
+                showSearchButton: false,
+                showLink: false,
+                showCodeBlock: false,
+                showQuote: false,
+                showIndent: false,
+                showListCheck: false,
+                multiRowsDisplay: false,
+              ),
+            ),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                color: const Color(0xFF0F0F1E),
+                child: QuillEditor.basic(
+                  configurations: const QuillEditorConfigurations(
+                    readOnly: false,
+                    placeholder: 'Once upon a time...',
+                    padding: EdgeInsets.zero,
+                    autoFocus: true,
                   ),
-                  placeholder: 'Once upon a time...',
-                  padding: EdgeInsets.zero,
-                  autoFocus: true,
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

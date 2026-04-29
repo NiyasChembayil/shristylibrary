@@ -11,7 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/push_notification_service.dart';
 import 'core/api_client.dart';
-import 'package:uni_links/uni_links.dart';
+import 'package:app_links/app_links.dart';
 import 'dart:async';
 import 'providers/platform_settings_provider.dart';
 import 'features/book/book_detail_screen.dart';
@@ -69,9 +69,11 @@ class _SrishtyAppState extends ConsumerState<SrishtyApp> {
   }
 
   Future<void> _initDeepLinks() async {
+    final appLinks = AppLinks();
+
     // Handle initial link
     try {
-      final initialLink = await getInitialLink();
+      final initialLink = await appLinks.getInitialLink();
       if (initialLink != null) {
         _processLink(initialLink);
       }
@@ -80,16 +82,15 @@ class _SrishtyAppState extends ConsumerState<SrishtyApp> {
     }
 
     // Handle incoming links
-    _sub = linkStream.listen((String? link) {
-      if (link != null) _processLink(link);
+    _sub = appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null) _processLink(uri);
     }, onError: (err) {
       debugPrint('DeepLink: Stream Error: $err');
     });
   }
 
-  void _processLink(String link) {
-    debugPrint('DeepLink: Processing link: $link');
-    final uri = Uri.parse(link);
+  void _processLink(Uri uri) {
+    debugPrint('DeepLink: Processing link: $uri');
     
     // Format: srishty://preview/123
     if (uri.scheme == 'srishty' && uri.host == 'preview') {
@@ -210,7 +211,7 @@ class SplashScreen extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.2),
+                color: Colors.blue.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.book, size: 50, color: Colors.blue),

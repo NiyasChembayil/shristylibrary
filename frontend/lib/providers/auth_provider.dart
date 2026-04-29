@@ -131,16 +131,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState(status: AuthStatus.unauthenticated);
       return true;
     } catch (e) {
-      // Try to extract the server's validation error message
       String message = 'Registration failed. Please try again.';
-      try {
-        final data = (e as dynamic).response?.data;
-        if (data is Map) {
-          final firstKey = data.keys.first;
-          final firstVal = data[firstKey];
-          message = firstVal is List ? firstVal.first.toString() : firstVal.toString();
+      
+      if (e is DioException) {
+        if (e.response?.data is Map) {
+          final data = e.response!.data as Map;
+          // Flatten error messages (e.g., {'username': ['Taken'], 'email': ['Invalid']})
+          final List<String> errors = [];
+          data.forEach((key, value) {
+            if (value is List) {
+              errors.add('${key.toString().toUpperCase()}: ${value.first}');
+            } else {
+              errors.add(value.toString());
+            }
+          });
+          if (errors.isNotEmpty) message = errors.join('\n');
+        } else if (e.message != null) {
+          message = e.message!;
         }
-      } catch (_) {}
+      }
+      
       state = AuthState(status: AuthStatus.error, errorMessage: message);
       return false;
     }

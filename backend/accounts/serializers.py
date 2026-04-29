@@ -136,26 +136,31 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
-
+        fields = ['username', 'email', 'password', 'role']
 
     def validate_username(self, value):
         if User.objects.filter(username__iexact=value).exists():
             raise serializers.ValidationError("This username is already taken.")
         return value
 
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        return value
+
     def create(self, validated_data):
-        # Strictly control the default role for new registrations
-        role = 'reader' 
+        # Allow specifying role during registration, but default to 'reader'
+        role = validated_data.pop('role', 'reader')
+        if role not in ['reader', 'author']:
+            role = 'reader'
+
         user = User.objects.create_user(
             username=validated_data['username'],
-            email=validated_data['email'],
+            email=validated_data.get('email', ''),
             password=validated_data['password']
         )
-        # Ensure profile exists and set role
-        if hasattr(user, 'profile'):
-            user.profile.role = role
-            user.profile.save()
+        # Ensure profile exists and set role safely (avoiding race conditions with signals)
+        Profile.objects.update_or_create(user=user, defaults={'role': role})
         return user
 
 class AdminUserHistorySerializer(serializers.ModelSerializer):

@@ -63,7 +63,7 @@ class _StudioDashboardState extends ConsumerState<StudioDashboard> {
             gradient: LinearGradient(
               begin: Alignment.topRight,
               colors: [
-                const Color(0xFF6C63FF).withValues(alpha: 0.2),
+                const Color(0xFF6C63FF).withOpacity(0.2),
                 Colors.transparent,
               ],
             ),
@@ -79,7 +79,7 @@ class _StudioDashboardState extends ConsumerState<StudioDashboard> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.auto_stories_rounded, size: 80, color: Colors.white.withValues(alpha: 0.1)),
+            Icon(Icons.auto_stories_rounded, size: 80, color: Colors.white.withOpacity(0.1)),
             const SizedBox(height: 20),
             const Text('Your studio is empty', style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
@@ -115,6 +115,7 @@ class _StudioDashboardState extends ConsumerState<StudioDashboard> {
                     coverUrl: story.coverUrl,
                     categoryName: story.categoryName,
                     views: story.totalReads,
+                    onPlay: () {}, // Not needed in dashboard
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => WriteScreen(bookId: story.id)),
@@ -173,12 +174,12 @@ class _StudioDashboardState extends ConsumerState<StudioDashboard> {
         alignment: Alignment.center,
         border: 2,
         linearGradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [
-          Colors.white.withValues(alpha: 0.1),
-          Colors.white.withValues(alpha: 0.05),
+          Colors.white.withOpacity(0.1),
+          Colors.white.withOpacity(0.05),
         ]),
         borderGradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [
-          const Color(0xFF6C63FF).withValues(alpha: 0.5),
-          const Color(0xFFFF6584).withValues(alpha: 0.5),
+          const Color(0xFF6C63FF).withOpacity(0.5),
+          const Color(0xFFFF6584).withOpacity(0.5),
         ]),
         child: Padding(
           padding: const EdgeInsets.all(30),
@@ -191,7 +192,7 @@ class _StudioDashboardState extends ConsumerState<StudioDashboard> {
                 decoration: InputDecoration(
                   hintText: 'Title',
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.05),
+                  fillColor: Colors.white.withOpacity(0.05),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
                 ),
                 style: const TextStyle(color: Colors.white),

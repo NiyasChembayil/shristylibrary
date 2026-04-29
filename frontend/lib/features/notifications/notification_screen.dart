@@ -128,7 +128,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 1),
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
-      color: notif['is_read'] ? Colors.transparent : Colors.white.withValues(alpha: 0.05),
+      color: notif['is_read'] ? Colors.transparent : Colors.white.withOpacity(0.05),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
