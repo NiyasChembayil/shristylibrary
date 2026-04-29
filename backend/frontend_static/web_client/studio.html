@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Srishty Author Studio</title>
+    <title>Srishty Author Studio v4.2</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,6 +16,25 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <script>
+        // SMART PATH LOGIC: Fix relative paths for Django backend (/studio/) vs Static site (/)
+        (function() {
+            var isBackend = window.location.pathname.includes('/studio/');
+            if (isBackend) {
+                console.log("SMART PATH: Backend detected. Adjusting relative paths...");
+                // Prepend /static/ to relative links and scripts
+                document.addEventListener('DOMContentLoaded', function() {
+                    var links = document.querySelectorAll('link[href^="css/"], link[href^="assets/"]');
+                    links.forEach(l => l.href = '/static/web_client/' + l.getAttribute('href'));
+                    
+                    var scripts = document.querySelectorAll('script[src^="js/"]');
+                    scripts.forEach(s => s.src = '/static/web_client/' + s.getAttribute('src'));
+                    
+                    var imgs = document.querySelectorAll('img[src^="assets/"]');
+                    imgs.forEach(i => i.src = '/static/web_client/' + i.getAttribute('src'));
+                });
+            }
+        })();
+
         window.onerror = function(msg, url, lineNo, columnNo, error) {
             var message = [
                 'Message: ' + msg,
