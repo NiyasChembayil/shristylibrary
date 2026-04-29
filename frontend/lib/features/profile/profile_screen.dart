@@ -402,11 +402,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               children: [
                 _buildNoBooksPlaceholder(),
                 const SizedBox(height: 10),
-                TextButton.icon(
-                  onPressed: () => ref.invalidate(authorBooksProvider(isMe ? 'me' : profile.userId.toString())),
-                  icon: const Icon(Icons.refresh, size: 16),
-                  label: const Text("DIAGNOSTIC REFRESH", style: TextStyle(fontSize: 10, color: Colors.white38)),
-                ),
+                const SizedBox(height: 10),
               ],
             );
           }
@@ -416,7 +412,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildChartSection(ref, profile.id),
+                const SizedBox(height: 10),
                 const SizedBox(height: 30),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

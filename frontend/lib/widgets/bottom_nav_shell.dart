@@ -22,7 +22,6 @@ class _BottomNavShellState extends State<BottomNavShell> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const AudioLibraryScreen(),
-    const StudioDashboard(),
     const FeedScreen(),
     const ProfileScreen(),
   ];
@@ -72,8 +71,8 @@ class _BottomNavShellState extends State<BottomNavShell> {
                         _buildNavItem(ref, selectedIndex, 1, Icons.headphones_rounded, 'Audio'),
                         // Centre ➕ Post button
                         _buildPostButton(context, ref),
-                        _buildNavItem(ref, selectedIndex, 2, Icons.create_rounded, 'Studio'),
-                        _buildNavItem(ref, selectedIndex, 4, Icons.person_rounded, 'Profile'),
+                        _buildNavItem(ref, selectedIndex, 2, Icons.forum_rounded, 'Feed'),
+                        _buildNavItem(ref, selectedIndex, 3, Icons.person_rounded, 'Profile'),
                       ],
                     ),
                   ),
