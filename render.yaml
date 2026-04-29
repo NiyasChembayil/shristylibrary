@@ -42,4 +42,4 @@ services:
   - type: static
     name: srishty-studio
     env: static
-    publishDir: web_client
+    publishDir: .
