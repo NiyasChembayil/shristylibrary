@@ -244,48 +244,37 @@ class SrishtyApp {
     }
 
     checkAuth() {
-        const gw = document.getElementById('auth-gateway');
-        const shell = document.getElementById('app-shell');
+        const authSection = document.getElementById('auth-section');
+        const appSection = document.getElementById('app-section');
+        if (!authSection || !appSection) return;
 
         if (!this.token) {
-            gw.classList.remove('hidden');
-            shell.classList.add('hidden');
+            authSection.classList.remove('hidden');
+            appSection.classList.add('hidden');
         } else {
-            gw.classList.add('hidden');
-            shell.classList.remove('hidden');
-
-            // Update Navbar Profile
-            const usernameEl = document.getElementById('nav-username');
-            const initialsEl = document.getElementById('nav-initials');
+            authSection.classList.add('hidden');
+            appSection.classList.remove('hidden');
+            
+            // Welcome message in Sidebar or Main
             const welcome = document.getElementById('welcome-message');
-
-            if (usernameEl) usernameEl.textContent = this.currentUser;
-            if (initialsEl && this.currentUser) initialsEl.textContent = this.currentUser.substring(0, 2).toUpperCase();
             if (welcome) welcome.textContent = `Welcome back, ${this.currentUser} 👋`;
-
-            this.switchView('home');
+            
+            this.fetchStories();
         }
     }
 
-    async handleAuth(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        const user = document.getElementById('auth-user').value;
-        const pass = document.getElementById('auth-pass').value;
-        const errorEl = document.getElementById('auth-error');
-        const btn = document.getElementById('auth-btn');
+    async handleAuth(type) {
+        const user = document.getElementById(type === 'login' ? 'login-username' : 'reg-username').value;
+        const pass = document.getElementById(type === 'login' ? 'login-password' : 'reg-password').value;
 
-        btn.textContent = 'Authenticating...';
-        btn.disabled = true;
-        errorEl.style.display = 'none';
+        if (!user || !pass) {
+            alert('Please fill in all fields');
+            return;
+        }
 
         try {
-            console.log('Auth: Starting authentication for', user, 'Mode:', this.isSignUpMode ? 'Registration' : 'Login');
-            if (this.isSignUpMode) {
-                const email = document.getElementById('auth-email').value;
-                console.log('Auth: Registering email', email);
+            if (type === 'register') {
+                const email = document.getElementById('reg-email').value;
                 await this.fetchAPI('/accounts/auth/register/', {
                     method: 'POST',
                     body: JSON.stringify({ 
@@ -295,13 +284,10 @@ class SrishtyApp {
                         role: 'author'
                     })
                 });
-                console.log('Auth: Registration successful!');
             }
 
-            console.log('Auth: Fetching JWT token...');
             const res = await axios.post(`${API_URL}/token/`, { username: user, password: pass });
             const data = res.data;
-            console.log('Auth: Token received!');
 
             this.token = data.access;
             this.currentUser = user;
@@ -312,23 +298,16 @@ class SrishtyApp {
             this.checkAuth();
         } catch (err) {
             console.error('Auth failure:', err);
-            errorEl.style.display = 'block';
             const errorMsg = err.response?.data?.detail || err.message || 'Unknown error';
-            errorEl.textContent = errorMsg;
             alert('Authentication Failed: ' + errorMsg);
-        } finally {
-            btn.textContent = this.isSignUpMode ? 'Register' : 'Sign In';
-            btn.disabled = false;
         }
     }
 
-    toggleAuthMode(e) {
-        e.preventDefault();
-        this.isSignUpMode = !this.isSignUpMode;
-        document.getElementById('signup-extra').classList.toggle('hidden');
-        document.getElementById('auth-toggle-text').textContent = this.isSignUpMode ? 'Already have an account?' : 'New to Srishty?';
-        e.target.textContent = this.isSignUpMode ? 'Sign In' : 'Create Account';
-        document.getElementById('auth-btn').textContent = this.isSignUpMode ? 'Register' : 'Sign In';
+    toggleAuth() {
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        loginForm.classList.toggle('hidden');
+        registerForm.classList.toggle('hidden');
     }
 
     logout() {
